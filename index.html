@@ -339,6 +339,19 @@ footer{background:#030305;border-top:1px solid rgba(0,229,255,.1);padding:0}
   .mp-progress{display:none}
   .mp-vol{display:none}
 }
+
+/* ── SPOTIFY MODAL ── */
+.spotify-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s}
+.spotify-modal-overlay.visible{opacity:1;pointer-events:all}
+.spotify-modal{background:var(--panel);border:1px solid rgba(0,229,255,.2);border-radius:16px;padding:28px 28px 24px;width:min(480px,90vw);box-shadow:0 0 60px rgba(0,229,255,.15),0 20px 60px rgba(0,0,0,.6);transform:translateY(20px);transition:transform .35s cubic-bezier(.22,.68,0,1.2)}
+.spotify-modal-overlay.visible .spotify-modal{transform:translateY(0)}
+.sp-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sp-modal-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#fff;letter-spacing:.08em}
+.sp-modal-close{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.sp-modal-close:hover{border-color:var(--pink);color:var(--pink)}
+.sp-modal-nav{display:flex;gap:10px;margin-top:16px;justify-content:center}
+.sp-nav-btn{background:transparent;border:1px solid rgba(0,229,255,.25);color:var(--cyan);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:.12em;padding:8px 20px;border-radius:4px;cursor:pointer;transition:all .2s}
+.sp-nav-btn:hover{background:rgba(0,229,255,.1);border-color:var(--cyan)}
 </style>
 </head>
 <body>
@@ -620,7 +633,30 @@ footer{background:#030305;border-top:1px solid rgba(0,229,255,.1);padding:0}
 
 <script>
 // ── DATA ──
-const TRACKS = [{"num": "01", "name": "L.I.F.E.", "status": "out"}, {"num": "02", "name": "THE ANTHEM", "status": "out"}, {"num": "03", "name": "AUTONOMOUS GHOST", "status": "album"}, {"num": "04", "name": "MOON RACER", "status": "album"}, {"num": "05", "name": "THE GALACTIC DRIP", "status": "album"}, {"num": "06", "name": "TRAP GANG", "status": "out"}, {"num": "07", "name": "GET IN THE WHIP", "status": "album"}, {"num": "08", "name": "LAKE HOUSE", "status": "album"}, {"num": "09", "name": "PUTTING GIRLS ON DIGITAL", "status": "album"}, {"num": "10", "name": "GALACTIC STATIC", "status": "album"}, {"num": "11", "name": "BINARY HEARTBEAT", "status": "album"}, {"num": "12", "name": "NEON LEATHER", "status": "out"}, {"num": "13", "name": "TOP GUN", "status": "album"}, {"num": "14", "name": "BITTER VELVET", "status": "album"}, {"num": "15", "name": "PENTHOUSE PURGATORY", "status": "album"}, {"num": "16", "name": "GLASS FORTRESS", "status": "album"}, {"num": "17", "name": "4AM PERSPECTIVE", "status": "out"}, {"num": "18", "name": "CHROME HEARTS", "status": "album"}, {"num": "19", "name": "ELEVATE", "status": "album"}, {"num": "20", "name": "ARCTIC GLACIER", "status": "album"}, {"num": "21", "name": "MERCURY CIRCUIT", "status": "album"}, {"num": "22", "name": "760 (SAHARA MIX)", "status": "out"}];
+const TRACKS = [
+  {"num":"01","name":"L.I.F.E.","status":"out","spotify":"2mo4pK8KxVV6uQ2Snq9Vno"},
+  {"num":"02","name":"THE ANTHEM","status":"out","spotify":"1FOQsOpkJHNLYbEk5HF7YM"},
+  {"num":"03","name":"AUTONOMOUS GHOST","status":"album","spotify":""},
+  {"num":"04","name":"MOON RACER","status":"album","spotify":""},
+  {"num":"05","name":"THE GALACTIC DRIP","status":"album","spotify":""},
+  {"num":"06","name":"TRAP GANG","status":"out","spotify":"7Ha9p6MTOHT7Q8drl8Yy9X"},
+  {"num":"07","name":"GET IN THE WHIP","status":"album","spotify":""},
+  {"num":"08","name":"LAKE HOUSE","status":"album","spotify":""},
+  {"num":"09","name":"PUTTING GIRLS ON DIGITAL","status":"album","spotify":""},
+  {"num":"10","name":"GALACTIC STATIC","status":"album","spotify":""},
+  {"num":"11","name":"BINARY HEARTBEAT","status":"album","spotify":""},
+  {"num":"12","name":"NEON LEATHER","status":"out","spotify":"4LaHMYBmv1laHaJh6s1N5O"},
+  {"num":"13","name":"TOP GUN","status":"album","spotify":""},
+  {"num":"14","name":"BITTER VELVET","status":"album","spotify":""},
+  {"num":"15","name":"PENTHOUSE PURGATORY","status":"album","spotify":""},
+  {"num":"16","name":"GLASS FORTRESS","status":"album","spotify":""},
+  {"num":"17","name":"4AM PERSPECTIVE","status":"album","spotify":""},
+  {"num":"18","name":"CHROME HEARTS","status":"album","spotify":""},
+  {"num":"19","name":"ELEVATE","status":"album","spotify":""},
+  {"num":"20","name":"ARCTIC GLACIER","status":"album","spotify":""},
+  {"num":"21","name":"MERCURY CIRCUIT","status":"album","spotify":""},
+  {"num":"22","name":"760 (SAHARA MIX)","status":"out","spotify":"3kTfWeOoQ3E6MGPdWURmAQ"}
+];
 const MERCH  = [{"id": "t1", "name": "Moon Racer Tee \u2014 Tracklist Edition", "desc": "Black premium cotton. Full tracklist on back. Limited run.", "price": "35.00", "img": "tshirt1", "tag": "APPAREL", "sizes": ["S", "M", "L", "XL", "XXL"]}, {"id": "t2", "name": "Moon Racer Tee \u2014 City Edition", "desc": "Cyberpunk city front graphic. Bear Cubz back logo.", "price": "35.00", "img": "tshirt2", "tag": "APPAREL", "sizes": ["S", "M", "L", "XL", "XXL"]}, {"id": "t3", "name": "Moon Racer Tee \u2014 Duo Front/Back", "desc": "Characters front & back. The definitive fan shirt.", "price": "38.00", "img": "tshirt3", "tag": "APPAREL", "sizes": ["S", "M", "L", "XL", "XXL"]}, {"id": "st", "name": "Holographic Sticker Pack", "desc": "14 holographic die-cut stickers. Moon Racer universe characters & logos.", "price": "18.00", "img": "stickers", "tag": "COLLECTIBLE", "sizes": []}, {"id": "bt", "name": "Moon Racer Button Pack", "desc": "16 premium 1.5\" pinback buttons. Full character set.", "price": "22.00", "img": "buttons", "tag": "COLLECTIBLE", "sizes": []}, {"id": "cd", "name": "Moon Racer I \u2014 CD", "desc": "Physical CD. Full 22-track album. Limited pressing.", "price": "15.00", "img": "cd", "tag": "MUSIC", "sizes": []}, {"id": "vn", "name": "Moon Racer I \u2014 Vinyl", "desc": "Black vinyl LP. Full album. Collector's pressing. Limited to 300 units.", "price": "45.00", "img": "vinyl", "tag": "MUSIC", "sizes": []}];
 // Images loaded via FULL_MERCH_IMGS below
 const FULL_MERCH_IMGS = {
@@ -698,50 +734,43 @@ function showToast(msg){
 })();
 
 // ── PLAYER ──
-let currentTrackIdx=-1,isPlaying=false,progressInterval=null,fakeProgress=0;
-const SPOTIFY_BASE='https://open.spotify.com/artist/7wywlCfgO9T0cqiGe1Q6fV';
+let currentTrackIdx=-1;
 
 function playTrack(idx){
   document.querySelectorAll('.track-item').forEach((el,i)=>el.classList.toggle('playing',i===idx));
   currentTrackIdx=idx;
   const t=TRACKS[idx];
-  document.getElementById('mpTitle').textContent=t.name;
-  document.getElementById('miniPlayer').classList.add('visible');
-  document.getElementById('mpPlayBtn').textContent='⏸';
-  isPlaying=true;
-  fakeProgress=0;
-  clearInterval(progressInterval);
-  progressInterval=setInterval(()=>{
-    fakeProgress+=100/(180*10);
-    if(fakeProgress>=100){fakeProgress=0}
-    document.getElementById('mpBarFill').style.width=fakeProgress+'%';
-    const elapsed=Math.floor(fakeProgress/100*180);
-    document.getElementById('mpCurrent').textContent=Math.floor(elapsed/60)+':'+String(elapsed%60).padStart(2,'0');
-    document.getElementById('mpDuration').textContent='3:00';
-  },100);
-  if(t.status==='out'){
-    showToast('▶ '+t.name+' — Stream on Spotify / Apple Music');
-    window.open(SPOTIFY_BASE,'_blank');
+  if(t.spotify){
+    openSpotifyModal(t);
   } else {
-    showToast('▶ '+t.name+' — Out Aug 21, 2026');
+    showToast('🔒 '+t.name+' — Drops Aug 21, 2026');
   }
 }
 
-function togglePlay(){
-  if(currentTrackIdx<0)return;
-  isPlaying=!isPlaying;
-  document.getElementById('mpPlayBtn').textContent=isPlaying?'⏸':'▶';
-  if(isPlaying){
-    progressInterval=setInterval(()=>{
-      fakeProgress+=100/(180*10);if(fakeProgress>=100)fakeProgress=0;
-      document.getElementById('mpBarFill').style.width=fakeProgress+'%';
-    },100);
-  } else clearInterval(progressInterval);
+function openSpotifyModal(t){
+  document.getElementById('spModalTitle').textContent=t.name;
+  document.getElementById('spEmbed').src=
+    'https://open.spotify.com/embed/track/'+t.spotify+'?utm_source=generator&theme=0';
+  document.getElementById('spotifyModal').classList.add('visible');
 }
-function prevTrack(){if(currentTrackIdx>0)playTrack(currentTrackIdx-1)}
-function nextTrack(){if(currentTrackIdx<TRACKS.length-1)playTrack(currentTrackIdx+1)}
-function closePlayer(){document.getElementById('miniPlayer').classList.remove('visible');clearInterval(progressInterval);isPlaying=false}
-function setVolume(e){const r=e.currentTarget.getBoundingClientRect();const pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));document.getElementById('mpVolFill').style.width=(pct*100)+'%'}
+
+function closeSpotifyModal(){
+  const modal=document.getElementById('spotifyModal');
+  modal.classList.remove('visible');
+  // Stop playback by clearing src
+  setTimeout(()=>{ document.getElementById('spEmbed').src=''; },400);
+}
+
+function prevTrack(){
+  if(currentTrackIdx>0){ playTrack(currentTrackIdx-1); }
+}
+function nextTrack(){
+  if(currentTrackIdx<TRACKS.length-1){ playTrack(currentTrackIdx+1); }
+}
+// Keep stub functions so nothing else breaks
+function togglePlay(){}
+function closePlayer(){}
+function setVolume(){}
 
 // ── MERCH ──
 (function(){
@@ -839,5 +868,29 @@ document.getElementById('mpBarBg')?.addEventListener('click',e=>{
   document.getElementById('mpBarFill').style.width=fakeProgress+'%';
 });
 </script>
+
+<!-- SPOTIFY EMBED MODAL -->
+<div class="spotify-modal-overlay" id="spotifyModal" onclick="if(event.target===this)closeSpotifyModal()">
+  <div class="spotify-modal">
+    <div class="sp-modal-header">
+      <div class="sp-modal-title" id="spModalTitle">NOW PLAYING</div>
+      <button class="sp-modal-close" onclick="closeSpotifyModal()">×</button>
+    </div>
+    <iframe id="spEmbed"
+      style="border-radius:10px"
+      src=""
+      width="100%"
+      height="152"
+      frameBorder="0"
+      allowfullscreen=""
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy">
+    </iframe>
+    <div class="sp-modal-nav">
+      <button class="sp-nav-btn" onclick="prevTrack()">◀ PREV</button>
+      <button class="sp-nav-btn" onclick="nextTrack()">NEXT ▶</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
