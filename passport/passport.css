@@ -1,0 +1,469 @@
+/* ============================================================
+   MOON RACER — DIGITAL PASSPORT
+   Reuses the BEλR CUBZ site's design tokens (colors, fonts) so
+   this page feels native to https://cruzzi-myth.github.io/bearcubz/
+   ============================================================ */
+
+:root{
+  --cyan:#00e5ff;--pink:#ff2d78;--purple:#bf5fff;--amber:#ffb700;--red:#ff2d55;
+  --dark:#060608;--mid:#0d0e14;--panel:#0f0f1e;--panel2:#13132a;
+  --border:rgba(0,229,255,0.12);
+  --glow-c:0 0 24px rgba(0,229,255,0.45);
+  --glow-p:0 0 24px rgba(255,45,120,0.45);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--dark);
+  color:#e8e8ee;
+  font-family:'Rajdhani',sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  min-height:100vh;
+  min-height:100dvh;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* faint CRT scanline texture, matches main site's body::before treatment */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;
+  z-index:1;
+}
+
+/* ambient holographic glow field behind everything */
+.bg-glow{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 0%, rgba(0,229,255,0.14), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 15%, rgba(255,45,120,0.12), transparent 60%),
+    radial-gradient(ellipse 50% 50% at 50% 100%, rgba(191,95,255,0.10), transparent 60%);
+}
+
+.hero-grid{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.05) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 20%, black, transparent 75%);
+}
+
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+.mono{font-family:'Share Tech Mono',monospace}
+.orbi{font-family:'Orbitron',sans-serif}
+
+/* ============ LAYOUT ============ */
+
+.passport-wrap{
+  position:relative;
+  z-index:2;
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px 16px 40px;
+}
+
+.passport-shell{
+  width:100%;
+  max-width:460px;
+}
+
+.brand-row{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:18px;
+}
+.brand-logo{
+  width:34px;
+  height:34px;
+  object-fit:contain;
+  border-radius:50%;
+  box-shadow:0 0 16px rgba(0,229,255,.7),0 0 32px rgba(0,229,255,.25);
+  filter:drop-shadow(0 0 6px rgba(0,229,255,.5));
+}
+.brand-name{
+  font-family:'Orbitron',sans-serif;
+  font-weight:900;
+  font-size:15px;
+  letter-spacing:.06em;
+  color:#fff;
+}
+.brand-name span{color:var(--cyan)}
+
+/* ============ HUD CARD ============ */
+
+.hud-card{
+  position:relative;
+  background:linear-gradient(180deg, rgba(15,15,30,.92), rgba(13,14,20,.96));
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:32px 22px 28px;
+  box-shadow:0 0 0 1px rgba(0,229,255,0.04), 0 20px 60px rgba(0,0,0,.55), var(--glow-c);
+  overflow:hidden;
+}
+
+/* circuit-style corner brackets */
+.hud-card::before,
+.hud-card::after,
+.hud-corner-tr,
+.hud-corner-bl{
+  content:'';
+  position:absolute;
+  width:22px;
+  height:22px;
+  border:2px solid var(--cyan);
+  opacity:.85;
+  filter:drop-shadow(0 0 4px rgba(0,229,255,.6));
+}
+.hud-card::before{ top:-1px; left:-1px; border-right:none; border-bottom:none; }
+.hud-card::after{ bottom:-1px; right:-1px; border-left:none; border-top:none; border-color:var(--pink); filter:drop-shadow(0 0 4px rgba(255,45,120,.6)); }
+.hud-corner-tr{ top:-1px; right:-1px; border-left:none; border-bottom:none; }
+.hud-corner-bl{ bottom:-1px; left:-1px; border-right:none; border-top:none; border-color:var(--pink); filter:drop-shadow(0 0 4px rgba(255,45,120,.6)); }
+
+/* subtle holographic sweep across the card */
+.hud-sweep{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg, transparent 40%, rgba(0,229,255,0.06) 50%, rgba(255,45,120,0.05) 56%, transparent 66%);
+  background-size:220% 220%;
+  animation:sweep 7s ease-in-out infinite;
+}
+@keyframes sweep{
+  0%{background-position:120% 0%}
+  50%{background-position:-20% 100%}
+  100%{background-position:120% 0%}
+}
+
+.screen{ display:none; }
+.screen.active{ display:block; animation:fadeUp .5s ease both; }
+@keyframes fadeUp{
+  from{opacity:0; transform:translateY(10px)}
+  to{opacity:1; transform:translateY(0)}
+}
+
+/* ============ TEXT BLOCKS ============ */
+
+.eyebrow{
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:var(--pink);
+  text-align:center;
+  margin-bottom:10px;
+}
+.eyebrow.cyan{color:var(--cyan)}
+
+.title-main{
+  font-family:'Orbitron',sans-serif;
+  font-weight:900;
+  font-size:clamp(34px, 10vw, 46px);
+  line-height:1.02;
+  text-align:center;
+  letter-spacing:.02em;
+  background:linear-gradient(90deg, var(--cyan), #fff 45%, var(--pink) 75%, var(--purple));
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 18px rgba(0,229,255,.35));
+  margin-bottom:6px;
+}
+
+.title-sub{
+  font-family:'Share Tech Mono',monospace;
+  text-align:center;
+  font-size:13px;
+  letter-spacing:.4em;
+  color:rgba(255,255,255,.75);
+  text-transform:uppercase;
+  margin-bottom:14px;
+  padding-left:.4em; /* optically balance the letter-spacing */
+}
+
+.tagline{
+  text-align:center;
+  font-size:12.5px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.4);
+  margin-bottom:26px;
+}
+
+.hr-glow{
+  height:1px;
+  width:100%;
+  margin:20px 0;
+  background:linear-gradient(90deg, transparent, var(--cyan), var(--pink), transparent);
+  opacity:.5;
+}
+
+.body-copy{
+  font-size:15.5px;
+  line-height:1.6;
+  color:rgba(255,255,255,.75);
+  text-align:center;
+  margin-bottom:8px;
+}
+.body-copy strong{color:#fff}
+
+.signal-tag{
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.2em;
+  color:var(--cyan);
+  text-align:center;
+  margin-bottom:14px;
+}
+
+/* ============ BUTTONS ============ */
+
+.btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  min-height:56px;
+  padding:14px 20px;
+  border-radius:4px;
+  font-family:'Orbitron',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  border:1px solid transparent;
+  transition:transform .15s ease, box-shadow .25s ease, background .25s ease, opacity .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{ transform:scale(.97); }
+.btn:disabled{ opacity:.55; pointer-events:none; }
+
+.btn-primary{
+  background:linear-gradient(90deg, var(--cyan), var(--pink));
+  color:#04040a;
+  box-shadow:var(--glow-c);
+  margin-top:6px;
+}
+.btn-primary:hover{ box-shadow:var(--glow-c), var(--glow-p); }
+
+.btn-outline{
+  background:transparent;
+  border-color:rgba(255,255,255,.2);
+  color:#fff;
+  margin-top:12px;
+}
+.btn-outline:hover{ border-color:var(--cyan); color:var(--cyan); }
+
+.btn-ghost{
+  background:transparent;
+  color:rgba(255,255,255,.45);
+  font-size:11px;
+  letter-spacing:.2em;
+  min-height:auto;
+  padding:10px;
+  margin-top:8px;
+}
+.btn-ghost:hover{ color:#fff; }
+
+/* ============ FORM ============ */
+
+.field{ margin-bottom:20px; }
+.field-label{
+  display:block;
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:6px;
+}
+.field-hint{
+  font-size:12.5px;
+  color:rgba(255,255,255,.4);
+  margin-bottom:8px;
+}
+.field-input{
+  width:100%;
+  min-height:52px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:4px;
+  color:#fff;
+  font-family:'Rajdhani',sans-serif;
+  font-size:17px; /* >=16px prevents iOS auto-zoom on focus */
+  outline:none;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.field-input::placeholder{ color:rgba(255,255,255,.25); }
+.field-input:focus{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px rgba(0,229,255,.12);
+}
+.field-input.invalid{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(255,45,85,.12);
+}
+
+.form-error{
+  display:none;
+  font-size:13px;
+  color:var(--red);
+  background:rgba(255,45,85,.08);
+  border:1px solid rgba(255,45,85,.3);
+  border-radius:4px;
+  padding:10px 12px;
+  margin-bottom:16px;
+  line-height:1.4;
+}
+.form-error.show{ display:block; }
+
+/* ============ PASSPORT DATA DISPLAY ============ */
+
+.passport-id-block{
+  text-align:center;
+  margin:22px 0 20px;
+  padding:18px 10px;
+  border:1px solid rgba(0,229,255,.25);
+  border-radius:4px;
+  background:rgba(0,229,255,.04);
+}
+.passport-id-label{
+  font-family:'Orbitron',sans-serif;
+  font-size:10.5px;
+  letter-spacing:.3em;
+  color:rgba(255,255,255,.45);
+  margin-bottom:8px;
+}
+.passport-id-value{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(26px, 8vw, 34px);
+  letter-spacing:.06em;
+  color:#fff;
+  text-shadow:0 0 18px rgba(0,229,255,.6), 0 0 40px rgba(255,45,120,.25);
+}
+
+.welcome-name{
+  text-align:center;
+  font-family:'Orbitron',sans-serif;
+  font-weight:900;
+  font-size:clamp(22px, 7vw, 30px);
+  color:#fff;
+  margin:2px 0 18px;
+  word-break:break-word;
+  text-shadow:0 0 16px rgba(0,229,255,.35);
+}
+
+.data-grid{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  border-top:1px solid rgba(255,255,255,.08);
+  margin-top:4px;
+}
+.data-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:12px;
+  padding:12px 2px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.data-key{
+  font-family:'Orbitron',sans-serif;
+  font-size:11px;
+  letter-spacing:.18em;
+  color:rgba(255,255,255,.4);
+  white-space:nowrap;
+}
+.data-val{
+  font-family:'Share Tech Mono',monospace;
+  font-size:14.5px;
+  color:var(--cyan);
+  text-align:right;
+}
+
+.closing-copy{
+  margin-top:22px;
+  text-align:center;
+  font-size:13px;
+  line-height:1.6;
+  color:rgba(255,255,255,.5);
+}
+.closing-copy .accent{
+  color:var(--pink);
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;
+  letter-spacing:.15em;
+  display:block;
+  margin-top:10px;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translate(-50%, 12px);
+  background:var(--panel2);
+  border:1px solid var(--cyan);
+  color:#fff;
+  font-size:13px;
+  padding:12px 18px;
+  border-radius:4px;
+  box-shadow:var(--glow-c);
+  opacity:0;
+  pointer-events:none;
+  transition:all .3s ease;
+  z-index:50;
+  max-width:90vw;
+  text-align:center;
+}
+.toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+/* spinner for submitting state */
+.spin{
+  width:16px; height:16px;
+  border:2px solid rgba(4,4,10,.35);
+  border-top-color:#04040a;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  display:none;
+}
+.btn.loading .spin{ display:inline-block; }
+.btn.loading .btn-label{ opacity:.7; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* ============ RESPONSIVE ============ */
+
+@media (max-width:380px){
+  .hud-card{ padding:26px 16px 22px; }
+  .title-sub{ letter-spacing:.3em; padding-left:.3em; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .hud-sweep{ animation:none; }
+  .screen.active{ animation:none; }
+}
