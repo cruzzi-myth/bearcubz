@@ -352,6 +352,45 @@ footer{background:#030305;border-top:1px solid rgba(0,229,255,.1);padding:0}
 .sp-modal-nav{display:flex;gap:10px;margin-top:16px;justify-content:center}
 .sp-nav-btn{background:transparent;border:1px solid rgba(0,229,255,.25);color:var(--cyan);font-family:'Orbitron',monospace;font-size:10px;letter-spacing:.12em;padding:8px 20px;border-radius:4px;cursor:pointer;transition:all .2s}
 .sp-nav-btn:hover{background:rgba(0,229,255,.1);border-color:var(--cyan)}
+
+/* ══════ PASSPORT (INFO SECTION) — prefixed pp- to stay isolated from the rest of the page ══════ */
+.pp-wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,380px) 1fr;gap:64px;align-items:start}
+.pp-hero{position:relative}
+.pp-hero img{width:100%;display:block;border-radius:10px;box-shadow:0 0 50px rgba(0,229,255,.18),0 20px 60px rgba(0,0,0,.6)}
+.pp-cta-row{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.pp-cta-row .btn-p{text-align:center}
+.pp-cta-note{font-size:12px;color:rgba(255,255,255,.4);text-align:center;letter-spacing:.05em}
+.pp-copy{font-size:15px;line-height:1.7;color:rgba(255,255,255,.62);margin-bottom:18px}
+.pp-copy strong{color:#fff}
+.pp-block-title{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.18em;color:var(--cyan);text-transform:uppercase;margin:34px 0 16px}
+.pp-block-title:first-of-type{margin-top:0}
+.pp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.pp-tile{background:var(--panel);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:16px 14px;cursor:pointer;transition:all .25s;text-decoration:none;display:flex;flex-direction:column;gap:10px;color:inherit}
+.pp-tile:hover{border-color:rgba(0,229,255,.35);transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.pp-tile-ic{width:34px;height:34px;border:1px solid rgba(191,95,255,.3);background:rgba(191,95,255,.06);color:var(--purple);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.pp-tile-ttl{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.pp-tile-dsc{font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.5)}
+.pp-info-bar{margin-top:40px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.1em;color:rgba(255,255,255,.4)}
+.pp-info-bar b{color:var(--purple);font-weight:400}
+@media(max-width:1024px){
+  .pp-wrap{grid-template-columns:1fr;gap:40px}
+  .pp-hero{max-width:320px;margin:0 auto}
+}
+@media(max-width:600px){
+  .pp-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── passport info modal (single reusable shell) ── */
+.pp-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:1001;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s;padding:20px}
+.pp-modal-overlay.visible{opacity:1;pointer-events:all}
+.pp-modal{background:var(--panel);border:1px solid rgba(0,229,255,.2);border-radius:16px;padding:28px 28px 26px;width:min(440px,100%);box-shadow:0 0 60px rgba(0,229,255,.15),0 20px 60px rgba(0,0,0,.6);transform:translateY(20px);transition:transform .35s cubic-bezier(.22,.68,0,1.2)}
+.pp-modal-overlay.visible .pp-modal{transform:translateY(0)}
+.pp-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:16px}
+.pp-modal-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#fff;letter-spacing:.06em}
+.pp-modal-close{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.pp-modal-close:hover{border-color:var(--pink);color:var(--pink)}
+.pp-modal-body{font-size:14.5px;line-height:1.65;color:rgba(255,255,255,.68);margin-bottom:20px}
+body.pp-modal-open{overflow:hidden}
 </style>
 </head>
 <body>
@@ -429,6 +468,7 @@ footer{background:#030305;border-top:1px solid rgba(0,229,255,.1);padding:0}
     <li><a href="#events">Events</a></li>
     <li><a href="#merch">Merch</a></li>
     <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#passport">Passport</a></li>
     <li><a href="https://cruzzi-myth.github.io/The-Collective/" target="_blank" class="nav-collective">← The Collective</a></li>
     <li><button class="nav-cart" onclick="openCart()">🛒 CART <span class="cart-badge" id="navCartBadge">0</span></button></li>
   </ul>
@@ -442,6 +482,7 @@ footer{background:#030305;border-top:1px solid rgba(0,229,255,.1);padding:0}
   <a href="#events" onclick="toggleMobile()">Events</a>
   <a href="#merch" onclick="toggleMobile()">Merch</a>
   <a href="#gallery" onclick="toggleMobile()">Gallery</a>
+  <a href="#passport" onclick="toggleMobile()">Passport</a>
   <a href="https://cruzzi-myth.github.io/The-Collective/" target="_blank">← The Collective</a>
 </div>
 
@@ -571,6 +612,79 @@ footer{background:#030305;border-top:1px solid rgba(0,229,255,.1);padding:0}
 <section id="gallery" class="reveal" style="padding:80px">
   <div class="sec-hdr" style="padding:0 0 40px"><div class="sec-eye">Universe</div><h2 class="sec-title">THE <span>GALLERY</span></h2></div>
   <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<!-- ══════ PASSPORT ══════ -->
+<section id="passport" class="reveal">
+  <div class="sec-hdr"><div class="sec-eye">First Fans · Original Tribe</div><h2 class="sec-title">DIGITAL <span>PASSPORT</span></h2></div>
+  <div class="pp-wrap">
+    <div class="pp-hero">
+      <img src="assets/moon-racer-passport-card.jpg" alt="Moon Racer Digital Passport — sample passport card MR-000001, Founding Member, Original Tribe, issued August 21, 2026" loading="lazy">
+      <div class="corner-tl"></div><div class="corner-br"></div>
+      <div class="pp-cta-row">
+        <a href="https://cruzzi-myth.github.io/bearcubz/passport/" class="btn-p">Claim Your Passport →</a>
+        <span class="pp-cta-note">Takes under a minute · no app required</span>
+      </div>
+    </div>
+    <div>
+      <p class="pp-copy">Every <strong>Moon Racer Digital Passport</strong> ties your email to a permanent, sequential Passport ID — <strong>MR-000001</strong> and up. First fans who claim theirs are locked in as <strong>Founding Members of the Original Tribe</strong>, issued <strong>August 21, 2026</strong>.</p>
+      <p class="pp-copy">Scan the QR at the album release, or claim yours right now from any device. One passport per person — your ID is yours for good.</p>
+
+      <div class="pp-block-title">Unlock Access</div>
+      <div class="pp-grid">
+        <a href="#events" class="pp-tile">
+          <div class="pp-tile-ic">★</div>
+          <div class="pp-tile-ttl">Exclusive Events</div>
+          <div class="pp-tile-dsc">Invites to listening parties, races, and secret shows.</div>
+        </a>
+        <div class="pp-tile" role="button" tabindex="0" onclick="ppOpenModal('early')" onkeydown="if(event.key==='Enter')ppOpenModal('early')">
+          <div class="pp-tile-ic">🔒</div>
+          <div class="pp-tile-ttl">Early Access</div>
+          <div class="pp-tile-dsc">First looks at new music, merch, and experiences.</div>
+        </div>
+        <a href="#merch" class="pp-tile">
+          <div class="pp-tile-ic">👕</div>
+          <div class="pp-tile-ttl">Limited Merch</div>
+          <div class="pp-tile-dsc">Special-edition drops only for Tribe members.</div>
+        </a>
+        <div class="pp-tile" role="button" tabindex="0" onclick="ppOpenModal('rewards')" onkeydown="if(event.key==='Enter')ppOpenModal('rewards')">
+          <div class="pp-tile-ic">⚡</div>
+          <div class="pp-tile-ttl">Tribe Rewards</div>
+          <div class="pp-tile-dsc">Points, surprises, and real-world benefits. More to come.</div>
+        </div>
+      </div>
+
+      <div class="pp-block-title">Save It. Keep It. It's Yours.</div>
+      <div class="pp-grid">
+        <div class="pp-tile" role="button" tabindex="0" onclick="ppOpenModal('appleWallet')" onkeydown="if(event.key==='Enter')ppOpenModal('appleWallet')">
+          <div class="pp-tile-ic">💳</div>
+          <div class="pp-tile-ttl">Apple Wallet</div>
+          <div class="pp-tile-dsc">Keep your passport with you.</div>
+        </div>
+        <div class="pp-tile" role="button" tabindex="0" onclick="ppOpenModal('googleWallet')" onkeydown="if(event.key==='Enter')ppOpenModal('googleWallet')">
+          <div class="pp-tile-ic">💳</div>
+          <div class="pp-tile-ttl">Google Wallet</div>
+          <div class="pp-tile-dsc">Keep your passport with you.</div>
+        </div>
+        <div class="pp-tile" role="button" tabindex="0" onclick="ppOpenModal('saveDevice')" onkeydown="if(event.key==='Enter')ppOpenModal('saveDevice')">
+          <div class="pp-tile-ic">⬇</div>
+          <div class="pp-tile-ttl">Save To Device</div>
+          <div class="pp-tile-dsc">Download or share your passport anytime.</div>
+        </div>
+        <div class="pp-tile" role="button" tabindex="0" onclick="ppOpenModal('alwaysReady')" onkeydown="if(event.key==='Enter')ppOpenModal('alwaysReady')">
+          <div class="pp-tile-ic">🔳</div>
+          <div class="pp-tile-ttl">Always Ready</div>
+          <div class="pp-tile-dsc">Pull up your ID anytime to prove you're in the tribe.</div>
+        </div>
+      </div>
+
+      <div class="pp-info-bar">
+        <span>SECTOR 00 — <b>THE CORE</b></span>
+        <span>ACCESS LEVEL 01 — <b>ORIGINAL TRIBE</b></span>
+        <span>KEEP THIS PASSPORT SAFE. IT IS YOUR KEY.</span>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- ══════ FOOTER ══════ -->
@@ -859,7 +973,33 @@ function checkout(){showToast('Redirecting to checkout...');setTimeout(()=>{aler
 })();
 function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('open')}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open')}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLightbox();closeCart()}});
+
+// ── PASSPORT INFO MODAL ──
+const PP_CONTENT={
+  early:{title:'Early Access',body:"Passport holders get first looks at new music, merch drops, and experiences — before they go public. Claim your Passport ID to be on the list.",cta:{label:'Claim Your Passport →',href:'https://cruzzi-myth.github.io/bearcubz/passport/'}},
+  rewards:{title:'Tribe Rewards',body:'Points, surprises, and real-world benefits for the Original Tribe are being built out as the Moon Racer universe expands. Your Passport ID is already locked in — rewards unlock on top of it, no re-registration needed.',cta:null},
+  appleWallet:{title:'Add To Apple Wallet',body:'Once you claim your Passport, you can save a wallet-ready pass straight from your confirmation screen and pull it up anytime from your iPhone.',cta:{label:'Claim Your Passport →',href:'https://cruzzi-myth.github.io/bearcubz/passport/'}},
+  googleWallet:{title:'Add To Google Wallet',body:'Once you claim your Passport, you can save a wallet-ready pass straight from your confirmation screen and pull it up anytime from your Android device.',cta:{label:'Claim Your Passport →',href:'https://cruzzi-myth.github.io/bearcubz/passport/'}},
+  saveDevice:{title:'Save To Device',body:'Screenshot or share your Passport straight from the confirmation screen — no app required, works on any phone.',cta:{label:'Claim Your Passport →',href:'https://cruzzi-myth.github.io/bearcubz/passport/'}},
+  alwaysReady:{title:'Always Ready',body:"Your Passport lives at your own link. Bookmark it, and pull it up anytime to prove you're part of the Original Tribe.",cta:{label:'Claim Your Passport →',href:'https://cruzzi-myth.github.io/bearcubz/passport/'}}
+};
+function ppOpenModal(key){
+  const c=PP_CONTENT[key];
+  if(!c)return;
+  document.getElementById('ppModalTitle').textContent=c.title;
+  document.getElementById('ppModalBody').textContent=c.body;
+  const cta=document.getElementById('ppModalCta');
+  if(c.cta){cta.style.display='inline-block';cta.textContent=c.cta.label;cta.href=c.cta.href}
+  else{cta.style.display='none'}
+  document.getElementById('ppModalOverlay').classList.add('visible');
+  document.body.classList.add('pp-modal-open');
+}
+function ppCloseModal(){
+  document.getElementById('ppModalOverlay').classList.remove('visible');
+  document.body.classList.remove('pp-modal-open');
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLightbox();closeCart();ppCloseModal()}});
 
 // ── PROGRESS BAR CLICK ──
 document.getElementById('mpBarBg')?.addEventListener('click',e=>{
@@ -890,6 +1030,18 @@ document.getElementById('mpBarBg')?.addEventListener('click',e=>{
       <button class="sp-nav-btn" onclick="prevTrack()">◀ PREV</button>
       <button class="sp-nav-btn" onclick="nextTrack()">NEXT ▶</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════ PASSPORT INFO MODAL (single reusable shell) ══════ -->
+<div class="pp-modal-overlay" id="ppModalOverlay" onclick="if(event.target===this)ppCloseModal()">
+  <div class="pp-modal">
+    <div class="pp-modal-header">
+      <div class="pp-modal-title" id="ppModalTitle">—</div>
+      <button class="pp-modal-close" onclick="ppCloseModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="pp-modal-body" id="ppModalBody">—</div>
+    <a class="btn-p" id="ppModalCta" href="#" style="display:none;text-align:center"></a>
   </div>
 </div>
 </body>
