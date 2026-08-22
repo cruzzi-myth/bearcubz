@@ -1,0 +1,1 @@
+import{o as e,s as t}from"./index-DoREaSOD.js";var n=t(e(),1);function r(e){(0,n.useEffect)(()=>{let t=document.title;return document.title=`${e} · Moon Racer Network`,()=>{document.title=t}},[e])}export{r as t};

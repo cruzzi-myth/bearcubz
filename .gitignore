@@ -1,0 +1,6 @@
+# Repo root .gitignore — did not exist before Phase 1.
+# network-app/ has its own .gitignore for its build tooling; these
+# are just repo-wide hygiene rules.
+node_modules/
+.DS_Store
+*.local

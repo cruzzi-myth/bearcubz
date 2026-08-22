@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Moon Racer Network — BEλR CUBZ</title>
+    <meta
+      name="description"
+      content="The RPG layer of the Moon Racer universe. Phase 1 shell — full experience coming soon."
+    />
+    <!-- Phase 1 routes are empty shells with no real content yet;
+         intentionally kept out of search results until there's
+         something worth indexing. Remove once real content ships. -->
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#060608" />
+    <link rel="icon" href="https://cruzzi-myth.github.io/bearcubz/passport/assets/moon-racer-logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // GitHub Pages SPA fallback (part 2 of 2 — part 1 is the
+      // redirect in /404.html at the repo root, which sends deep
+      // links here as /bearcubz/network/?p=/galaxy). Restore the
+      // real URL BEFORE React Router mounts and reads it, so a
+      // hard refresh or a direct deep link lands on the right page
+      // instead of always showing the Network hub.
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var deepPath = params.get('p');
+        if (deepPath) {
+          var restored = '/bearcubz/network' + deepPath + window.location.hash;
+          window.history.replaceState(null, '', restored);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

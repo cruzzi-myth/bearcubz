@@ -1,0 +1,1 @@
+import{n as e}from"./index-DoREaSOD.js";import{t}from"./WorldTemplate-CDlg_5ET.js";var n=e();function r(){return(0,n.jsx)(t,{worldId:`romeos-castle`})}export{r as CastlePage};

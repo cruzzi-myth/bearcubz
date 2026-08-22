@@ -1,0 +1,53 @@
+.galaxy-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.galaxy-tile {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 78px;
+}
+
+.galaxy-tile--unlocked {
+  border-color: rgba(0, 229, 255, 0.3);
+  background: rgba(0, 229, 255, 0.04);
+}
+
+.galaxy-tile__name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.galaxy-tile__worlds {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.galaxy-tile__worlds a {
+  font-size: 12.5px;
+  color: var(--cyan);
+  text-decoration: none;
+}
+.galaxy-tile__worlds a:hover {
+  text-decoration: underline;
+}
+
+.galaxy-tile__dark {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.25);
+  text-transform: uppercase;
+}

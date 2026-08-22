@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Not Found — BEλR CUBZ</title>
+<meta name="robots" content="noindex">
+<script>
+  // GitHub Pages only ever serves a custom 404 from the REPO ROOT
+  // (per-directory 404s aren't supported), so this file is the only
+  // place that can catch a deep link into the Moon Racer Network SPA
+  // — e.g. a hard refresh on /bearcubz/network/galaxy/ — and route it
+  // back into that app instead of showing a dead end.
+  //
+  // Anything outside /bearcubz/network/ (a broken Classic Mode link,
+  // a typo, whatever) just falls through to the plain message below;
+  // Classic Mode is static HTML and was never meant to be an SPA, so
+  // it doesn't need or want this rewrite.
+  (function () {
+    var NETWORK_BASE = '/bearcubz/network/';
+    var loc = window.location;
+    if (loc.pathname.indexOf(NETWORK_BASE) === 0) {
+      var rest = loc.pathname.slice(NETWORK_BASE.length); // e.g. "galaxy/" or ""
+      var extraParams = loc.search ? '&' + loc.search.slice(1) : '';
+      var target = NETWORK_BASE + '?p=' + encodeURIComponent('/' + rest) + extraParams + loc.hash;
+      loc.replace(target);
+    }
+  })();
+</script>
+<style>
+  body{background:#060608;color:#bbb;font-family:'Rajdhani',sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;text-align:center;padding:24px}
+  a{color:#00e5ff}
+</style>
+</head>
+<body>
+  <p>Page not found.<br><a href="/bearcubz/">Return to BEλR CUBZ</a></p>
+</body>
+</html>
