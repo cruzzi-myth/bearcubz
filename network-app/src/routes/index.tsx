@@ -9,6 +9,8 @@ const NetworkHome = lazy(() => import('../features/entry/NetworkHome').then((m) 
 const GuestEntryPage = lazy(() => import('../features/auth/GuestEntryPage').then((m) => ({ default: m.GuestEntryPage })));
 const LoginPage = lazy(() => import('../features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
 const PassportShellPage = lazy(() => import('../features/passport/PassportShellPage').then((m) => ({ default: m.PassportShellPage })));
+const NewPassportPage = lazy(() => import('../features/passport/NewPassportPage').then((m) => ({ default: m.NewPassportPage })));
+const OnboardingPage = lazy(() => import('../features/onboarding/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
 const AvatarCreationPage = lazy(() => import('../features/avatar/AvatarCreationPage').then((m) => ({ default: m.AvatarCreationPage })));
 const DashboardPage = lazy(() => import('../features/player/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const GalaxyMapPage = lazy(() => import('../features/galaxy/GalaxyMapPage').then((m) => ({ default: m.GalaxyMapPage })));
@@ -36,6 +38,8 @@ export const networkRoutes: RouteObject[] = [
       { path: 'guest', element: <GuestEntryPage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'passport', element: <PassportShellPage /> },
+      { path: 'passport/new', element: <NewPassportPage /> },
+      { path: 'onboarding', element: <OnboardingPage /> },
       { path: 'avatar', element: <AvatarCreationPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'galaxy', element: <GalaxyMapPage /> },

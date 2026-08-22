@@ -4,7 +4,7 @@ import { trackEvent } from '../../services/analytics';
 import './network-home.css';
 
 /** The /network landing shell — the fork between Guest Mode and a
- * real Passport-linked identity. No authentication happens here yet. */
+ * real Passport-linked identity (auth happens on /login). */
 export function NetworkHome() {
   useDocumentTitle('Moon Racer Network');
 
@@ -18,7 +18,7 @@ export function NetworkHome() {
         <Link
           to="/guest"
           className="network-home__cta network-home__cta--primary"
-          onClick={() => trackEvent('guest_entry')}
+          onClick={() => trackEvent('guest_entered')}
         >
           Enter As Guest
         </Link>

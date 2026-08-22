@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
+import { AuthProvider } from './features/auth/AuthContext';
+import { PlayerStateProvider } from './features/player/PlayerStateContext';
 import { SettingsProvider } from './features/settings/SettingsContext';
 import { AudioProvider } from './features/audio/AudioProvider';
 import { networkRoutes } from './routes';
@@ -35,14 +37,18 @@ function LoadingFallback() {
 
 export default function App() {
   return (
-    <SettingsProvider>
-      <AudioProvider>
-        <BrowserRouter basename={basename}>
-          <Suspense fallback={<LoadingFallback />}>
-            <AppRoutes />
-          </Suspense>
-        </BrowserRouter>
-      </AudioProvider>
-    </SettingsProvider>
+    <AuthProvider>
+      <PlayerStateProvider>
+        <SettingsProvider>
+          <AudioProvider>
+            <BrowserRouter basename={basename}>
+              <Suspense fallback={<LoadingFallback />}>
+                <AppRoutes />
+              </Suspense>
+            </BrowserRouter>
+          </AudioProvider>
+        </SettingsProvider>
+      </PlayerStateProvider>
+    </AuthProvider>
   );
 }

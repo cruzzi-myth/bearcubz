@@ -1,0 +1,21 @@
+.mr-passport-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 18px;
+  margin: 0;
+  max-width: 640px;
+}
+.mr-passport-card dt {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 4px;
+}
+.mr-passport-card dd {
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 14px;
+  color: #fff;
+}

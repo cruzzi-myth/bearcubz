@@ -146,11 +146,151 @@
   flex: 1;
 }
 
+/* ---- Player readout: Passport ID / level / rank / XP / ZIP, real
+   data from PlayerStateContext once signed in ---- */
+.mr-hud__player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+}
+.mr-hud__player-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: var(--cyan);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.mr-hud__player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mr-hud__zip {
+  color: var(--amber);
+}
+.mr-hud__logout {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.mr-hud__logout:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ---- Mobile navigation (Phase 1 bug fix: below 768px the header nav
+   used to just disappear with no replacement) ---- */
+.mr-mobile-tabbar {
+  display: none;
+}
+.mr-mobile-sheet {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .mr-hud__nav {
     display: none;
   }
   .mr-hud__classic-link span {
     display: none;
+  }
+  .mr-hud__player {
+    display: none;
+  }
+
+  .mr-main {
+    padding-bottom: 68px; /* clears the fixed tab bar */
+  }
+
+  .mr-mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    height: 58px;
+    background: rgba(6, 6, 8, 0.96);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+  }
+  .mr-mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .mr-mobile-tab span {
+    font-size: 16px;
+  }
+  .mr-mobile-tab.active,
+  .mr-mobile-tab[aria-expanded='true'] {
+    color: var(--cyan);
+  }
+
+  .mr-mobile-sheet {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: auto;
+    bottom: 58px;
+    z-index: 99;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: rgba(8, 8, 14, 0.98);
+    border-top: 1px solid var(--border);
+    padding: 20px;
+  }
+  .mr-mobile-sheet__links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mr-mobile-sheet__links a {
+    padding: 12px 10px;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .mr-mobile-sheet__links a.active {
+    color: var(--cyan);
+    background: rgba(0, 229, 255, 0.06);
+  }
+  .mr-mobile-sheet__settings {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
   }
 }

@@ -11,14 +11,23 @@
 export type AnalyticsEvent =
   | 'classic_to_network'
   | 'network_to_classic'
-  | 'guest_entry'
+  | 'guest_entered'
   | 'passport_signup'
   | 'world_visit'
   | 'mission_start'
   | 'mission_complete'
   | 'transmission_play'
   | 'artifact_found'
-  | 'visualizer_start';
+  | 'visualizer_start'
+  // Phase 2 — player identity layer
+  | 'network_login_started'
+  | 'network_login_success'
+  | 'passport_existing_linked'
+  | 'passport_new_started'
+  | 'passport_new_created'
+  | 'avatar_onboarding_started'
+  | 'avatar_onboarding_completed'
+  | 'dashboard_loaded';
 
 export function trackEvent(event: AnalyticsEvent, payload: Record<string, unknown> = {}): void {
   if (import.meta.env.DEV) {

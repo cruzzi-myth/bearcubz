@@ -1,1 +1,0 @@
-import{n as e}from"./index-DoREaSOD.js";import{t}from"./RouteShell-Bv1y379M.js";var n=e();function r(){return(0,n.jsx)(t,{eyebrow:`Signal Lost`,title:`404`,description:`Nothing is registered at this coordinate.`})}export{r as NotFoundPage};

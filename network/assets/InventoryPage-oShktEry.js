@@ -1,1 +1,0 @@
-import{n as e}from"./index-DoREaSOD.js";import{t}from"./RouteShell-Bv1y379M.js";var n=e();function r(){return(0,n.jsx)(t,{eyebrow:`Player`,title:`Inventory`,description:`Artifacts found across the galaxy will live here. The full inventory system (stacking, rarity, trading) is a later phase — this route just proves the shell and the Artifact type.`})}export{r as InventoryPage};

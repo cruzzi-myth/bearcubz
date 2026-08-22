@@ -1,1 +1,0 @@
-import{a as e,n as t}from"./index-DoREaSOD.js";import{t as n}from"./WorldTemplate-CDlg_5ET.js";var r=t();function i(){let{worldId:t}=e();return(0,r.jsx)(n,{worldId:t??``})}export{i as WorldPage};

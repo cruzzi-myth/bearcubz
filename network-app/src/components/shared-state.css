@@ -1,0 +1,64 @@
+.mr-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 48px 20px;
+  text-align: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.mr-state__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: var(--glow-c);
+}
+.mr-state--loading .mr-state__dot {
+  animation: mr-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mr-state--loading .mr-state__dot {
+    animation: none;
+  }
+}
+.mr-state.mr-motion-off .mr-state__dot {
+  animation: none;
+}
+
+@keyframes mr-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.mr-panel {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 28px 24px;
+  background: linear-gradient(180deg, rgba(15, 15, 30, 0.92), rgba(13, 14, 20, 0.96));
+  border: 1px solid rgba(255, 45, 120, 0.3);
+  border-radius: 8px;
+  text-align: center;
+}
+.mr-panel--info {
+  border-color: rgba(0, 229, 255, 0.3);
+}
+.mr-panel__title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  color: #fff;
+  margin: 0 0 10px;
+}
+.mr-panel__body {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 18px;
+}

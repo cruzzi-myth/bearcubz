@@ -15,7 +15,7 @@ export function GuestEntryPage() {
     } catch {
       // localStorage unavailable — guest mode just won't be remembered on reload.
     }
-    trackEvent('guest_entry');
+    trackEvent('guest_entered');
     navigate('/dashboard');
   }
 
