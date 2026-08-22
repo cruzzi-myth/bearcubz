@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { AvatarPreset, PlayerAvatar, PlayerAvatarCosmeticPatch, AvatarModelFormat } from '../types/player';
+import type { AvatarGeneration, AvatarPreset, PlayerAvatar, PlayerAvatarCosmeticPatch, AvatarModelFormat } from '../types/player';
 
 // ============================================================
 // Centralized avatar data access. Components never touch
@@ -53,6 +53,17 @@ export function getAvatarPreview(avatar: Pick<PlayerAvatar, 'base_model' | 'prev
   if (!avatar) return { kind: 'placeholder', label: 'NO SIGNAL' };
   if (avatar.preview_image_url) return { kind: 'image', src: avatar.preview_image_url, label: avatar.base_model };
   return { kind: 'placeholder', label: avatar.base_model.toUpperCase() };
+}
+
+/** The signed-in player's generated-image candidate history, newest
+ * first. Always empty as of Avatar Phase 1 (nothing writes to
+ * avatar_generations yet) — this exists so Phase 2+ UI has a ready
+ * read path the day generation rows start appearing. RLS restricts
+ * this to the caller's own rows; there is no client write path. */
+export async function loadAvatarGenerations(): Promise<AvatarGeneration[]> {
+  const { data, error } = await supabase.from('avatar_generations').select('*').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data as AvatarGeneration[];
 }
 
 /** Provider-agnostic pass-through for the future 3D pipeline. Nothing
