@@ -1,0 +1,162 @@
+import { describe, expect, it } from 'vitest';
+import {
+  deserializeAvatarConfiguration,
+  emptyConfigurationDraft,
+  serializeAvatarConfiguration,
+  validateActiveDraft,
+  validateFoundationSelected,
+  validateGlitchComposition,
+  validateHybridSelection,
+} from './avatarValidation';
+import { getAvatarSpeciesDefinition, getOptionsForFoundation, isHybridPairAllowed, listEnabledAvatarSpecies } from '../data/avatarSpecies';
+
+describe('validateHybridSelection', () => {
+  it('rejects missing primary/secondary', () => {
+    const result = validateHybridSelection(null, null, 50);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('Choose a primary species.');
+    expect(result.errors).toContain('Choose a secondary species.');
+  });
+
+  it('rejects identical primary and secondary', () => {
+    const result = validateHybridSelection('human', 'human', 50);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('Primary and secondary species must be different.');
+  });
+
+  it('rejects a pairing not on the allowed list', () => {
+    // hybrid x hybrid is nonsensical and not on the list at all
+    const result = validateHybridSelection('hybrid', 'human', 50);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes('not yet offered'))).toBe(true);
+  });
+
+  it('rejects an out-of-range ratio', () => {
+    const result = validateHybridSelection('human', 'alien', 150);
+    expect(result.valid).toBe(false);
+  });
+
+  it('accepts a valid allowed pair with a valid ratio', () => {
+    const result = validateHybridSelection('human', 'alien', 58);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+});
+
+describe('validateGlitchComposition', () => {
+  it('rejects missing values', () => {
+    const result = validateGlitchComposition(40, null, 35);
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects a total under 100', () => {
+    const result = validateGlitchComposition(40, 25, 30);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toMatch(/currently 95%/);
+  });
+
+  it('rejects a total over 100', () => {
+    const result = validateGlitchComposition(50, 30, 30);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toMatch(/currently 110%/);
+  });
+
+  it('accepts a composition that sums to exactly 100', () => {
+    const result = validateGlitchComposition(40, 25, 35);
+    expect(result.valid).toBe(true);
+  });
+});
+
+describe('validateFoundationSelected / validateActiveDraft', () => {
+  it('rejects an undefined draft', () => {
+    expect(validateFoundationSelected(undefined).valid).toBe(false);
+  });
+
+  it('rejects a draft with no foundation', () => {
+    expect(validateFoundationSelected({ foundation: null, values: {} }).valid).toBe(false);
+  });
+
+  it('passes a non-hybrid, non-glitch species once a foundation is set', () => {
+    const result = validateActiveDraft('human', { foundation: 'racer', values: {} });
+    expect(result.valid).toBe(true);
+  });
+
+  it('still enforces hybrid composition even with a foundation set', () => {
+    const result = validateActiveDraft('hybrid', { foundation: 'stable', values: {}, primarySpecies: 'human', secondarySpecies: null, hybridRatio: 50 });
+    expect(result.valid).toBe(false);
+  });
+});
+
+describe('isHybridPairAllowed', () => {
+  it('is symmetric', () => {
+    expect(isHybridPairAllowed('human', 'alien')).toBe(true);
+    expect(isHybridPairAllowed('alien', 'human')).toBe(true);
+  });
+
+  it('rejects identical species', () => {
+    expect(isHybridPairAllowed('human', 'human')).toBe(false);
+  });
+
+  it('rejects a pair not on the list', () => {
+    expect(isHybridPairAllowed('glitch', 'human')).toBe(false);
+  });
+});
+
+describe('configuration serialize/deserialize round-trip', () => {
+  it('round-trips an empty draft', () => {
+    const draft = emptyConfigurationDraft();
+    const restored = deserializeAvatarConfiguration(serializeAvatarConfiguration(draft));
+    expect(restored).toEqual(draft);
+  });
+
+  it('round-trips a populated draft', () => {
+    const draft = emptyConfigurationDraft();
+    draft.active.species = 'hybrid';
+    draft.speciesDrafts.hybrid = {
+      foundation: 'stable',
+      values: { outfit: 'house_formal', signal_appearance: 'violet' },
+      primarySpecies: 'human',
+      secondarySpecies: 'alien',
+      hybridRatio: 58,
+    };
+    const restored = deserializeAvatarConfiguration(serializeAvatarConfiguration(draft));
+    expect(restored.active.species).toBe('hybrid');
+    expect(restored.speciesDrafts.hybrid?.hybridRatio).toBe(58);
+    expect(restored.speciesDrafts.hybrid?.values.outfit).toBe('house_formal');
+  });
+
+  it('never throws on malformed input', () => {
+    expect(() => deserializeAvatarConfiguration(null)).not.toThrow();
+    expect(() => deserializeAvatarConfiguration('garbage')).not.toThrow();
+    expect(() => deserializeAvatarConfiguration({ speciesDrafts: 'not an object' })).not.toThrow();
+    expect(deserializeAvatarConfiguration(undefined)).toEqual(emptyConfigurationDraft());
+  });
+});
+
+describe('species option lookup', () => {
+  it('lists all six enabled species', () => {
+    const ids = listEnabledAvatarSpecies().map((s) => s.id);
+    expect(ids).toEqual(['human', 'alien', 'hybrid', 'ai', 'mythraxian', 'glitch']);
+  });
+
+  it('narrows Alien cranial-structure options to the active foundation', () => {
+    const alien = getAvatarSpeciesDefinition('alien');
+    const cranial = alien.customizationGroups.find((g) => g.id === 'cranial_structure')!;
+    const atlaranOptions = getOptionsForFoundation(cranial, 'atlaran').map((o) => o.id);
+    const xyrenOptions = getOptionsForFoundation(cranial, 'xyren').map((o) => o.id);
+    expect(atlaranOptions).toContain('domed');
+    expect(atlaranOptions).not.toContain('smooth_featureless');
+    expect(xyrenOptions).toContain('smooth_featureless');
+    expect(xyrenOptions).not.toContain('domed');
+    // untagged options are available under any foundation
+    expect(atlaranOptions).toContain('elongated_skull');
+    expect(xyrenOptions).toContain('elongated_skull');
+  });
+
+  it('every species has at least one foundation and at least one group per wizard step used', () => {
+    for (const species of listEnabledAvatarSpecies()) {
+      expect(species.foundations.length).toBeGreaterThan(0);
+      expect(species.customizationGroups.length).toBeGreaterThan(0);
+    }
+  });
+});

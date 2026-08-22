@@ -1,5 +1,13 @@
 import { supabase } from './supabaseClient';
+import { AVATAR_REFERENCE_BASE } from '../data/avatarSpecies';
 import type { AvatarGeneration, AvatarPreset, PlayerAvatar, PlayerAvatarCosmeticPatch, AvatarModelFormat } from '../types/player';
+
+/** Resolves a species reference image's relative path (e.g.
+ * 'human/moon-racer.png') to a real URL under the app's base path —
+ * works in both dev ("/") and production ("/bearcubz/network/"). */
+export function getAvatarReferenceUrl(relativePath: string): string {
+  return `${import.meta.env.BASE_URL}${AVATAR_REFERENCE_BASE}${relativePath}`;
+}
 
 // ============================================================
 // Centralized avatar data access. Components never touch
