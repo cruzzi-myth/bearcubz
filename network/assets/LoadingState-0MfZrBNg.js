@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-BdWOIfJ4.js";import{b as t}from"./index-BIhPCs61.js";var n=e();function r({message:e}){let r=t();return(0,n.jsxs)(`div`,{className:`mr-state mr-state--loading${r?` mr-motion-off`:``}`,role:`status`,"aria-live":`polite`,children:[(0,n.jsx)(`span`,{className:`mr-state__dot`,"aria-hidden":`true`}),e]})}export{r as t};

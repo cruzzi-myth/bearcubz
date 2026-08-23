@@ -10,7 +10,10 @@ import { savePlayerAvatar, loadAvatarPresets } from '../../services/avatarServic
 import { HAIR_OPTIONS, EYE_OPTIONS, OUTFIT_OPTIONS, ACCENT_OPTIONS } from '../../data/avatarOptions';
 import { describeBackendError } from '../../services/errors';
 import { trackEvent } from '../../services/analytics';
+import { computeOnboardingPreviewParams } from '../../services/avatarPreview';
+import { AvatarPreviewGlyph } from '../avatar/components/AvatarPreviewGlyph';
 import type { AvatarPreset } from '../../types/player';
+import '../avatar/avatar-creator.css';
 import './onboarding.css';
 
 const USERNAME_RE = /^[A-Za-z0-9 ._'-]{2,24}$/;
@@ -67,6 +70,12 @@ function OnboardingWizard() {
       })
       .catch(() => setPresetsError(true));
   }, []);
+
+  // Live reactive schematic preview — same glyph/logic as the full
+  // /network/avatar creator, adapted for this simpler preset+hair/
+  // eyes/outfit/accent picker. Updates on every change, no extra
+  // wiring needed per field.
+  const previewParams = computeOnboardingPreviewParams(baseModel, hair, eyes, accent);
 
   if (playerState.status === 'loading' || (playerState.status === 'ready' && playerState.profile)) {
     return (
@@ -155,7 +164,8 @@ function OnboardingWizard() {
       )}
 
       {step === 'avatar' && (
-        <div className="mr-onboard-form">
+        <div className="mr-avatar-layout">
+        <div className="mr-onboard-form mr-avatar-main">
           {presetsError && (
             <p style={{ color: 'var(--pink)', fontSize: 13 }} role="alert">
               Could not load base forms. Try refreshing.
@@ -245,10 +255,18 @@ function OnboardingWizard() {
             </button>
           </div>
         </div>
+        <aside className="mr-avatar-reference" aria-label="Avatar preview">
+          <div className="mr-avatar-preview-block">
+            <AvatarPreviewGlyph params={previewParams} />
+            <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
+          </div>
+        </aside>
+        </div>
       )}
 
       {step === 'confirm' && (
-        <div className="mr-onboard-form">
+        <div className="mr-avatar-layout">
+        <div className="mr-onboard-form mr-avatar-main">
           <p style={{ color: 'rgba(255,255,255,.7)' }}>
             <strong style={{ color: '#fff' }}>{displayName || username}</strong> · @{username}
             <br />
@@ -276,6 +294,13 @@ function OnboardingWizard() {
               {submitting ? 'Synchronizing Avatar…' : 'Enter the Network →'}
             </button>
           </div>
+        </div>
+        <aside className="mr-avatar-reference" aria-label="Avatar preview">
+          <div className="mr-avatar-preview-block">
+            <AvatarPreviewGlyph params={previewParams} />
+            <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
+          </div>
+        </aside>
         </div>
       )}
     </RouteShell>

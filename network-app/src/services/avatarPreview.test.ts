@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeAvatarPreviewParams } from './avatarPreview';
+import { computeAvatarPreviewParams, computeOnboardingPreviewParams } from './avatarPreview';
 import { emptySpeciesDraft } from './avatarValidation';
 
 describe('computeAvatarPreviewParams', () => {
@@ -64,5 +64,26 @@ describe('computeAvatarPreviewParams', () => {
       glitchAiRatio: 10,
     });
     expect(balanced.fragmentation).toBeGreaterThan(dominant.fragmentation);
+  });
+});
+
+describe('computeOnboardingPreviewParams', () => {
+  it('reacts to eye style, accent, and hairstyle independently', () => {
+    const a = computeOnboardingPreviewParams('human', 'static-shave', 'cyan-visor', 'magenta');
+    const b = computeOnboardingPreviewParams('human', 'void-braid', 'violet-scan', 'amber');
+    expect(a.primaryColor).not.toBe(b.primaryColor);
+    expect(a.accentColor).not.toBe(b.accentColor);
+    expect(a.detailIntensity).not.toBe(b.detailIntensity);
+  });
+
+  it('falls back to the species default hue for an unrecognized eye style or "none" accent', () => {
+    const params = computeOnboardingPreviewParams('mythraxian', 'static-shave', 'unknown-style', 'none');
+    expect(params.primaryColor).toBe('#d4af37');
+    expect(params.accentColor).toBe('#d4af37');
+  });
+
+  it('falls back to human for an unrecognized base model rather than throwing', () => {
+    expect(() => computeOnboardingPreviewParams('not-a-species', 'static-shave', 'cyan-visor', 'none')).not.toThrow();
+    expect(computeOnboardingPreviewParams('not-a-species', 'static-shave', 'cyan-visor', 'none').species).toBe('human');
   });
 });

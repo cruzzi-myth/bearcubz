@@ -148,3 +148,47 @@ export function computeAvatarPreviewParams(
     fragmentation,
   };
 }
+
+// ---- Onboarding's lightweight picker (OnboardingPage.tsx) ----
+// A separate, simpler avatar step from the full species creator: base
+// preset + hair/eyes/outfit/accent from data/avatarOptions.ts, not the
+// rich foundation/customization-group system above. Small dedicated
+// mapping rather than forcing that flat shape through
+// computeAvatarPreviewParams's AvatarSpeciesDraft-shaped API.
+
+/** Eye style ids from data/avatarOptions.ts's EYE_OPTIONS encode a
+ * color in their name already — reuse it as the preview's primary hue
+ * rather than leaving eye choice visually inert. */
+const ONBOARDING_EYE_HUE: Record<string, string> = {
+  'cyan-visor': '#00e5ff',
+  'ember-glow': '#ffb700',
+  'violet-scan': '#8b5cf6',
+  'mono-dark': '#15151f',
+};
+
+/** Hairstyle ids from HAIR_OPTIONS, loosely ordered from plainest to
+ * most elaborate — just enough to make the detail-dot count move. */
+const ONBOARDING_HAIR_DETAIL: Record<string, number> = {
+  'static-shave': 0,
+  'signal-crop': 1,
+  'drift-waves': 2,
+  'void-braid': 3,
+};
+
+export function computeOnboardingPreviewParams(baseModel: string, hair: string, eyes: string, accent: string): AvatarPreviewParams {
+  const species = (AVATAR_SPECIES_DEFINITIONS[baseModel as AvatarSpeciesId] ? baseModel : 'human') as AvatarSpeciesId;
+  const baseHue = DEFAULT_HUE[species];
+
+  return {
+    species,
+    baseShape: species,
+    blendShape: null,
+    blendAmount: 0,
+    scale: 1,
+    primaryColor: ONBOARDING_EYE_HUE[eyes] ?? baseHue,
+    secondaryColor: baseHue,
+    accentColor: hexFor(accent) ?? baseHue,
+    detailIntensity: ONBOARDING_HAIR_DETAIL[hair] ?? 1,
+    fragmentation: species === 'glitch' ? 1 : 0,
+  };
+}
