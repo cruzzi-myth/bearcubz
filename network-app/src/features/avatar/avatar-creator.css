@@ -244,6 +244,48 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* ---- reactive schematic preview glyph ---- */
+.mr-avatar-glyph {
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 4 / 5;
+  display: block;
+  margin: 0 auto;
+  transition: transform 0.2s ease;
+}
+.mr-avatar-glyph--scanning .mr-avatar-glyph__scanline {
+  stroke: var(--cyan);
+  stroke-width: 1;
+  opacity: 0.7;
+  animation: mr-glyph-scan 0.9s ease-in-out infinite;
+}
+@keyframes mr-glyph-scan {
+  0% { transform: translateY(-70px); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(70px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mr-avatar-glyph--scanning .mr-avatar-glyph__scanline {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+
+.mr-avatar-preview-block {
+  text-align: center;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.mr-avatar-preview-block__caption {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 6px 0 0;
+}
+
 /* ---- reference panel ---- */
 .mr-avatar-reference {
   position: sticky;

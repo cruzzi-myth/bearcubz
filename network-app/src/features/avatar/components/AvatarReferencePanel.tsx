@@ -1,23 +1,41 @@
 import type { AvatarReferenceImage } from '../../../data/avatarSpecies';
+import type { AvatarPreviewParams } from '../../../services/avatarPreview';
 import { getAvatarReferenceUrl } from '../../../services/avatarService';
+import { AvatarPreviewGlyph } from './AvatarPreviewGlyph';
 
 interface AvatarReferencePanelProps {
   speciesName: string;
   images: AvatarReferenceImage[];
   summaryLines: string[];
+  previewParams: AvatarPreviewParams | null;
+  previewScanning: boolean;
 }
 
 /**
- * The "what am I building" panel. No AI generation exists yet, so
- * this is explicitly reference art + a running text summary of the
- * player's own choices — never presented as the player's finished
- * avatar, and never captioned with the canon character's name (that
- * lives only in the alt text as a description of what's pictured,
- * for players using assistive tech — not as an on-screen label).
+ * The "what am I building" panel — two clearly separate things,
+ * deliberately not conflated:
+ *
+ * 1. "Your Configuration" — a reactive SCHEMATIC glyph
+ *    (AvatarPreviewGlyph) that actually changes as the player changes
+ *    hair color, build, outfit, etc. This is the closest thing to a
+ *    live preview that exists without per-option artwork or AI
+ *    generation, and it's captioned as a schematic every time.
+ * 2. "Visual Foundation Reference" — the real canon character art
+ *    (unchanged from Phase 2B), which only changes when species/
+ *    foundation changes and never reacts to cosmetic choices. Never
+ *    captioned with the canon character's name on screen (that lives
+ *    only in alt text, for assistive tech).
  */
-export function AvatarReferencePanel({ speciesName, images, summaryLines }: AvatarReferencePanelProps) {
+export function AvatarReferencePanel({ speciesName, images, summaryLines, previewParams, previewScanning }: AvatarReferencePanelProps) {
   return (
-    <aside className="mr-avatar-reference" aria-label="Visual foundation reference">
+    <aside className="mr-avatar-reference" aria-label="Avatar preview and visual foundation reference">
+      {previewParams && (
+        <div className="mr-avatar-preview-block">
+          <AvatarPreviewGlyph params={previewParams} scanning={previewScanning} />
+          <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
+        </div>
+      )}
+
       <p className="mr-avatar-reference__eyebrow">Visual Foundation Reference</p>
       {images.length > 0 ? (
         <div className="mr-avatar-reference__images">

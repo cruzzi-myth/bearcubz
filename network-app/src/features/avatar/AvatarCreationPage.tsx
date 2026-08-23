@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RouteShell } from '../../components/RouteShell';
 import { RequireAuth } from '../../components/RequireAuth';
 import { LoadingState } from '../../components/LoadingState';
 import { useAuth } from '../auth/AuthContext';
 import { usePlayerState } from '../player/PlayerStateContext';
+import { usePrefersReducedMotion } from '../../hooks/useReducedMotion';
 import { savePlayerAvatar } from '../../services/avatarService';
 import { confirmAvatarSpecies, completeInitialAvatar } from '../../services/playerState';
 import { describeBackendError } from '../../services/errors';
 import { trackEvent } from '../../services/analytics';
 import { hasCompletedInitialAvatar, DASHBOARD_ROUTE } from '../../services/onboarding';
+import { computeAvatarPreviewParams } from '../../services/avatarPreview';
 import {
   AVATAR_SPECIES,
   AVATAR_SPECIES_DEFINITIONS,
@@ -83,6 +85,7 @@ function AvatarWizard() {
   const { session } = useAuth();
   const playerState = usePlayerState();
   const navigate = useNavigate();
+  const reducedMotion = usePrefersReducedMotion();
 
   const [stepIndex, setStepIndex] = useState(0);
   const [activeSpecies, setActiveSpecies] = useState<AvatarSpeciesId | null>(null);
@@ -271,6 +274,28 @@ function AvatarWizard() {
 
   const summaryLines = useMemo(() => buildSummaryLines(activeSpecies, activeDraft), [activeSpecies, activeDraft]);
 
+  // Reactive schematic preview (see services/avatarPreview.ts) — reads
+  // every cosmetic choice, so it updates on its own with no extra
+  // wiring per group. Cosmetic changes update it instantly; a
+  // species/foundation SWITCH gets a brief themed "scan" beat first
+  // (skipped entirely under prefers-reduced-motion) so picking a new
+  // species reads as loading a new identity rather than an instant
+  // cut.
+  const previewParams = useMemo(() => (activeSpecies ? computeAvatarPreviewParams(activeSpecies, activeDraft) : null), [activeSpecies, activeDraft]);
+  const [scanning, setScanning] = useState(false);
+  const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!initialized) return; // don't scan-flash on the very first seed from saved data
+    if (reducedMotion) return;
+    setScanning(true);
+    if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    scanTimeoutRef.current = setTimeout(() => setScanning(false), 450);
+    return () => {
+      if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpecies, activeDraft?.foundation, reducedMotion]);
+
   if (playerState.status === 'loading' || !initialized) {
     return (
       <RouteShell eyebrow="Identity" title="Avatar Creator" description="" placeholder={false}>
@@ -456,7 +481,13 @@ function AvatarWizard() {
           )}
         </div>
 
-        <AvatarReferencePanel speciesName={speciesDef?.displayName ?? 'Species'} images={referenceImages} summaryLines={summaryLines} />
+        <AvatarReferencePanel
+          speciesName={speciesDef?.displayName ?? 'Species'}
+          images={referenceImages}
+          summaryLines={summaryLines}
+          previewParams={previewParams}
+          previewScanning={scanning}
+        />
       </div>
 
       {confirmModalOpen && speciesDef && (
