@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export function useDocumentTitle(title: string) {
   useEffect(() => {
     const prev = document.title;
-    document.title = `${title} · Moon Racer Network`;
+    document.title = `${title} · Moon Racer Universe`;
     return () => {
       document.title = prev;
     };

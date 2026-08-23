@@ -8,21 +8,21 @@
 <script>
   // GitHub Pages only ever serves a custom 404 from the REPO ROOT
   // (per-directory 404s aren't supported), so this file is the only
-  // place that can catch a deep link into the Moon Racer Network SPA
-  // — e.g. a hard refresh on /bearcubz/network/galaxy/ — and route it
+  // place that can catch a deep link into the Moon Racer Universe SPA
+  // — e.g. a hard refresh on /bearcubz/universe/galaxy/ — and route it
   // back into that app instead of showing a dead end.
   //
-  // Anything outside /bearcubz/network/ (a broken Classic Mode link,
+  // Anything outside /bearcubz/universe/ (a broken Classic Mode link,
   // a typo, whatever) just falls through to the plain message below;
   // Classic Mode is static HTML and was never meant to be an SPA, so
   // it doesn't need or want this rewrite.
   (function () {
-    var NETWORK_BASE = '/bearcubz/network/';
+    var UNIVERSE_BASE = '/bearcubz/universe/';
     var loc = window.location;
-    if (loc.pathname.indexOf(NETWORK_BASE) === 0) {
-      var rest = loc.pathname.slice(NETWORK_BASE.length); // e.g. "galaxy/" or ""
+    if (loc.pathname.indexOf(UNIVERSE_BASE) === 0) {
+      var rest = loc.pathname.slice(UNIVERSE_BASE.length); // e.g. "galaxy/" or ""
       var extraParams = loc.search ? '&' + loc.search.slice(1) : '';
-      var target = NETWORK_BASE + '?p=' + encodeURIComponent('/' + rest) + extraParams + loc.hash;
+      var target = UNIVERSE_BASE + '?p=' + encodeURIComponent('/' + rest) + extraParams + loc.hash;
       loc.replace(target);
     }
   })();

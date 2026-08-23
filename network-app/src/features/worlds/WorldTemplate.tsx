@@ -6,8 +6,8 @@ import { locations } from '../../data/locations';
 /**
  * Shared template for any World — this is what proves a new world
  * can be added by editing src/data/worlds.ts, not by writing a new
- * page component. /network/world/:worldId, /network/core, and
- * /network/castle all render through this same component.
+ * page component. /universe/world/:worldId, /universe/core, and
+ * /universe/castle all render through this same component.
  */
 export function WorldTemplate({ worldId }: { worldId: string }) {
   const world = getWorld(worldId);

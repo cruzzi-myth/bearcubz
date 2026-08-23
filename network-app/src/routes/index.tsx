@@ -25,9 +25,9 @@ const TransmissionsArchivePage = lazy(() => import('../features/transmissions/Tr
 const VisualizerTheaterPage = lazy(() => import('../features/visualizers/VisualizerTheaterPage').then((m) => ({ default: m.VisualizerTheaterPage })));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
-// Paths are relative to the router basename ("/bearcubz/network" in
+// Paths are relative to the router basename ("/bearcubz/universe" in
 // production — see vite.config.ts + main.tsx). "/" here is
-// https://cruzzi-myth.github.io/bearcubz/network/, not the Classic
+// https://cruzzi-myth.github.io/bearcubz/universe/, not the Classic
 // site root.
 export const networkRoutes: RouteObject[] = [
   {

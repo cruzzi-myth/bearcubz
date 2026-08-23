@@ -1,5 +1,5 @@
 // ============================================================
-// Moon Racer Network — core content types.
+// Moon Racer Universe — core content types.
 //
 // These describe the *shape* of the eventual galaxy so future
 // phases can add real worlds, missions, and lore by adding data,

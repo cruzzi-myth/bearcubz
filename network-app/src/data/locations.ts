@@ -1,6 +1,6 @@
 import type { Location } from '../types';
 
-// Sample data only — proves /network/location/:locationId works.
+// Sample data only — proves /universe/location/:locationId works.
 export const locations: Location[] = [
   {
     id: 'the-core-plaza',

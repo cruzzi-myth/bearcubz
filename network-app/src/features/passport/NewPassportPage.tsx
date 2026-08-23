@@ -66,7 +66,7 @@ function NewPassportForm() {
     <RouteShell
       eyebrow="Identity"
       title="Create Moon Racer Passport"
-      description="Your identity has been verified. Choose the Racer Name that will identify you across the Network."
+      description="Your identity has been verified. Choose the Racer Name that will identify you across the Universe."
       placeholder={false}
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 360 }}>

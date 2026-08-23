@@ -6,7 +6,7 @@ import { SettingsProvider } from './features/settings/SettingsContext';
 import { AudioProvider } from './features/audio/AudioProvider';
 import { networkRoutes } from './routes';
 
-// Vite's BASE_URL is "/bearcubz/network/" in production (see
+// Vite's BASE_URL is "/bearcubz/universe/" in production (see
 // vite.config.ts) and "/" in local dev — either way, strip the
 // trailing slash for React Router's basename.
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '');

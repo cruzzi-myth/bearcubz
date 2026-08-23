@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Moon Racer Network — BEλR CUBZ</title>
+    <title>Moon Racer Universe — BEλR CUBZ</title>
     <meta
       name="description"
       content="The RPG layer of the Moon Racer universe. Phase 1 shell — full experience coming soon."
@@ -22,15 +22,15 @@
     <script>
       // GitHub Pages SPA fallback (part 2 of 2 — part 1 is the
       // redirect in /404.html at the repo root, which sends deep
-      // links here as /bearcubz/network/?p=/galaxy). Restore the
+      // links here as /bearcubz/universe/?p=/galaxy). Restore the
       // real URL BEFORE React Router mounts and reads it, so a
       // hard refresh or a direct deep link lands on the right page
-      // instead of always showing the Network hub.
+      // instead of always showing the Universe hub.
       (function () {
         var params = new URLSearchParams(window.location.search);
         var deepPath = params.get('p');
         if (deepPath) {
-          var restored = '/bearcubz/network' + deepPath + window.location.hash;
+          var restored = '/bearcubz/universe' + deepPath + window.location.hash;
           window.history.replaceState(null, '', restored);
         }
       })();

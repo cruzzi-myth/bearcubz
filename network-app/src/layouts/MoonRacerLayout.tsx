@@ -62,10 +62,10 @@ export function MoonRacerLayout() {
 
       <header className="mr-hud">
         <NavLink to="/" className="mr-hud__brand" end>
-          MOON RACER <span>NETWORK</span>
+          MOON RACER <span>UNIVERSE</span>
         </NavLink>
 
-        <nav className="mr-hud__nav" aria-label="Moon Racer Network">
+        <nav className="mr-hud__nav" aria-label="Moon Racer Universe">
           <NavLink to="/galaxy">Galaxy</NavLink>
           <NavLink to="/passport">Passport</NavLink>
           <NavLink to="/missions">Missions</NavLink>

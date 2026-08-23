@@ -18,7 +18,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 // Where a magic-link email sends the browser back to. Router basename
-// (see App.tsx / vite.config.ts) is "/bearcubz/network" in production —
+// (see App.tsx / vite.config.ts) is "/bearcubz/universe" in production —
 // import.meta.env.BASE_URL already includes the trailing slash.
 function loginRedirectUrl(): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}login`;

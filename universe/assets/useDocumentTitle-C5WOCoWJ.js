@@ -1,0 +1,1 @@
+import{d as e,p as t}from"./jsx-runtime-DxdW1FkT.js";var n=t(e(),1);function r(e){(0,n.useEffect)(()=>{let t=document.title;return document.title=`${e} · Moon Racer Universe`,()=>{document.title=t}},[e])}export{r as t};

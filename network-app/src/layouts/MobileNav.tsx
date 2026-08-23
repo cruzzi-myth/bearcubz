@@ -21,7 +21,7 @@ export function MobileNav({ settingsSlot }: { settingsSlot?: React.ReactNode }) 
     <>
       {menuOpen && (
         <div className="mr-mobile-sheet" role="dialog" aria-label="Menu">
-          <nav className="mr-mobile-sheet__links" aria-label="Moon Racer Network — full menu">
+          <nav className="mr-mobile-sheet__links" aria-label="Moon Racer Universe — full menu">
             <NavLink to="/" end onClick={() => setMenuOpen(false)}>
               Hub
             </NavLink>
@@ -51,7 +51,7 @@ export function MobileNav({ settingsSlot }: { settingsSlot?: React.ReactNode }) 
         </div>
       )}
 
-      <nav className="mr-mobile-tabbar" aria-label="Moon Racer Network — quick navigation">
+      <nav className="mr-mobile-tabbar" aria-label="Moon Racer Universe — quick navigation">
         <button
           type="button"
           className="mr-mobile-tab"

@@ -3,7 +3,7 @@ import { RouteShell } from '../../components/RouteShell';
 import { getLocation } from '../../data/locations';
 import { getWorld } from '../../data/worlds';
 
-/** Generic destination route: /network/location/:locationId */
+/** Generic destination route: /universe/location/:locationId */
 export function LocationPage() {
   const { locationId } = useParams<{ locationId: string }>();
   const location = locationId ? getLocation(locationId) : undefined;

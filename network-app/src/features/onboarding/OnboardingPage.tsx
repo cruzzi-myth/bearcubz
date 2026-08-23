@@ -72,7 +72,7 @@ function OnboardingWizard() {
   }, []);
 
   // Live reactive schematic preview — same glyph/logic as the full
-  // /network/avatar creator, adapted for this simpler preset+hair/
+  // /universe/avatar creator, adapted for this simpler preset+hair/
   // eyes/outfit/accent picker. Updates on every change, no extra
   // wiring needed per field.
   const previewParams = computeOnboardingPreviewParams(baseModel, hair, eyes, accent);
@@ -291,7 +291,7 @@ function OnboardingWizard() {
               ← Back
             </button>
             <button type="button" className="network-btn" onClick={handleConfirm} disabled={submitting}>
-              {submitting ? 'Synchronizing Avatar…' : 'Enter the Network →'}
+              {submitting ? 'Synchronizing Avatar…' : 'Enter the Universe →'}
             </button>
           </div>
         </div>

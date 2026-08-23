@@ -8,7 +8,7 @@ import { createContext, useContext, useMemo, useRef, useState, type ReactNode } 
 // mounting a single <audio> element here, in a provider that sits
 // ABOVE <Routes> in the tree (see App.tsx) — route changes swap
 // page content in an <Outlet>, they never unmount this provider,
-// so a real track would keep playing across every /network/* route.
+// so a real track would keep playing across every /universe/* route.
 //
 // No track is wired up yet (no stable audio asset exists to point
 // at outside the Classic site's embedded base64 audio). This is

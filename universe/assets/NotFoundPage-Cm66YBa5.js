@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DxdW1FkT.js";import{t}from"./RouteShell-DHpZxPck.js";var n=e();function r(){return(0,n.jsx)(t,{eyebrow:`Signal Lost`,title:`404`,description:`Nothing is registered at this coordinate.`})}export{r as NotFoundPage};

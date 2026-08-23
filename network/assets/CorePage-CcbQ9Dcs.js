@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-BdWOIfJ4.js";import{t}from"./WorldTemplate-C5NFjPl3.js";var n=e();function r(){return(0,n.jsx)(t,{worldId:`the-core`})}export{r as CorePage};

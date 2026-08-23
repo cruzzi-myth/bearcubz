@@ -5,7 +5,7 @@ import type { AvatarGeneration, AvatarPreset, PlayerAvatar, PlayerAvatarCosmetic
 
 /** Resolves a species reference image's relative path (e.g.
  * 'human/moon-racer.png') to a real URL under the app's base path —
- * works in both dev ("/") and production ("/bearcubz/network/"). */
+ * works in both dev ("/") and production ("/bearcubz/universe/"). */
 export function getAvatarReferenceUrl(relativePath: string): string {
   return `${import.meta.env.BASE_URL}${AVATAR_REFERENCE_BASE}${relativePath}`;
 }

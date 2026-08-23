@@ -11,7 +11,7 @@ import type { PlayerState } from '../types/player';
 // player_progress.onboarding_stage) — never on URL history or
 // localStorage. Routes here are relative to the network router's own
 // basename (see App.tsx) — e.g. '/avatar' means
-// https://.../bearcubz/network/avatar, not a second '/network/' prefix.
+// https://.../bearcubz/universe/avatar, not a second '/universe/' prefix.
 // ============================================================
 
 /** Where an authenticated, Passport-linked player with no completed

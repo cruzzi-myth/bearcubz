@@ -20,7 +20,7 @@ export interface TravelRequest {
 }
 
 /**
- * Proof-of-concept only: fires a brief flash on every /network/*
+ * Proof-of-concept only: fires a brief flash on every /universe/*
  * route change. A later phase can replace the single CSS animation
  * with per-`type` treatments without changing where this is mounted
  * (once, in MoonRacerLayout) or how routes trigger it (automatically,

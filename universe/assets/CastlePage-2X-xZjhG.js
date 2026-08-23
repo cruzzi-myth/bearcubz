@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DxdW1FkT.js";import{t}from"./WorldTemplate-ByQADQ0a.js";var n=e();function r(){return(0,n.jsx)(t,{worldId:`romeos-castle`})}export{r as CastlePage};

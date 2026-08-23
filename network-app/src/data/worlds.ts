@@ -1,6 +1,6 @@
 import type { World } from '../types';
 
-// Sample data only — just enough to prove /network/world/:worldId
+// Sample data only — just enough to prove /universe/world/:worldId
 // is genuinely data-driven. Future phases add worlds here (or from
 // a real content source) without touching WorldPage.
 export const worlds: World[] = [

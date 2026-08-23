@@ -33,10 +33,10 @@ export function RouteShell({ eyebrow, title, description, placeholder = true, ch
           <div className="route-shell__badge">Shell ready · gameplay arrives in a future phase</div>
         )}
         {children && <div className="route-shell__content">{children}</div>}
-        {/* Router basename is "/bearcubz/network" — "/" here means the
-            network hub, not the classic site root. */}
+        {/* Router basename is "/bearcubz/universe" — "/" here means the
+            universe hub, not the classic site root. */}
         <Link to="/" className="route-shell__back">
-          ← Return to Network Hub
+          ← Return to Universe Hub
         </Link>
       </div>
     </section>

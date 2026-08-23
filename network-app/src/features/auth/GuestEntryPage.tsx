@@ -23,7 +23,7 @@ export function GuestEntryPage() {
     <RouteShell
       eyebrow="Guest Mode"
       title="Enter As Guest"
-      description="Explore the Moon Racer Network without a Passport. Progress won't be saved to an account until you claim one — this is a local-only session."
+      description="Explore the Moon Racer Universe without a Passport. Progress won't be saved to an account until you claim one — this is a local-only session."
     >
       <button type="button" className="network-btn" onClick={continueAsGuest}>
         Continue As Guest →
