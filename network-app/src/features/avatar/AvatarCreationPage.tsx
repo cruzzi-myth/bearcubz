@@ -11,7 +11,7 @@ import { confirmAvatarSpecies, completeInitialAvatar } from '../../services/play
 import { describeBackendError } from '../../services/errors';
 import { trackEvent } from '../../services/analytics';
 import { hasCompletedInitialAvatar, DASHBOARD_ROUTE } from '../../services/onboarding';
-import { computeAvatarPreviewParams } from '../../services/avatarPreview';
+import { computeAvatarPreviewParams, resolveSpeciesAvatarRenderState } from '../../services/avatarPreview';
 import {
   AVATAR_SPECIES,
   AVATAR_SPECIES_DEFINITIONS,
@@ -282,6 +282,12 @@ function AvatarWizard() {
   // species reads as loading a new identity rather than an instant
   // cut.
   const previewParams = useMemo(() => (activeSpecies ? computeAvatarPreviewParams(activeSpecies, activeDraft) : null), [activeSpecies, activeDraft]);
+  // Real-image render state — same resolver core and AvatarRenderer
+  // component /universe/onboarding uses (see resolveSpeciesAvatarRenderState
+  // in services/avatarPreview.ts). Currently only resolves to
+  // anything visual for Human/Racer's hair_style group; everything
+  // else falls through to the schematic glyph above.
+  const renderState = useMemo(() => (activeSpecies ? resolveSpeciesAvatarRenderState(activeSpecies, activeDraft) : null), [activeSpecies, activeDraft]);
   const [scanning, setScanning] = useState(false);
   const scanTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -487,6 +493,7 @@ function AvatarWizard() {
           summaryLines={summaryLines}
           previewParams={previewParams}
           previewScanning={scanning}
+          renderState={renderState}
         />
       </div>
 

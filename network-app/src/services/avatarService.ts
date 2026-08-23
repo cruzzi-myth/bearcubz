@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { AVATAR_REFERENCE_BASE } from '../data/avatarSpecies';
+import { AVATAR_RENDER_BASE } from '../data/avatarRenderManifest';
 import { sanitizeCosmeticPatch } from './avatarValidation';
 import type { AvatarGeneration, AvatarPreset, PlayerAvatar, PlayerAvatarCosmeticPatch, AvatarModelFormat } from '../types/player';
 
@@ -8,6 +9,13 @@ import type { AvatarGeneration, AvatarPreset, PlayerAvatar, PlayerAvatarCosmetic
  * works in both dev ("/") and production ("/bearcubz/universe/"). */
 export function getAvatarReferenceUrl(relativePath: string): string {
   return `${import.meta.env.BASE_URL}${AVATAR_REFERENCE_BASE}${relativePath}`;
+}
+
+/** Same idea as getAvatarReferenceUrl, but for AvatarRenderer's
+ * runtime-optimized render assets (data/avatarRenderManifest.ts) —
+ * a deliberately separate folder/base from the canon reference art. */
+export function getAvatarRenderUrl(relativePath: string): string {
+  return `${import.meta.env.BASE_URL}${AVATAR_RENDER_BASE}${relativePath}`;
 }
 
 // ============================================================

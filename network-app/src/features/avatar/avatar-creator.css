@@ -286,6 +286,96 @@
   margin: 6px 0 0;
 }
 
+/* ---- real-image avatar renderer (AvatarRenderer.tsx) ---- */
+@keyframes mr-avatar-render-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.mr-avatar-render {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.mr-avatar-render__stage {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.3);
+}
+.mr-avatar-render__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: mr-avatar-render-fade-in 0.25s ease;
+}
+.mr-avatar-render__temp-flag {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 4px 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fff;
+  background: rgba(255, 45, 85, 0.82);
+}
+.mr-avatar-render__layers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mr-avatar-render__layer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.mr-avatar-render__layer-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+}
+.mr-avatar-render__layer-value {
+  color: rgba(255, 255, 255, 0.85);
+  text-align: right;
+}
+.mr-avatar-render__layer--text-only .mr-avatar-render__layer-value {
+  color: rgba(255, 255, 255, 0.55);
+}
+.mr-avatar-render__layer--active .mr-avatar-render__layer-label {
+  color: var(--cyan);
+}
+.mr-avatar-render__layer-flag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 183, 0, 0.75);
+  border: 1px solid rgba(255, 183, 0, 0.35);
+  border-radius: 3px;
+  padding: 1px 4px;
+  flex: none;
+}
+
 /* ---- reference panel ---- */
 .mr-avatar-reference {
   position: sticky;

@@ -1,6 +1,14 @@
 import type { AvatarSpeciesId } from '../types/player';
 import { AVATAR_COLOR_PALETTE, AVATAR_SPECIES_DEFINITIONS } from '../data/avatarSpecies';
 import type { AvatarSpeciesDraft } from './avatarValidation';
+import { HAIR_OPTIONS, EYE_OPTIONS, OUTFIT_OPTIONS, ACCENT_OPTIONS } from '../data/avatarOptions';
+import {
+  DEFAULT_RENDER_FOUNDATION,
+  getAvatarRenderAsset,
+  getAvatarRenderCategoryLabel,
+  type AvatarRenderAsset,
+  type AvatarRenderCategory,
+} from '../data/avatarRenderManifest';
 
 // ============================================================
 // Maps a player's in-progress selections to a small set of visual
@@ -191,4 +199,179 @@ export function computeOnboardingPreviewParams(baseModel: string, hair: string, 
     detailIntensity: ONBOARDING_HAIR_DETAIL[hair] ?? 1,
     fragmentation: species === 'glitch' ? 1 : 0,
   };
+}
+
+// ---- Real-image AvatarRenderer state ----
+// Separate from the schematic AvatarPreviewGlyph above. Resolves the
+// player's current selections to actual artwork where it exists, and
+// to a plain text summary where it doesn't — see the graceful-
+// degradation note in data/avatarRenderManifest.ts. This is the
+// single source of truth AvatarRenderer consumes — both the
+// onboarding picker and the full /universe/avatar creator feed their
+// OWN already-owned state into the SAME resolveAvatarRenderState core
+// below (via two small adapters, one per option catalog); neither
+// page keeps a second copy of "what's currently selected."
+
+export interface AvatarRenderLayerState {
+  category: AvatarRenderCategory;
+  label: string;
+  optionId: string | undefined;
+  optionLabel: string;
+  /** Real artwork for this layer, or null if none exists yet (render
+   * as text only — never fabricate a low-quality image). */
+  asset: AvatarRenderAsset | null;
+}
+
+export interface AvatarRenderState {
+  species: string;
+  foundation: string | undefined;
+  /** The single portrait currently shown, whichever category's asset
+   * wins under the priority/last-changed rule below — null if nothing
+   * has real art yet for this species/foundation at all. V1 swaps
+   * whole portraits (no true layer compositing, since source art
+   * isn't modular); this field is what "wins" that swap. */
+  activeAsset: AvatarRenderAsset | null;
+  /** Which category is currently driving activeAsset, or null when
+   * activeAsset is null. */
+  activeCategory: AvatarRenderCategory | null;
+  layers: AvatarRenderLayerState[];
+}
+
+/** Default priority when the caller doesn't say which category the
+ * player just touched — most visually-dominant trait wins. 'base' is
+ * checked last, as the species/foundation's neutral default. */
+const CATEGORY_PRIORITY: AvatarRenderCategory[] = ['headFeature', 'outfit', 'eyes', 'accent', 'base'];
+
+/**
+ * Generic core: given a species/foundation and the current selection
+ * per category (with its already-resolved display label — each
+ * caller knows its own option catalog), returns which single portrait
+ * should be on screen right now and the per-category text summary.
+ *
+ * `lastChangedCategory` lets a caller say "the player just changed
+ * X" so that category's asset wins even if a higher-priority category
+ * also has art — keeps "instant visual update on the thing you just
+ * touched" true once more than one category has real art. Optional;
+ * falls back to CATEGORY_PRIORITY when omitted (e.g. first render).
+ */
+export function resolveAvatarRenderState(
+  species: string,
+  foundation: string | undefined,
+  selections: Partial<Record<AvatarRenderCategory, { optionId: string | undefined; optionLabel: string }>>,
+  lastChangedCategory?: AvatarRenderCategory | null,
+): AvatarRenderState {
+  const categories: AvatarRenderCategory[] = ['headFeature', 'eyes', 'outfit', 'accent'];
+
+  const layers: AvatarRenderLayerState[] = categories.map((category) => {
+    const selection = selections[category];
+    return {
+      category,
+      label: getAvatarRenderCategoryLabel(species, category),
+      optionId: selection?.optionId,
+      optionLabel: selection?.optionLabel ?? selection?.optionId ?? '—',
+      asset: getAvatarRenderAsset(species, foundation, category, selection?.optionId),
+    };
+  });
+
+  const order = lastChangedCategory ? [lastChangedCategory, ...CATEGORY_PRIORITY.filter((c) => c !== lastChangedCategory)] : CATEGORY_PRIORITY;
+
+  let activeAsset: AvatarRenderAsset | null = null;
+  let activeCategory: AvatarRenderCategory | null = null;
+  for (const category of order) {
+    if (category === 'base') {
+      const asset = getAvatarRenderAsset(species, foundation, 'base', 'default');
+      if (asset) {
+        activeAsset = asset;
+        activeCategory = 'base';
+        break;
+      }
+      continue;
+    }
+    const layer = layers.find((l) => l.category === category);
+    if (layer?.asset) {
+      activeAsset = layer.asset;
+      activeCategory = category;
+      break;
+    }
+  }
+
+  return { species, foundation, activeAsset, activeCategory, layers };
+}
+
+/** Onboarding's flat hair/eyes/outfit/accent picker -> real render
+ * state. Mirrors computeOnboardingPreviewParams's inputs exactly so
+ * callers don't need to track two shapes of "current selection". */
+export function resolveOnboardingAvatarRenderState(
+  baseModel: string,
+  hair: string,
+  eyes: string,
+  outfit: string,
+  accent: string,
+  lastChangedCategory?: AvatarRenderCategory | null,
+): AvatarRenderState {
+  const foundation = DEFAULT_RENDER_FOUNDATION[baseModel];
+  const label = (catalog: { id: string; label: string }[], id: string) => catalog.find((o) => o.id === id)?.label ?? id;
+
+  return resolveAvatarRenderState(
+    baseModel,
+    foundation,
+    {
+      headFeature: { optionId: hair, optionLabel: label(HAIR_OPTIONS, hair) },
+      eyes: { optionId: eyes, optionLabel: label(EYE_OPTIONS, eyes) },
+      outfit: { optionId: outfit, optionLabel: label(OUTFIT_OPTIONS, outfit) },
+      accent: { optionId: accent, optionLabel: label(ACCENT_OPTIONS, accent) },
+    },
+    lastChangedCategory,
+  );
+}
+
+// ---- Full /universe/avatar creator (AvatarCreationPage.tsx) ----
+// The rich per-species customization-group system (avatarSpecies.ts)
+// predates this renderer and uses its own option ids, which for
+// Human's hair_style group don't match data/avatarOptions.ts's
+// canonical hair ids at all (dreadlocks/shaved/short_cropped/
+// long_loose/braided vs signal-crop/drift-waves/void-braid/static-
+// shave). Rather than fork a second manifest/resolver for this page,
+// or fabricate new art, this is a small, explicit bridge from the
+// rich creator's ids to the nearest matching canonical render asset.
+// TEMPORARY: once art exists that's actually built for these ids (or
+// the rich creator's ids are reconciled with the canonical set), this
+// bridge should go away in favor of a direct 1:1 lookup.
+const HUMAN_HAIR_STYLE_TO_RENDER_ID: Record<string, string> = {
+  shaved: 'static-shave',
+  short_cropped: 'signal-crop',
+  long_loose: 'drift-waves',
+  braided: 'void-braid',
+  dreadlocks: 'void-braid', // closest available texture match — no dedicated dreadlocks render yet
+};
+
+/** The full species creator's current draft -> real render state.
+ * Only Human/Racer resolves to anything visual today (see the module
+ * note above and data/avatarRenderManifest.ts); every other species/
+ * foundation naturally falls through to AvatarRenderer's schematic
+ * fallback via an empty/no-match selection set. */
+export function resolveSpeciesAvatarRenderState(
+  species: AvatarSpeciesId,
+  draft: AvatarSpeciesDraft | undefined,
+  lastChangedCategory?: AvatarRenderCategory | null,
+): AvatarRenderState {
+  const foundation = draft?.foundation ?? DEFAULT_RENDER_FOUNDATION[species];
+  const values = draft?.values ?? {};
+
+  const hairStyleValue = typeof values.hair_style === 'string' ? values.hair_style : undefined;
+  const renderHairId = species === 'human' && hairStyleValue ? HUMAN_HAIR_STYLE_TO_RENDER_ID[hairStyleValue] : undefined;
+  const hairLabel = renderHairId ? (HAIR_OPTIONS.find((o) => o.id === renderHairId)?.label ?? renderHairId) : (hairStyleValue ?? '—');
+
+  return resolveAvatarRenderState(
+    species,
+    foundation,
+    {
+      headFeature: { optionId: renderHairId, optionLabel: hairLabel },
+      // eyes/outfit/accent: the rich creator's option ids for these
+      // groups don't correspond to any canonical render id yet either
+      // (see the module note) — left unset so they resolve to a plain
+      // text summary rather than a fabricated match.
+    },
+    lastChangedCategory,
+  );
 }

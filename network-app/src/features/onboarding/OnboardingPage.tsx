@@ -10,8 +10,10 @@ import { savePlayerAvatar, loadAvatarPresets } from '../../services/avatarServic
 import { HAIR_OPTIONS, EYE_OPTIONS, OUTFIT_OPTIONS, ACCENT_OPTIONS } from '../../data/avatarOptions';
 import { describeBackendError } from '../../services/errors';
 import { trackEvent } from '../../services/analytics';
-import { computeOnboardingPreviewParams } from '../../services/avatarPreview';
+import { computeOnboardingPreviewParams, resolveOnboardingAvatarRenderState } from '../../services/avatarPreview';
+import type { AvatarRenderCategory } from '../../data/avatarRenderManifest';
 import { AvatarPreviewGlyph } from '../avatar/components/AvatarPreviewGlyph';
+import { AvatarRenderer } from '../avatar/components/AvatarRenderer';
 import type { AvatarPreset } from '../../types/player';
 import '../avatar/avatar-creator.css';
 import './onboarding.css';
@@ -58,6 +60,10 @@ function OnboardingWizard() {
   const [eyes, setEyes] = useState(EYE_OPTIONS[0].id);
   const [outfit, setOutfit] = useState(OUTFIT_OPTIONS[0].id);
   const [accent, setAccent] = useState(ACCENT_OPTIONS[0].id);
+  // Which category the player most recently touched — so once more
+  // than one category has real render art, the one just changed wins
+  // the displayed portrait rather than a fixed priority order.
+  const [lastChangedCategory, setLastChangedCategory] = useState<AvatarRenderCategory | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -74,8 +80,11 @@ function OnboardingWizard() {
   // Live reactive schematic preview — same glyph/logic as the full
   // /universe/avatar creator, adapted for this simpler preset+hair/
   // eyes/outfit/accent picker. Updates on every change, no extra
-  // wiring needed per field.
+  // wiring needed per field. Used as AvatarRenderer's fallback for
+  // species with no real render art yet (see resolveOnboardingAvatarRenderState).
   const previewParams = computeOnboardingPreviewParams(baseModel, hair, eyes, accent);
+  const renderState = resolveOnboardingAvatarRenderState(baseModel, hair, eyes, outfit, accent, lastChangedCategory);
+  const baseModelLabel = presets.find((p) => p.base_model === baseModel)?.display_name ?? baseModel;
 
   if (playerState.status === 'loading' || (playerState.status === 'ready' && playerState.profile)) {
     return (
@@ -194,7 +203,10 @@ function OnboardingWizard() {
                   key={opt.id}
                   type="button"
                   className={`mr-onboard-chip${hair === opt.id ? ' active' : ''}`}
-                  onClick={() => setHair(opt.id)}
+                  onClick={() => {
+                    setHair(opt.id);
+                    setLastChangedCategory('headFeature');
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -209,7 +221,10 @@ function OnboardingWizard() {
                   key={opt.id}
                   type="button"
                   className={`mr-onboard-chip${eyes === opt.id ? ' active' : ''}`}
-                  onClick={() => setEyes(opt.id)}
+                  onClick={() => {
+                    setEyes(opt.id);
+                    setLastChangedCategory('eyes');
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -224,7 +239,10 @@ function OnboardingWizard() {
                   key={opt.id}
                   type="button"
                   className={`mr-onboard-chip${outfit === opt.id ? ' active' : ''}`}
-                  onClick={() => setOutfit(opt.id)}
+                  onClick={() => {
+                    setOutfit(opt.id);
+                    setLastChangedCategory('outfit');
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -239,7 +257,10 @@ function OnboardingWizard() {
                   key={opt.id}
                   type="button"
                   className={`mr-onboard-chip${accent === opt.id ? ' active' : ''}`}
-                  onClick={() => setAccent(opt.id)}
+                  onClick={() => {
+                    setAccent(opt.id);
+                    setLastChangedCategory('accent');
+                  }}
                 >
                   {opt.label}
                 </button>
@@ -256,10 +277,16 @@ function OnboardingWizard() {
           </div>
         </div>
         <aside className="mr-avatar-reference" aria-label="Avatar preview">
-          <div className="mr-avatar-preview-block">
-            <AvatarPreviewGlyph params={previewParams} />
-            <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
-          </div>
+          <AvatarRenderer
+            state={renderState}
+            speciesLabel={baseModelLabel}
+            fallback={
+              <div className="mr-avatar-preview-block">
+                <AvatarPreviewGlyph params={previewParams} />
+                <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
+              </div>
+            }
+          />
         </aside>
         </div>
       )}
@@ -296,10 +323,16 @@ function OnboardingWizard() {
           </div>
         </div>
         <aside className="mr-avatar-reference" aria-label="Avatar preview">
-          <div className="mr-avatar-preview-block">
-            <AvatarPreviewGlyph params={previewParams} />
-            <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
-          </div>
+          <AvatarRenderer
+            state={renderState}
+            speciesLabel={baseModelLabel}
+            fallback={
+              <div className="mr-avatar-preview-block">
+                <AvatarPreviewGlyph params={previewParams} />
+                <p className="mr-avatar-preview-block__caption">Schematic Preview — Not A Final Portrait</p>
+              </div>
+            }
+          />
         </aside>
         </div>
       )}
