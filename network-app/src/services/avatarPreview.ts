@@ -53,7 +53,7 @@ function hexFor(colorId: string | undefined): string | null {
 /** Groups whose value feeds a specific visual channel. Listed by the
  * customization-group id, which is stable across species (see
  * avatarSpecies.ts) even though not every species has every group. */
-const HAIR_OR_HEAD_COLOR_GROUPS = ['hair_color', 'eye_color', 'optic_color', 'luminous_eye_color'];
+const HAIR_OR_HEAD_COLOR_GROUPS = ['hair_color', 'eye_color', 'optic_color', 'luminous_eye_color', 'surface_color', 'dermal_tone', 'shell_color'];
 const ACCENT_COLOR_GROUPS = ['signal_color', 'marking_color', 'signal_appearance', 'crystal_coloration', 'core_color', 'circuitry_color'];
 const BUILD_GROUPS = ['build', 'body_proportions', 'chassis_structure', 'body_structure', 'base_form', 'body_build'];
 const DETAIL_GROUPS = ['augmentation_level', 'engraving_density', 'circuitry', 'fragmentation_intensity', 'bioluminescence', 'exposed_mechanics'];

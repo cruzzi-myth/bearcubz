@@ -225,4 +225,33 @@ describe('species option lookup', () => {
       expect(species.customizationGroups.length).toBeGreaterThan(0);
     }
   });
+
+  it('every species offers a Presentation choice with 4 inclusive options', () => {
+    for (const species of listEnabledAvatarSpecies()) {
+      const group = species.customizationGroups.find((g) => g.id === 'presentation');
+      expect(group, `${species.id} is missing a presentation group`).toBeDefined();
+      expect(group?.options?.map((o) => o.id)).toEqual(['masculine', 'feminine', 'androgynous', 'unspecified']);
+    }
+  });
+
+  it('every species has a skin/surface color equivalent somewhere in its groups', () => {
+    const skinLikeGroupIds: Record<string, string> = {
+      human: 'skin_tone',
+      alien: 'surface_color',
+      hybrid: 'dermal_tone',
+      ai: 'shell_color',
+      mythraxian: 'crystal_coloration',
+      glitch: 'holographic_matter',
+    };
+    for (const [speciesId, groupId] of Object.entries(skinLikeGroupIds)) {
+      const species = getAvatarSpeciesDefinition(speciesId as Parameters<typeof getAvatarSpeciesDefinition>[0]);
+      expect(species.customizationGroups.some((g) => g.id === groupId), `${speciesId} missing ${groupId}`).toBe(true);
+    }
+  });
+
+  it('Hybrid offers hair customization', () => {
+    const hybrid = getAvatarSpeciesDefinition('hybrid');
+    expect(hybrid.customizationGroups.some((g) => g.id === 'hair_style')).toBe(true);
+    expect(hybrid.customizationGroups.some((g) => g.id === 'hair_color')).toBe(true);
+  });
 });

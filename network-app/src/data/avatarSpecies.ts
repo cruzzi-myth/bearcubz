@@ -116,6 +116,23 @@ function ref(species: string, file: string, alt: string): AvatarReferenceImage {
   return { src: `${species}/${file}`, alt };
 }
 
+/** Body/voice presentation — shared across all six species (added
+ * alongside the build/skin/hair options below). Kept as an inclusive,
+ * non-binary-only choice set rather than a literal biological-sex
+ * field: this is a cosmetic appearance/presentation choice like any
+ * other, not permanent identity, and applies equally to a synthetic
+ * AI or a Glitch as to a Human. */
+const PRESENTATION_OPTIONS: AvatarOptionDef[] = [
+  { id: 'masculine', label: 'Masculine' },
+  { id: 'feminine', label: 'Feminine' },
+  { id: 'androgynous', label: 'Androgynous' },
+  { id: 'unspecified', label: 'Unspecified' },
+];
+
+function presentationGroup(label = 'Presentation'): AvatarCustomizationGroup {
+  return { id: 'presentation', label, wizardStep: 'form', control: 'choice', options: PRESENTATION_OPTIONS };
+}
+
 export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDefinition> = {
   // ============================================================
   human: {
@@ -139,6 +156,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'build', label: 'Build', wizardStep: 'form', control: 'choice', options: [
         { id: 'slender', label: 'Slender' }, { id: 'athletic', label: 'Athletic' }, { id: 'muscular', label: 'Muscular' }, { id: 'heavyset', label: 'Heavyset' },
       ] },
+      presentationGroup(),
       { id: 'facial_structure', label: 'Facial Structure', wizardStep: 'form', control: 'choice', options: [
         { id: 'angular', label: 'Angular' }, { id: 'soft', label: 'Soft' }, { id: 'weathered', label: 'Weathered' }, { id: 'youthful', label: 'Youthful' },
       ] },
@@ -197,6 +215,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'body_proportions', label: 'Body Proportions', wizardStep: 'form', control: 'choice', options: [
         { id: 'slender', label: 'Slender' }, { id: 'elongated', label: 'Elongated' }, { id: 'dense', label: 'Dense' }, { id: 'asymmetric', label: 'Asymmetric' },
       ] },
+      presentationGroup(),
       { id: 'cranial_structure', label: 'Cranial Structure', wizardStep: 'form', control: 'choice', options: [
         { id: 'domed', label: 'Domed', foundations: ['atlaran'] },
         { id: 'crested', label: 'Crested', foundations: ['atlaran'] },
@@ -217,6 +236,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
         { id: 'obsidian_glossy', label: 'Obsidian / Glossy', foundations: ['xyren'] },
         { id: 'chitinous', label: 'Chitinous' }, { id: 'membranous', label: 'Membranous' },
       ] },
+      { id: 'surface_color', label: 'Surface Color', wizardStep: 'features', control: 'color', options: AVATAR_COLOR_PALETTE },
       { id: 'dermal_pattern', label: 'Dermal Pattern', wizardStep: 'features', control: 'choice', options: [
         { id: 'dotted', label: 'Dotted' }, { id: 'veined', label: 'Veined' }, { id: 'smooth', label: 'Smooth' }, { id: 'circuit_seam', label: 'Circuit Seam', foundations: ['xyren'] },
       ] },
@@ -255,12 +275,18 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'body_build', label: 'Body Build', wizardStep: 'form', control: 'choice', options: [
         { id: 'slender', label: 'Slender' }, { id: 'athletic', label: 'Athletic' }, { id: 'dense', label: 'Dense' },
       ] },
+      presentationGroup(),
       { id: 'dominant_facial_traits', label: 'Dominant Facial Traits', wizardStep: 'features', control: 'choice', options: [
         { id: 'primary_leaning', label: 'Primary-Leaning' }, { id: 'balanced', label: 'Balanced' }, { id: 'secondary_leaning', label: 'Secondary-Leaning' },
       ] },
       { id: 'dermal_integration', label: 'Dermal Integration', wizardStep: 'features', control: 'choice', options: [
         { id: 'smooth_blend', label: 'Smooth Blend' }, { id: 'visible_seams', label: 'Visible Seams' }, { id: 'patterned_overlay', label: 'Patterned Overlay' },
       ] },
+      { id: 'dermal_tone', label: 'Dermal Tone', wizardStep: 'features', control: 'color', options: AVATAR_COLOR_PALETTE },
+      { id: 'hair_style', label: 'Hairstyle', wizardStep: 'features', control: 'choice', options: [
+        { id: 'dreadlocks', label: 'Dreadlocks' }, { id: 'shaved', label: 'Shaved' }, { id: 'short_cropped', label: 'Short Cropped' }, { id: 'long_loose', label: 'Long, Loose' }, { id: 'none', label: 'None' },
+      ] },
+      { id: 'hair_color', label: 'Hair Color', wizardStep: 'features', control: 'color', options: AVATAR_COLOR_PALETTE },
       { id: 'stability', label: 'Visual Stability', wizardStep: 'augmentation', control: 'choice', helpText: 'How settled the integration currently appears — distinct from the Stable/Altered/Engineered/Corrupted foundation.', options: [
         { id: 'coherent', label: 'Coherent' }, { id: 'fluctuating', label: 'Fluctuating' }, { id: 'volatile', label: 'Volatile' },
       ] },
@@ -302,6 +328,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'chassis_structure', label: 'Chassis / Body Structure', wizardStep: 'form', control: 'choice', options: [
         { id: 'slender_frame', label: 'Slender Frame' }, { id: 'reinforced_frame', label: 'Reinforced Frame' }, { id: 'utility_frame', label: 'Utility Frame' },
       ] },
+      presentationGroup('Frame Presentation'),
       { id: 'head_architecture', label: 'Head Architecture', wizardStep: 'form', control: 'choice', options: [
         { id: 'non_human', label: 'Non-Human', foundations: ['construct'] },
         { id: 'organic_face_synthetic_frame', label: 'Organic Face, Synthetic Frame', foundations: ['human_passing'] },
@@ -318,6 +345,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'shell_material', label: 'Shell / Plating Material', wizardStep: 'features', control: 'choice', options: [
         { id: 'luminal_alloy', label: 'Luminal Alloy' }, { id: 'dark_alloy', label: 'Dark Alloy' }, { id: 'ceramic_composite', label: 'Ceramic Composite' }, { id: 'chrome', label: 'Chrome', foundations: ['human_passing'] },
       ] },
+      { id: 'shell_color', label: 'Shell Color', wizardStep: 'features', control: 'color', options: AVATAR_COLOR_PALETTE },
       { id: 'core', label: 'Core', wizardStep: 'augmentation', control: 'choice', options: [
         { id: 'chest_core', label: 'Chest Core' }, { id: 'distributed', label: 'Distributed' }, { id: 'concealed', label: 'Concealed' },
       ] },
@@ -361,6 +389,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'body_structure', label: 'Body Structure', wizardStep: 'form', control: 'choice', options: [
         { id: 'slender', label: 'Slender' }, { id: 'tall', label: 'Tall' }, { id: 'compact', label: 'Compact' },
       ] },
+      presentationGroup(),
       { id: 'facial_geometry', label: 'Facial Geometry', wizardStep: 'form', control: 'choice', options: [
         { id: 'angular', label: 'Angular' }, { id: 'elongated', label: 'Elongated' }, { id: 'refined_soft', label: 'Refined / Soft' },
       ] },
@@ -409,6 +438,7 @@ export const AVATAR_SPECIES_DEFINITIONS: Record<AvatarSpeciesId, AvatarSpeciesDe
       { id: 'base_form', label: 'Base Form', wizardStep: 'form', control: 'choice', options: [
         { id: 'humanoid_coherent', label: 'Humanoid, Coherent' }, { id: 'elongated', label: 'Elongated' }, { id: 'asymmetric', label: 'Asymmetric' },
       ] },
+      presentationGroup(),
       { id: 'form_stability', label: 'Form Stability', wizardStep: 'form', control: 'choice', helpText: 'Describes physical structure, not a filter effect.', options: [
         { id: 'stable', label: 'Stable' }, { id: 'shifting', label: 'Shifting' }, { id: 'fragmented', label: 'Fragmented' },
       ] },
