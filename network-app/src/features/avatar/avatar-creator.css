@@ -310,6 +310,73 @@
   margin: 4px 0 0;
 }
 
+/* ---- permanent species confirmation modal ---- */
+.mr-species-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(4, 4, 8, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.mr-species-confirm {
+  max-width: 440px;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(15, 15, 30, 0.98), rgba(13, 14, 20, 0.99));
+  border: 1px solid rgba(255, 45, 120, 0.45);
+  border-radius: 10px;
+  padding: 26px 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+}
+.mr-species-confirm__title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--pink);
+  margin: 0 0 14px;
+}
+.mr-species-confirm__body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 12px;
+}
+.mr-species-confirm__species {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: #fff;
+  margin: 0 0 18px;
+}
+.mr-species-confirm__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mr-species-confirm__actions .network-btn {
+  flex: 1;
+  text-align: center;
+}
+
+/* ---- locked identity display ---- */
+.mr-identity-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  background: rgba(0, 229, 255, 0.06);
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+
 /* ---- mobile ---- */
 @media (max-width: 860px) {
   .mr-avatar-layout {

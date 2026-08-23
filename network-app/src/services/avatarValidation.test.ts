@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   deserializeAvatarConfiguration,
   emptyConfigurationDraft,
+  sanitizeCosmeticPatch,
   serializeAvatarConfiguration,
   validateActiveDraft,
   validateFoundationSelected,
   validateGlitchComposition,
   validateHybridSelection,
+  validateSpeciesConfirmation,
 } from './avatarValidation';
 import { getAvatarSpeciesDefinition, getOptionsForFoundation, isHybridPairAllowed, listEnabledAvatarSpecies } from '../data/avatarSpecies';
 
@@ -130,6 +132,70 @@ describe('configuration serialize/deserialize round-trip', () => {
     expect(() => deserializeAvatarConfiguration('garbage')).not.toThrow();
     expect(() => deserializeAvatarConfiguration({ speciesDrafts: 'not an object' })).not.toThrow();
     expect(deserializeAvatarConfiguration(undefined)).toEqual(emptyConfigurationDraft());
+  });
+});
+
+describe('validateSpeciesConfirmation', () => {
+  it('accepts a valid Human confirmation (no composition needed)', () => {
+    expect(validateSpeciesConfirmation({ species: 'human' }).valid).toBe(true);
+  });
+
+  it('accepts a valid Hybrid confirmation', () => {
+    const result = validateSpeciesConfirmation({ species: 'hybrid', primarySpecies: 'human', secondarySpecies: 'alien', hybridRatio: 58 });
+    expect(result.valid).toBe(true);
+  });
+
+  it('rejects a Hybrid confirmation with identical parents', () => {
+    const result = validateSpeciesConfirmation({ species: 'hybrid', primarySpecies: 'human', secondarySpecies: 'human', hybridRatio: 50 });
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects a Hybrid confirmation with a disallowed pair', () => {
+    const result = validateSpeciesConfirmation({ species: 'hybrid', primarySpecies: 'glitch', secondarySpecies: 'human', hybridRatio: 50 });
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects a Hybrid confirmation with an invalid ratio', () => {
+    const result = validateSpeciesConfirmation({ species: 'hybrid', primarySpecies: 'human', secondarySpecies: 'alien', hybridRatio: -5 });
+    expect(result.valid).toBe(false);
+  });
+
+  it('accepts a valid Glitch confirmation', () => {
+    const result = validateSpeciesConfirmation({ species: 'glitch', glitchHumanRatio: 40, glitchAlienRatio: 25, glitchAiRatio: 35 });
+    expect(result.valid).toBe(true);
+  });
+
+  it('rejects a Glitch confirmation that does not total 100', () => {
+    const result = validateSpeciesConfirmation({ species: 'glitch', glitchHumanRatio: 40, glitchAlienRatio: 25, glitchAiRatio: 30 });
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects an unrecognized species', () => {
+    // @ts-expect-error deliberately invalid for the test
+    expect(validateSpeciesConfirmation({ species: 'dragon' }).valid).toBe(false);
+  });
+});
+
+describe('sanitizeCosmeticPatch', () => {
+  it('strips every permanent-identity key', () => {
+    const dirty = {
+      hair: 'shaved',
+      species: 'alien',
+      primary_species: 'human',
+      secondary_species: 'alien',
+      hybrid_ratio: 50,
+      glitch_human_ratio: 10,
+      glitch_alien_ratio: 10,
+      glitch_ai_ratio: 80,
+      species_confirmed_at: '2026-01-01T00:00:00Z',
+    };
+    const clean = sanitizeCosmeticPatch(dirty);
+    expect(clean).toEqual({ hair: 'shaved' });
+  });
+
+  it('leaves a purely cosmetic patch untouched', () => {
+    const patch = { hair: 'shaved', outfit: 'racer_jacket', archetype: 'racer' };
+    expect(sanitizeCosmeticPatch(patch)).toEqual(patch);
   });
 });
 

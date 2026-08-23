@@ -26,6 +26,20 @@ export interface PlayerProfile {
   updated_at: string;
 }
 
+/** Server-authoritative first-time-player progression (Avatar Phase
+ * 2C). There is deliberately no client UPDATE grant on player_progress
+ * at all — only trusted RPCs (initialize_player_profile,
+ * confirm_avatar_species, complete_initial_avatar) ever move this
+ * forward. 'core_arrival' / 'active_player' are reserved for the next
+ * gameplay phase and are not yet reachable through any RPC. */
+export type PlayerOnboardingStage =
+  | 'passport_created'
+  | 'species_selection'
+  | 'avatar_customization'
+  | 'avatar_complete'
+  | 'core_arrival'
+  | 'active_player';
+
 /** level and rank are DB-generated columns (level_for_xp / rank_for_level)
  * — never computed or overridden on the client. */
 export interface PlayerProgress {
@@ -34,6 +48,8 @@ export interface PlayerProgress {
   level: number;
   rank: string;
   zip_balance: number;
+  onboarding_stage: PlayerOnboardingStage;
+  onboarding_completed_at: string | null;
   updated_at: string;
 }
 
@@ -132,7 +148,24 @@ export interface PlayerAvatar {
   /** Denormalized copy of the approved generation's image_path. */
   approved_image_path: string | null;
   approved_generation_id: string | null;
+  /** Avatar Phase 2C. NULL = species not yet permanently confirmed —
+   * Phase 2B-style draft browsing/switching is still safe. Once set,
+   * species/primary_species/secondary_species/hybrid_ratio/
+   * glitch_*_ratio are immutable for normal authenticated clients,
+   * enforced by the player_avatar_identity_lock DB trigger (not just
+   * by this field existing) — see services/playerState.ts's
+   * confirmAvatarSpecies(). */
+  species_confirmed_at: string | null;
 }
+
+/** The fields confirmAvatarSpecies() permanently commits. Never part
+ * of PlayerAvatarCosmeticPatch — once species_confirmed_at is set,
+ * the DB trigger rejects direct client writes to any of these
+ * regardless of what a component tries to send. */
+export type PlayerAvatarIdentityFields = Pick<
+  PlayerAvatar,
+  'species' | 'primary_species' | 'secondary_species' | 'hybrid_ratio' | 'glitch_human_ratio' | 'glitch_alien_ratio' | 'glitch_ai_ratio'
+>;
 
 /** A generated-image candidate belonging to the player's one avatar
  * identity (player_avatar) — never a second avatar record. Rows are
@@ -153,16 +186,21 @@ export interface AvatarGeneration {
   approved_at: string | null;
 }
 
-/** Only the fields a player is allowed to edit via savePlayerAvatar().
- * The Phase 1 species/composition/origin fields are included here for
- * future (Phase 2+) use by the real species creator — nothing in the
- * current UI sends them yet, and RLS already scopes writes to the
- * owner's own row regardless of which of these fields a given screen
- * actually uses. */
+/** Only the fields a player is allowed to edit via savePlayerAvatar() —
+ * editable appearance, never permanent identity. Deliberately excludes
+ * species/primary_species/secondary_species/hybrid_ratio/
+ * glitch_*_ratio (Avatar Phase 2C: those are PlayerAvatarIdentityFields,
+ * committed once via confirmAvatarSpecies() and DB-trigger-immutable
+ * after that). `archetype` (the species "foundation") stays here — it
+ * is cosmetic/visual, not part of the permanent-identity lock. This is
+ * what makes it structurally impossible for a future barber/wardrobe/
+ * customization terminal to accidentally mutate species: the type
+ * they'd build against doesn't have the field. */
 export type PlayerAvatarCosmeticPatch = Partial<
   Pick<
     PlayerAvatar,
     | 'base_model'
+    | 'archetype'
     | 'face'
     | 'body_type'
     | 'skin'
@@ -178,14 +216,6 @@ export type PlayerAvatarCosmeticPatch = Partial<
     | 'crest'
     | 'cybernetics'
     | 'background'
-    | 'species'
-    | 'archetype'
-    | 'primary_species'
-    | 'secondary_species'
-    | 'hybrid_ratio'
-    | 'glitch_human_ratio'
-    | 'glitch_alien_ratio'
-    | 'glitch_ai_ratio'
     | 'signal_affinity'
     | 'signal_color'
     | 'origin'

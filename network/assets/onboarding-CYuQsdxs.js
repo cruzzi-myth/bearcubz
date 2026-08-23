@@ -1,0 +1,1 @@
+var e=`/dashboard`;function t(t){if(!t.profile)return`/onboarding`;switch(t.progress?.onboarding_stage??`passport_created`){case`passport_created`:case`species_selection`:case`avatar_customization`:return`/avatar`;default:return e}}function n(e){let t=e.progress?.onboarding_stage;return t===`avatar_complete`||t===`core_arrival`||t===`active_player`}export{n,t as r,e as t};

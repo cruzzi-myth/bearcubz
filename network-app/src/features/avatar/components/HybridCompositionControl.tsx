@@ -9,6 +9,11 @@ interface HybridCompositionControlProps {
   secondarySpecies: AvatarSpeciesId | null;
   hybridRatio: number;
   onChange: (patch: { primarySpecies?: AvatarSpeciesId | null; secondarySpecies?: AvatarSpeciesId | null; hybridRatio?: number }) => void;
+  /** True once species_confirmed_at is set — ancestry is permanent
+   * identity at that point (Avatar Phase 2C), so this renders a
+   * read-only summary instead of editable pickers/slider. The DB
+   * trigger is the actual enforcement; this is just honest UI. */
+  locked?: boolean;
 }
 
 /**
@@ -17,8 +22,20 @@ interface HybridCompositionControlProps {
  * jsonb) — this is identity-level data, not a cosmetic choice. Only
  * offers the species pairs on HYBRID_ALLOWED_PAIRS.
  */
-export function HybridCompositionControl({ primarySpecies, secondarySpecies, hybridRatio, onChange }: HybridCompositionControlProps) {
+export function HybridCompositionControl({ primarySpecies, secondarySpecies, hybridRatio, onChange, locked = false }: HybridCompositionControlProps) {
   const secondaryOptions = HYBRID_CANDIDATE_SPECIES.filter((s) => !primarySpecies || isHybridPairAllowed(primarySpecies, s));
+
+  if (locked) {
+    return (
+      <fieldset className="mr-onboard-fieldset">
+        <legend>Ancestry — Permanent Identity</legend>
+        <p className="mr-avatar-help">
+          {primarySpecies ? AVATAR_SPECIES_DEFINITIONS[primarySpecies].displayName : '—'} ×{' '}
+          {secondarySpecies ? AVATAR_SPECIES_DEFINITIONS[secondarySpecies].displayName : '—'} · Secondary influence {hybridRatio}%
+        </p>
+      </fieldset>
+    );
+  }
 
   return (
     <fieldset className="mr-onboard-fieldset">

@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RouteShell } from '../../components/RouteShell';
 import { RequireAuth } from '../../components/RequireAuth';
 import { LoadingState } from '../../components/LoadingState';
 import { useAuth } from '../auth/AuthContext';
 import { usePlayerState } from '../player/PlayerStateContext';
 import { savePlayerAvatar } from '../../services/avatarService';
+import { confirmAvatarSpecies, completeInitialAvatar } from '../../services/playerState';
+import { describeBackendError } from '../../services/errors';
 import { trackEvent } from '../../services/analytics';
+import { hasCompletedInitialAvatar, DASHBOARD_ROUTE } from '../../services/onboarding';
 import {
   AVATAR_SPECIES,
   AVATAR_SPECIES_DEFINITIONS,
@@ -22,6 +26,7 @@ import {
   emptySpeciesDraft,
   serializeAvatarConfiguration,
   validateActiveDraft,
+  validateSpeciesConfirmation,
   type AvatarConfigurationDraft,
   type AvatarSpeciesDraft,
 } from '../../services/avatarValidation';
@@ -34,6 +39,7 @@ import { FoundationCard } from './components/FoundationCard';
 import { AvatarReferencePanel } from './components/AvatarReferencePanel';
 import { HybridCompositionControl } from './components/HybridCompositionControl';
 import { GlitchCompositionControl } from './components/GlitchCompositionControl';
+import { SpeciesConfirmationModal } from './components/SpeciesConfirmationModal';
 import './avatar-creator.css';
 
 type WizardStepId = 'species' | 'foundation' | AvatarWizardStep | 'review';
@@ -50,13 +56,20 @@ const WIZARD_STEPS: { id: WizardStepId; label: string }[] = [
 ];
 
 /**
- * Avatar Phase 2B — the full six-species character creator. Entirely
- * data-driven from avatarSpecies.ts: no per-species JSX branching
- * beyond the two identity-level composition controls (Hybrid
- * ancestry, Glitch consciousness composition), which write to
- * player_avatar's first-class columns rather than the configuration
- * jsonb. No image generation — this only builds and saves the
- * structured configuration that a later phase will read.
+ * Avatar Phase 2B/2C — the full six-species character creator, now
+ * with a permanent species lock. Entirely data-driven from
+ * avatarSpecies.ts: no per-species JSX branching beyond the two
+ * identity-level composition controls (Hybrid ancestry, Glitch
+ * consciousness composition).
+ *
+ * Before confirmation: free browsing/switching between all six species
+ * (unchanged Phase 2B behavior). CONFIRM SPECIES on the Foundation step
+ * calls confirmAvatarSpecies() — the only path that ever sets
+ * player_avatar.species_confirmed_at. After that, this same route
+ * becomes an appearance editor: species/ancestry render read-only, and
+ * Review's action becomes either COMPLETE AVATAR (first time,
+ * advances onboarding_stage to avatar_complete) or SAVE APPEARANCE
+ * (a returning player editing cosmetics — no onboarding-state change).
  */
 export function AvatarCreationPage() {
   return (
@@ -69,6 +82,7 @@ export function AvatarCreationPage() {
 function AvatarWizard() {
   const { session } = useAuth();
   const playerState = usePlayerState();
+  const navigate = useNavigate();
 
   const [stepIndex, setStepIndex] = useState(0);
   const [activeSpecies, setActiveSpecies] = useState<AvatarSpeciesId | null>(null);
@@ -77,8 +91,15 @@ function AvatarWizard() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string[] | null>(null);
   const [saved, setSaved] = useState(false);
+  const [completed, setCompleted] = useState(false);
+
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmErrors, setConfirmErrors] = useState<string[] | null>(null);
 
   const avatar = playerState.avatar;
+  const isLocked = Boolean(avatar?.species_confirmed_at);
+  const alreadyCompletedOnboarding = hasCompletedInitialAvatar(playerState);
 
   // Seed the wizard from the saved avatar exactly once it's loaded.
   // Identity fields for the CURRENTLY ACTIVE species come from the
@@ -118,6 +139,7 @@ function AvatarWizard() {
   const step = WIZARD_STEPS[stepIndex];
 
   function updateDraft(species: AvatarSpeciesId, patch: Partial<AvatarSpeciesDraft>) {
+    if (isLocked) return; // identity fields are immutable post-confirmation; nothing else uses updateDraft
     setDrafts((prev) => {
       const existing = prev[species] ?? emptySpeciesDraft();
       return { ...prev, [species]: { ...existing, ...patch } };
@@ -134,6 +156,7 @@ function AvatarWizard() {
   }
 
   function selectSpecies(id: AvatarSpeciesId) {
+    if (isLocked) return; // the species grid isn't even rendered when locked, but guard anyway
     setActiveSpecies(id);
     setDrafts((prev) => {
       if (prev[id]) return prev;
@@ -146,41 +169,96 @@ function AvatarWizard() {
   const foundationValidation = activeSpecies ? validateActiveDraft(activeSpecies, activeDraft) : { valid: false, errors: [] };
 
   function goNext() {
-    if (step.id === 'foundation' && !foundationValidation.valid) return;
+    if (step.id === 'foundation' && !isLocked) {
+      // Pre-confirmation, Foundation's "Continue" is replaced by the
+      // permanent confirmation flow — see the nav render below.
+      return;
+    }
     setStepIndex((i) => Math.min(i + 1, WIZARD_STEPS.length - 1));
   }
   function goBack() {
     setStepIndex((i) => Math.max(i - 1, 0));
   }
 
-  async function handleSave() {
-    if (!activeSpecies || !activeDraft || !session) return;
-    const validation = validateActiveDraft(activeSpecies, activeDraft);
+  async function handleConfirmSpecies() {
+    if (!activeSpecies || !activeDraft) return;
+    const validation = validateSpeciesConfirmation({
+      species: activeSpecies,
+      primarySpecies: activeDraft.primarySpecies,
+      secondarySpecies: activeDraft.secondarySpecies,
+      hybridRatio: activeDraft.hybridRatio,
+      glitchHumanRatio: activeDraft.glitchHumanRatio,
+      glitchAlienRatio: activeDraft.glitchAlienRatio,
+      glitchAiRatio: activeDraft.glitchAiRatio,
+    });
     if (!validation.valid) {
-      setSaveError(validation.errors);
+      setConfirmErrors(validation.errors);
       return;
     }
+    setConfirming(true);
+    setConfirmErrors(null);
+    try {
+      await confirmAvatarSpecies({
+        species: activeSpecies,
+        primary_species: activeDraft.primarySpecies ?? null,
+        secondary_species: activeDraft.secondarySpecies ?? null,
+        hybrid_ratio: activeDraft.hybridRatio ?? null,
+        glitch_human_ratio: activeDraft.glitchHumanRatio ?? null,
+        glitch_alien_ratio: activeDraft.glitchAlienRatio ?? null,
+        glitch_ai_ratio: activeDraft.glitchAiRatio ?? null,
+      });
+      await playerState.refresh();
+      trackEvent('avatar_onboarding_completed', { context: 'species_confirmed', species: activeSpecies });
+      setConfirmModalOpen(false);
+      setStepIndex(2); // straight into Form — species is locked, nothing left to decide at Foundation
+    } catch (err) {
+      // Do NOT visually mark species as locked on failure — the modal
+      // stays open with a real error, matching "if RPC fails, keep the
+      // player on the confirmation step."
+      setConfirmErrors([describeBackendError(err).body]);
+    } finally {
+      setConfirming(false);
+    }
+  }
+
+  async function saveCosmetics(): Promise<void> {
+    if (!activeSpecies || !activeDraft || !session) return;
+    const configuration = serializeAvatarConfiguration({ version: 1, speciesDrafts: drafts, active: { species: activeSpecies } });
+    const patch: PlayerAvatarCosmeticPatch = {
+      archetype: activeDraft.foundation,
+      configuration,
+    };
+    await savePlayerAvatar(session.user.id, patch);
+  }
+
+  async function handleSaveAppearance() {
+    if (!activeSpecies || !activeDraft || saving) return;
     setSaving(true);
     setSaveError(null);
     try {
-      const configuration = serializeAvatarConfiguration({ version: 1, speciesDrafts: drafts, active: { species: activeSpecies } });
-      const patch: PlayerAvatarCosmeticPatch = {
-        species: activeSpecies,
-        archetype: activeDraft.foundation,
-        primary_species: activeSpecies === 'hybrid' ? (activeDraft.primarySpecies ?? null) : null,
-        secondary_species: activeSpecies === 'hybrid' ? (activeDraft.secondarySpecies ?? null) : null,
-        hybrid_ratio: activeSpecies === 'hybrid' ? (activeDraft.hybridRatio ?? null) : null,
-        glitch_human_ratio: activeSpecies === 'glitch' ? (activeDraft.glitchHumanRatio ?? null) : null,
-        glitch_alien_ratio: activeSpecies === 'glitch' ? (activeDraft.glitchAlienRatio ?? null) : null,
-        glitch_ai_ratio: activeSpecies === 'glitch' ? (activeDraft.glitchAiRatio ?? null) : null,
-        configuration,
-      };
-      await savePlayerAvatar(session.user.id, patch);
+      await saveCosmetics();
       await playerState.refresh();
-      trackEvent('avatar_onboarding_completed', { context: 'creator', species: activeSpecies });
+      trackEvent('avatar_onboarding_completed', { context: 'appearance_saved', species: activeSpecies });
       setSaved(true);
     } catch {
       setSaveError(['Could not save your avatar. Please try again.']);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCompleteAvatar() {
+    if (!activeSpecies || !activeDraft || saving) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await saveCosmetics();
+      await completeInitialAvatar();
+      await playerState.refresh();
+      trackEvent('avatar_onboarding_completed', { context: 'avatar_complete', species: activeSpecies });
+      setCompleted(true);
+    } catch (err) {
+      setSaveError([describeBackendError(err).body]);
     } finally {
       setSaving(false);
     }
@@ -226,16 +304,28 @@ function AvatarWizard() {
 
       <div className="mr-avatar-layout">
         <div className="mr-avatar-main">
-          {step.id === 'species' && (
-            <fieldset className="mr-onboard-fieldset">
-              <legend>Choose a Species</legend>
-              <div className="mr-species-grid">
-                {listEnabledAvatarSpecies().map((s) => (
-                  <SpeciesCard key={s.id} species={s} selected={activeSpecies === s.id} onSelect={() => selectSpecies(s.id)} />
-                ))}
-              </div>
-            </fieldset>
-          )}
+          {step.id === 'species' &&
+            (isLocked && speciesDef ? (
+              <fieldset className="mr-onboard-fieldset">
+                <legend>Species</legend>
+                <p className="mr-identity-locked">
+                  {speciesDef.displayName} · Permanent Identity
+                </p>
+                <p className="mr-avatar-help">
+                  Your species was permanently confirmed and cannot be changed through normal gameplay. You can still edit
+                  your appearance in the steps ahead.
+                </p>
+              </fieldset>
+            ) : (
+              <fieldset className="mr-onboard-fieldset">
+                <legend>Choose a Species</legend>
+                <div className="mr-species-grid">
+                  {listEnabledAvatarSpecies().map((s) => (
+                    <SpeciesCard key={s.id} species={s} selected={activeSpecies === s.id} onSelect={() => selectSpecies(s.id)} />
+                  ))}
+                </div>
+              </fieldset>
+            ))}
 
           {step.id === 'foundation' && speciesDef && activeSpecies && (
             <>
@@ -258,6 +348,7 @@ function AvatarWizard() {
                   secondarySpecies={activeDraft?.secondarySpecies ?? null}
                   hybridRatio={activeDraft?.hybridRatio ?? 50}
                   onChange={(patch) => updateDraft(activeSpecies, patch)}
+                  locked={isLocked}
                 />
               )}
               {activeSpecies === 'glitch' && (
@@ -266,9 +357,10 @@ function AvatarWizard() {
                   alien={activeDraft?.glitchAlienRatio ?? 33}
                   ai={activeDraft?.glitchAiRatio ?? 33}
                   onChange={({ human, alien, ai }) => updateDraft(activeSpecies, { glitchHumanRatio: human, glitchAlienRatio: alien, glitchAiRatio: ai })}
+                  locked={isLocked}
                 />
               )}
-              {!foundationValidation.valid && (
+              {!isLocked && !foundationValidation.valid && (
                 <ul className="mr-avatar-errors" role="alert">
                   {foundationValidation.errors.map((e) => (
                     <li key={e}>{e}</li>
@@ -310,14 +402,29 @@ function AvatarWizard() {
                   ))}
                 </ul>
               )}
-              {saved && (
+              {saved && !completed && (
                 <p className="mr-avatar-saved" role="status">
-                  Avatar saved.
+                  Appearance saved.
                 </p>
               )}
-              <button type="button" className="network-btn" onClick={handleSave} disabled={saving}>
-                {saving ? 'Synchronizing Avatar…' : 'Save Avatar'}
-              </button>
+              {completed && (
+                <div className="mr-avatar-saved" role="status">
+                  <p style={{ margin: '0 0 12px' }}>IDENTITY COMPLETE — CORE ACCESS READY</p>
+                  <button type="button" className="network-btn" onClick={() => navigate(DASHBOARD_ROUTE)}>
+                    Continue →
+                  </button>
+                </div>
+              )}
+              {!completed && !alreadyCompletedOnboarding && (
+                <button type="button" className="network-btn" onClick={handleCompleteAvatar} disabled={saving}>
+                  {saving ? 'Synchronizing Avatar…' : 'Complete Avatar'}
+                </button>
+              )}
+              {!completed && alreadyCompletedOnboarding && (
+                <button type="button" className="network-btn" onClick={handleSaveAppearance} disabled={saving}>
+                  {saving ? 'Synchronizing Avatar…' : 'Save Appearance'}
+                </button>
+              )}
             </div>
           )}
 
@@ -326,10 +433,24 @@ function AvatarWizard() {
               <button type="button" className="network-btn mr-avatar-nav__back" onClick={goBack} disabled={stepIndex === 0}>
                 ← Back
               </button>
-              {step.id !== 'review' && (
-                <button type="button" className="network-btn" onClick={goNext} disabled={step.id === 'foundation' && !foundationValidation.valid}>
-                  Continue →
+              {step.id === 'foundation' && !isLocked ? (
+                <button
+                  type="button"
+                  className="network-btn"
+                  onClick={() => {
+                    setConfirmErrors(null);
+                    setConfirmModalOpen(true);
+                  }}
+                  disabled={!foundationValidation.valid}
+                >
+                  Confirm Species →
                 </button>
+              ) : (
+                step.id !== 'review' && (
+                  <button type="button" className="network-btn" onClick={goNext}>
+                    Continue →
+                  </button>
+                )
               )}
             </div>
           )}
@@ -337,6 +458,16 @@ function AvatarWizard() {
 
         <AvatarReferencePanel speciesName={speciesDef?.displayName ?? 'Species'} images={referenceImages} summaryLines={summaryLines} />
       </div>
+
+      {confirmModalOpen && speciesDef && (
+        <SpeciesConfirmationModal
+          speciesName={speciesDef.displayName}
+          busy={confirming}
+          errors={confirmErrors}
+          onCancel={() => setConfirmModalOpen(false)}
+          onConfirm={handleConfirmSpecies}
+        />
+      )}
     </RouteShell>
   );
 }

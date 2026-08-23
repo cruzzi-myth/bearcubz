@@ -1,4 +1,5 @@
-import type { AvatarSpeciesId } from '../types/player';
+import type { AvatarSpeciesId, PlayerAvatarCosmeticPatch } from '../types/player';
+import { AVATAR_SPECIES } from '../types/player';
 import { isHybridPairAllowed } from '../data/avatarSpecies';
 
 // ============================================================
@@ -156,4 +157,50 @@ export function validateActiveDraft(species: AvatarSpeciesId, draft: AvatarSpeci
     return validateGlitchComposition(draft?.glitchHumanRatio, draft?.glitchAlienRatio, draft?.glitchAiRatio);
   }
   return { valid: true, errors: [] };
+}
+
+export interface SpeciesConfirmationInput {
+  species: AvatarSpeciesId;
+  primarySpecies?: AvatarSpeciesId | null;
+  secondarySpecies?: AvatarSpeciesId | null;
+  hybridRatio?: number | null;
+  glitchHumanRatio?: number | null;
+  glitchAlienRatio?: number | null;
+  glitchAiRatio?: number | null;
+}
+
+/** Client-side pre-check before ever calling confirmAvatarSpecies() —
+ * mirrors exactly what the confirm_avatar_species RPC validates
+ * server-side, so an obviously-invalid submission gets a friendly
+ * inline error instead of a round trip. This is a UX convenience, NOT
+ * the security boundary — the RPC (and the player_avatar_identity_lock
+ * trigger after confirmation) re-validates/enforces regardless of
+ * what this function decides. */
+export function validateSpeciesConfirmation(input: SpeciesConfirmationInput): ValidationResult {
+  if (!AVATAR_SPECIES.includes(input.species)) {
+    return { valid: false, errors: ['Choose one of the six Moon Racer species.'] };
+  }
+  if (input.species === 'hybrid') {
+    return validateHybridSelection(input.primarySpecies, input.secondarySpecies, input.hybridRatio);
+  }
+  if (input.species === 'glitch') {
+    return validateGlitchComposition(input.glitchHumanRatio, input.glitchAlienRatio, input.glitchAiRatio);
+  }
+  return { valid: true, errors: [] };
+}
+
+/** Runtime defense-in-depth alongside PlayerAvatarCosmeticPatch's
+ * compile-time field exclusion: strips any permanent-identity key that
+ * somehow ends up on a cosmetic-save patch (e.g. an object built from
+ * untyped/spread data) before it ever reaches savePlayerAvatar(). The
+ * player_avatar_identity_lock DB trigger remains the actual security
+ * boundary regardless — this just keeps a buggy call from even trying. */
+const IDENTITY_ONLY_KEYS = ['species', 'primary_species', 'secondary_species', 'hybrid_ratio', 'glitch_human_ratio', 'glitch_alien_ratio', 'glitch_ai_ratio', 'species_confirmed_at'] as const;
+
+export function sanitizeCosmeticPatch<T extends Record<string, unknown>>(patch: T): PlayerAvatarCosmeticPatch {
+  const clean: Record<string, unknown> = { ...patch };
+  for (const key of IDENTITY_ONLY_KEYS) {
+    delete clean[key];
+  }
+  return clean as PlayerAvatarCosmeticPatch;
 }

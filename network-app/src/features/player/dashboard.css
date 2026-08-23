@@ -1,3 +1,19 @@
+.mr-dash-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  background: rgba(0, 229, 255, 0.06);
+  border-radius: 20px;
+  padding: 6px 14px;
+  margin: 0 0 20px;
+}
+
 .mr-dash-header {
   display: flex;
   align-items: center;

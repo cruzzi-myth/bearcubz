@@ -5,6 +5,10 @@ interface GlitchCompositionControlProps {
   alien: number;
   ai: number;
   onChange: (next: { human: number; alien: number; ai: number }) => void;
+  /** True once species_confirmed_at is set — composition is permanent
+   * identity at that point (Avatar Phase 2C). Read-only summary
+   * instead of editable sliders; the DB trigger is the real lock. */
+  locked?: boolean;
 }
 
 /** Writes directly to player_avatar's first-class glitch_human_ratio /
@@ -13,7 +17,20 @@ interface GlitchCompositionControlProps {
  * other two (rather than letting the total drift and only flagging it
  * at save time), so the player always sees a valid, understandable
  * total while they work. */
-export function GlitchCompositionControl({ human, alien, ai, onChange }: GlitchCompositionControlProps) {
+export function GlitchCompositionControl({ human, alien, ai, onChange, locked = false }: GlitchCompositionControlProps) {
+  const total = human + alien + ai;
+
+  if (locked) {
+    return (
+      <fieldset className="mr-onboard-fieldset">
+        <legend>Consciousness Composition — Permanent Identity</legend>
+        <p className="mr-avatar-help">
+          Human {human}% · Alien {alien}% · AI {ai}%
+        </p>
+      </fieldset>
+    );
+  }
+
   function handleChange(key: 'human' | 'alien' | 'ai', nextValue: number) {
     const current = { human, alien, ai };
     const others = (['human', 'alien', 'ai'] as const).filter((k) => k !== key);
@@ -34,8 +51,6 @@ export function GlitchCompositionControl({ human, alien, ai, onChange }: GlitchC
     }
     onChange(next);
   }
-
-  const total = human + alien + ai;
 
   return (
     <fieldset className="mr-onboard-fieldset">

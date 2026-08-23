@@ -16,6 +16,20 @@ export type BackendErrorCode =
   | 'USERNAME_TAKEN'
   | 'INVALID_USERNAME'
   | 'INVALID_DISPLAY_NAME'
+  | 'NO_AVATAR_FOUND'
+  | 'NO_PROGRESS_FOUND'
+  | 'SPECIES_ALREADY_CONFIRMED'
+  | 'INVALID_SPECIES'
+  | 'HYBRID_PARENTS_REQUIRED'
+  | 'HYBRID_PARENTS_IDENTICAL'
+  | 'HYBRID_PAIR_NOT_ALLOWED'
+  | 'INVALID_HYBRID_RATIO'
+  | 'GLITCH_COMPOSITION_REQUIRED'
+  | 'INVALID_GLITCH_PERCENTAGE'
+  | 'GLITCH_COMPOSITION_NOT_100'
+  | 'SPECIES_NOT_CONFIRMED'
+  | 'FOUNDATION_REQUIRED'
+  | 'PERMANENT_IDENTITY_LOCKED'
   | 'UNKNOWN';
 
 const KNOWN_CODES: BackendErrorCode[] = [
@@ -29,6 +43,20 @@ const KNOWN_CODES: BackendErrorCode[] = [
   'USERNAME_TAKEN',
   'INVALID_USERNAME',
   'INVALID_DISPLAY_NAME',
+  'NO_AVATAR_FOUND',
+  'NO_PROGRESS_FOUND',
+  'SPECIES_ALREADY_CONFIRMED',
+  'INVALID_SPECIES',
+  'HYBRID_PARENTS_REQUIRED',
+  'HYBRID_PARENTS_IDENTICAL',
+  'HYBRID_PAIR_NOT_ALLOWED',
+  'INVALID_HYBRID_RATIO',
+  'GLITCH_COMPOSITION_REQUIRED',
+  'INVALID_GLITCH_PERCENTAGE',
+  'GLITCH_COMPOSITION_NOT_100',
+  'SPECIES_NOT_CONFIRMED',
+  'FOUNDATION_REQUIRED',
+  'PERMANENT_IDENTITY_LOCKED',
 ];
 
 /** Supabase wraps a `raise exception 'CODE'` as an error whose
@@ -85,6 +113,62 @@ const COPY: Record<BackendErrorCode, UiError> = {
   INVALID_DISPLAY_NAME: {
     title: 'DISPLAY NAME REJECTED',
     body: 'Display name must be 2–32 characters.',
+  },
+  NO_AVATAR_FOUND: {
+    title: 'IDENTITY NOT INITIALIZED',
+    body: 'Your player profile is not fully set up yet. Please restart onboarding.',
+  },
+  NO_PROGRESS_FOUND: {
+    title: 'PROGRESSION NOT FOUND',
+    body: 'Your player progress record is missing. Please restart onboarding.',
+  },
+  SPECIES_ALREADY_CONFIRMED: {
+    title: 'SPECIES ALREADY LOCKED',
+    body: 'Your species was already permanently confirmed and cannot be selected again.',
+  },
+  INVALID_SPECIES: {
+    title: 'UNRECOGNIZED SPECIES',
+    body: 'Choose one of the six Moon Racer species.',
+  },
+  HYBRID_PARENTS_REQUIRED: {
+    title: 'ANCESTRY INCOMPLETE',
+    body: 'Choose both a primary and secondary species for your Hybrid.',
+  },
+  HYBRID_PARENTS_IDENTICAL: {
+    title: 'ANCESTRY INVALID',
+    body: 'Primary and secondary species must be different.',
+  },
+  HYBRID_PAIR_NOT_ALLOWED: {
+    title: 'ANCESTRY NOT SUPPORTED',
+    body: 'That species pairing is not yet offered in the creator.',
+  },
+  INVALID_HYBRID_RATIO: {
+    title: 'ANCESTRY RATIO INVALID',
+    body: 'Set the secondary species influence between 0 and 100.',
+  },
+  GLITCH_COMPOSITION_REQUIRED: {
+    title: 'COMPOSITION INCOMPLETE',
+    body: 'Set your Human, Alien, and AI consciousness percentages.',
+  },
+  INVALID_GLITCH_PERCENTAGE: {
+    title: 'COMPOSITION INVALID',
+    body: 'Each consciousness percentage must be between 0 and 100.',
+  },
+  GLITCH_COMPOSITION_NOT_100: {
+    title: 'COMPOSITION MUST TOTAL 100%',
+    body: 'Your Human, Alien, and AI percentages must add up to exactly 100%.',
+  },
+  SPECIES_NOT_CONFIRMED: {
+    title: 'SPECIES NOT YET CONFIRMED',
+    body: 'Confirm your permanent species before completing your avatar.',
+  },
+  FOUNDATION_REQUIRED: {
+    title: 'FOUNDATION REQUIRED',
+    body: 'Choose a foundation before completing your avatar.',
+  },
+  PERMANENT_IDENTITY_LOCKED: {
+    title: 'IDENTITY LOCKED',
+    body: 'Your species is a permanent identity and cannot be changed through normal gameplay.',
   },
   UNKNOWN: {
     title: 'SIGNAL LOST',

@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { AVATAR_REFERENCE_BASE } from '../data/avatarSpecies';
+import { sanitizeCosmeticPatch } from './avatarValidation';
 import type { AvatarGeneration, AvatarPreset, PlayerAvatar, PlayerAvatarCosmeticPatch, AvatarModelFormat } from '../types/player';
 
 /** Resolves a species reference image's relative path (e.g.
@@ -39,9 +40,15 @@ export async function loadPlayerAvatar(): Promise<PlayerAvatar | null> {
  * columns are ever passed in, never xp/level/zip, which don't even
  * exist on this table. */
 export async function savePlayerAvatar(userId: string, patch: PlayerAvatarCosmeticPatch): Promise<PlayerAvatar> {
+  // Runtime defense-in-depth: even though PlayerAvatarCosmeticPatch
+  // already excludes permanent-identity fields at compile time, strip
+  // them again in case this ever gets called with untyped/spread data.
+  // The player_avatar_identity_lock DB trigger is the real boundary —
+  // this just keeps a buggy call from even attempting the mutation.
+  const safePatch = sanitizeCosmeticPatch(patch);
   const { data, error } = await supabase
     .from('player_avatar')
-    .update(patch)
+    .update(safePatch)
     .eq('user_id', userId)
     .select()
     .single();

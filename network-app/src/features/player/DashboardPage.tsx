@@ -7,6 +7,7 @@ import { usePlayerState } from './PlayerStateContext';
 import { getAvatarPreview } from '../../services/avatarService';
 import { ABILITY_STATS } from '../../services/abilities';
 import { trackEvent } from '../../services/analytics';
+import { resolveOnboardingDestination, DASHBOARD_ROUTE } from '../../services/onboarding';
 import './dashboard.css';
 
 export function DashboardPage() {
@@ -21,11 +22,16 @@ function DashboardContent() {
   const playerState = usePlayerState();
   const navigate = useNavigate();
 
+  // Centralized onboarding-stage routing (Avatar Phase 2C) — a player
+  // who hasn't finished species confirmation/avatar setup lands back
+  // on /avatar instead of seeing an empty/misleading Dashboard.
   useEffect(() => {
-    if (playerState.status === 'ready' && !playerState.profile) {
-      navigate('/onboarding', { replace: true });
+    if (playerState.status !== 'ready') return;
+    const destination = resolveOnboardingDestination(playerState);
+    if (destination !== DASHBOARD_ROUTE) {
+      navigate(destination, { replace: true });
     }
-  }, [playerState.status, playerState.profile, navigate]);
+  }, [playerState, navigate]);
 
   useEffect(() => {
     if (playerState.status === 'ready' && playerState.profile) {
@@ -60,6 +66,7 @@ function DashboardContent() {
 
   return (
     <RouteShell eyebrow="Player" title="Dashboard" description="" placeholder={false}>
+      {progress.onboarding_stage !== 'active_player' && <p className="mr-dash-pending">IDENTITY COMPLETE · CORE ACCESS PENDING</p>}
       <div className="mr-dash-header">
         <div className="mr-dash-avatar" aria-hidden="true">
           {preview.kind === 'image' ? <img src={preview.src} alt="" /> : preview.label}

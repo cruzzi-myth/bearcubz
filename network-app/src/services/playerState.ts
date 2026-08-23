@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Passport, PlayerState } from '../types/player';
+import type { AvatarSpeciesId, Passport, PlayerAvatarIdentityFields, PlayerState } from '../types/player';
 
 // ============================================================
 // Thin wrappers around the trusted RPCs that make up the player
@@ -61,6 +61,53 @@ export async function initializePlayerProfile(
     p_display_name: displayName,
     p_avatar_base_model: avatarBaseModel,
   });
+  if (error) throw error;
+  return data as PlayerState;
+}
+
+/** Options accepted by confirmAvatarSpecies() — a subset of
+ * PlayerAvatarIdentityFields since only 'hybrid'/'glitch' species ever
+ * need the parent/composition fields populated. */
+export type AvatarSpeciesConfirmationInput = {
+  species: AvatarSpeciesId;
+} & Partial<Omit<PlayerAvatarIdentityFields, 'species'>>;
+
+/** THE only normal player path that permanently commits initial
+ * species identity (Avatar Phase 2C). Calls the confirm_avatar_species
+ * RPC, which: rejects an already-confirmed avatar, validates the
+ * species/Hybrid-pair/Glitch-composition shape server-side (mirroring
+ * the same rules avatarSpecies.ts's validateActiveDraft() checks
+ * client-side — this is defense in depth, not the only check), and
+ * atomically sets species_confirmed_at + advances
+ * player_progress.onboarding_stage to 'avatar_customization'. After
+ * this call succeeds, the player_avatar_identity_lock DB trigger makes
+ * species/primary_species/secondary_species/hybrid_ratio/
+ * glitch_*_ratio immutable for every future authenticated UPDATE,
+ * including ones this same function would otherwise be able to make —
+ * calling this again on an already-confirmed avatar throws
+ * SPECIES_ALREADY_CONFIRMED. */
+export async function confirmAvatarSpecies(input: AvatarSpeciesConfirmationInput): Promise<PlayerState> {
+  const { data, error } = await supabase.rpc('confirm_avatar_species', {
+    p_species: input.species,
+    p_primary_species: input.primary_species ?? null,
+    p_secondary_species: input.secondary_species ?? null,
+    p_hybrid_ratio: input.hybrid_ratio ?? null,
+    p_glitch_human_ratio: input.glitch_human_ratio ?? null,
+    p_glitch_alien_ratio: input.glitch_alien_ratio ?? null,
+    p_glitch_ai_ratio: input.glitch_ai_ratio ?? null,
+  });
+  if (error) throw error;
+  return data as PlayerState;
+}
+
+/** Validates species is confirmed + a foundation is chosen, then
+ * advances player_progress.onboarding_stage to 'avatar_complete'
+ * (idempotent — safe to call again if already complete). Does NOT
+ * save cosmetic configuration itself — call
+ * avatarService.savePlayerAvatar() first so nothing is lost if this
+ * step is retried. */
+export async function completeInitialAvatar(): Promise<PlayerState> {
+  const { data, error } = await supabase.rpc('complete_initial_avatar');
   if (error) throw error;
   return data as PlayerState;
 }
