@@ -13,7 +13,7 @@ const links = {
   art: `${ROOT}#gallery`,
   merch: `${ROOT}#merch`,
   passport: `${ROOT}passport/`,
-  instagram: 'https://www.instagram.com/bearcubz/',
+  instagram: 'https://www.instagram.com/bearcubzmusic/',
   spotify: 'https://open.spotify.com/artist/7wywlCfgO9T0cqiGe1Q6fV',
   youtube: 'https://www.youtube.com/@bearcubzmusic',
   tiktok: 'https://www.tiktok.com/@bearcubzmusic',
@@ -119,7 +119,7 @@ function App() {
       <article className="next-panel">
         <img src={carePackage} alt="Moon Racer care package with apparel, album, collectibles and mystery drops aboard a yacht" width="1672" height="941" loading="lazy"/>
         <div className="next-overlay"/><div className="scan" aria-hidden="true"/>
-        <div className="next-copy"><p className="eyebrow">Future live cyberpunk events</p><h2>What will the<br/>signal drop next?</h2><p>New music. New worlds. New experiences.<br/>The Moon Racer universe always has another transmission incoming.</p><div className="button-row"><a className="primary-button" href={links.instagram} target="_blank" rel="noopener noreferrer">Stay tuned @BEARCUBZ <span>↗</span></a><a className="outline-button" href={links.passport}>Claim your Passport</a></div></div>
+        <div className="next-copy"><p className="eyebrow">Future live cyberpunk events</p><h2>What will the<br/>signal drop next?</h2><p>New music. New worlds. New experiences.<br/>The Moon Racer universe always has another transmission incoming.</p><div className="button-row"><a className="primary-button" href={links.instagram} target="_blank" rel="noopener noreferrer">Stay tuned @BEARCUBZMUSIC <span>↗</span></a><a className="outline-button" href={links.passport}>Claim your Passport</a></div></div>
         <div className="classified"><small>Next drop</small><b>Classified</b></div>
       </article>
     </section>
