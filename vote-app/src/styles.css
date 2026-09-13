@@ -1,0 +1,467 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --cyan: #00e5ff;
+  --pink: #ff2d78;
+  --purple: #bf5fff;
+  --violet: #9d58ff;
+  --magenta: #ff42db;
+  --amber: #ffb700;
+  --red: #ff2d55;
+  --dark: #05060a;
+  --panel: #0d0e14;
+  --panel2: #13132a;
+  --line: rgba(0, 229, 255, 0.22);
+  --muted: rgba(255, 255, 255, 0.62);
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: dark; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--dark);
+  color: #f2f4fa;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+body.modal-open { overflow: hidden; }
+a { color: inherit; }
+button { font: inherit; }
+h1, h2, h3 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; margin: 0; }
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 2000;
+  padding: 12px 16px;
+  background: var(--cyan);
+  color: #000;
+  font-weight: 700;
+}
+.skip-link:focus { top: 12px; }
+
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+.btn-primary, .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border: none;
+  cursor: pointer;
+  font: 700 12px 'Orbitron', sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: transform 0.15s ease, background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn-primary {
+  background: var(--cyan);
+  color: #000;
+}
+.btn-primary:hover:not(:disabled), .btn-primary:focus-visible { background: #7cf2ff; }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-outline {
+  background: rgba(4, 6, 12, 0.4);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.btn-outline:hover, .btn-outline:focus-visible { border-color: var(--cyan); color: var(--cyan); }
+
+/* ---------- nav ---------- */
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 18px clamp(18px, 4vw, 48px);
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(rgba(2, 3, 8, 0.96), transparent);
+}
+.wordmark {
+  font: 900 18px 'Orbitron', sans-serif;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  color: #fff;
+}
+.site-nav nav { display: flex; gap: clamp(12px, 2vw, 26px); flex-wrap: wrap; }
+.site-nav nav a {
+  font: 700 11px 'Share Tech Mono', monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.62);
+  transition: color 0.2s;
+}
+.site-nav nav a:hover, .site-nav nav a:focus-visible { color: var(--cyan); }
+
+/* ---------- shell ---------- */
+.vote-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) clamp(16px, 4vw, 40px) 80px;
+}
+.vote-shell__intro { text-align: center; max-width: 640px; margin: 0 auto 34px; }
+.vote-shell__eyebrow {
+  font: 700 11px 'Share Tech Mono', monospace;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin: 0 0 10px;
+}
+.vote-shell__intro h1 {
+  font-size: clamp(32px, 5.5vw, 54px);
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+  margin-bottom: 14px;
+}
+.vote-shell__lead { color: var(--muted); font-size: 16px; line-height: 1.5; margin: 0; }
+.vote-shell__notice {
+  margin-top: 18px;
+  text-align: center;
+  font: 12px 'Share Tech Mono', monospace;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+}
+
+/* ---------- carousel ---------- */
+.carousel {
+  position: relative;
+  height: clamp(220px, 34vw, 300px);
+  margin: 0 auto 28px;
+  max-width: 900px;
+}
+.carousel:focus-visible { outline-offset: 6px; }
+.carousel__viewport {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+.carousel__track {
+  position: relative;
+  height: 100%;
+  /* Claim the whole gesture for JS — pan-y still let some browsers'
+     native-vs-JS gesture arbitration cancel the pointer sequence
+     before a horizontal drag could be recognized (observed as an
+     early pointercancel). The carousel is a fixed-height focal
+     control, not a scroll container, so giving up native vertical
+     panning here is an acceptable trade. */
+  touch-action: none;
+}
+.carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(5, 6, 10, 0.7);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 200;
+  transition: border-color 0.2s, color 0.2s;
+}
+.carousel__arrow:hover:not(:disabled), .carousel__arrow:focus-visible { border-color: var(--cyan); color: var(--cyan); }
+.carousel__arrow:disabled { opacity: 0.3; cursor: default; }
+.carousel__arrow--prev { left: -4px; }
+.carousel__arrow--next { right: -4px; }
+
+.track-card {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: clamp(140px, 20vw, 200px);
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.track-card__frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.track-card--selected .track-card__frame {
+  border-color: var(--cyan);
+  box-shadow: 0 0 26px rgba(0, 229, 255, 0.28);
+}
+.track-card__frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.track-card__number {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 3px 7px;
+  background: rgba(3, 5, 10, 0.82);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  font: 10px 'Share Tech Mono', monospace;
+  letter-spacing: 0.12em;
+  color: var(--cyan);
+}
+.track-card__title {
+  font: 700 13px 'Orbitron', sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  text-align: center;
+}
+
+/* ---------- player ---------- */
+.player {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, rgba(13, 14, 20, 0.9), rgba(9, 10, 16, 0.9));
+}
+.player__meta { text-align: center; margin-bottom: 18px; }
+.player__index {
+  display: block;
+  font: 11px 'Share Tech Mono', monospace;
+  letter-spacing: 0.2em;
+  color: var(--cyan);
+  margin-bottom: 6px;
+}
+.player__title { font-size: clamp(22px, 4vw, 30px); letter-spacing: -0.01em; }
+.player__artist { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.14em; }
+
+.player__transport { display: flex; align-items: center; justify-content: center; gap: 22px; margin-bottom: 16px; }
+.player__skip, .player__play {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(4, 6, 12, 0.5);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+.player__skip { width: 42px; height: 42px; }
+.player__skip svg { width: 18px; height: 18px; fill: currentColor; }
+.player__play { width: 62px; height: 62px; border-radius: 50%; border-color: var(--cyan); color: var(--cyan); }
+.player__play svg { width: 24px; height: 24px; fill: currentColor; }
+.player__skip:hover, .player__skip:focus-visible, .player__play:hover, .player__play:focus-visible {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.25);
+}
+
+.player__progress { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.player__time { font: 11px 'Share Tech Mono', monospace; color: var(--muted); width: 38px; text-align: center; }
+.player__seek {
+  flex: 1;
+  accent-color: var(--cyan);
+  height: 4px;
+  cursor: pointer;
+}
+
+.player__vote { text-align: center; }
+.player__voted-status { font: 12px 'Share Tech Mono', monospace; letter-spacing: 0.06em; color: var(--violet); margin: 0 0 12px; text-transform: uppercase; }
+.player__vote-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.player__vote-btn { min-width: 220px; }
+
+/* ---------- transmission decoding / results overlay ---------- */
+.decode {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  overflow-y: auto;
+  display: grid;
+  place-items: start center;
+  padding: clamp(24px, 6vw, 60px) clamp(16px, 4vw, 40px);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(157, 88, 255, 0.18), transparent 32rem),
+    linear-gradient(160deg, #04040c, #05060a 60%, #060412);
+}
+.decode__streams {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 6px;
+  padding: 0 8vw;
+  pointer-events: none;
+  overflow: hidden;
+}
+.decode__streams span {
+  flex: 1;
+  background: linear-gradient(180deg, transparent, var(--cyan), var(--violet), transparent);
+  opacity: 0.5;
+  transform: translateY(100%);
+  animation: decode-rise 0.9s calc(var(--i) * 28ms) ease-out infinite;
+}
+@keyframes decode-rise {
+  0% { transform: translateY(100%); opacity: 0; }
+  35% { opacity: 0.6; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+.decode__panel {
+  position: relative;
+  width: min(720px, 100%);
+  margin-top: clamp(20px, 6vh, 60px);
+  text-align: center;
+}
+
+.decode__readout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  animation: decode-flicker 0.6s steps(6, end);
+}
+.decode__readout span {
+  font: 12px 'Share Tech Mono', monospace;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+@keyframes decode-flicker {
+  0%, 100% { opacity: 1; }
+  10% { opacity: 0.2; }
+  20% { opacity: 1; }
+  32% { opacity: 0.3; }
+  45% { opacity: 1; }
+}
+
+.decode__lock {
+  animation: decode-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.decode__lock img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border: 1px solid var(--cyan);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.35);
+}
+.decode__lock-title { margin-top: 14px; font: 700 18px 'Orbitron', sans-serif; text-transform: uppercase; }
+.decode__lock-status {
+  margin-top: 6px;
+  font: 12px 'Share Tech Mono', monospace;
+  letter-spacing: 0.2em;
+  color: var(--magenta);
+  text-shadow: 0 0 10px rgba(255, 66, 219, 0.6);
+}
+@keyframes decode-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.decode__results { animation: decode-fade-up 0.5s ease-out both; }
+@keyframes decode-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.decode__eyebrow {
+  font: 11px 'Share Tech Mono', monospace;
+  letter-spacing: 0.24em;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.decode__results h2 {
+  font-size: clamp(22px, 4vw, 32px);
+  margin-bottom: 22px;
+  color: #fff;
+}
+.decode__reset { margin: 16px 0 0; font: 12px 'Share Tech Mono', monospace; color: var(--muted); }
+.decode__actions { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 22px; }
+.decode__links {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.decode__links a {
+  font: 10px 'Share Tech Mono', monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+}
+.decode__links a:hover, .decode__links a:focus-visible { color: var(--cyan); }
+
+/* ---------- leaderboard ---------- */
+.leaderboard { list-style: none; margin: 0; padding: 0; text-align: left; }
+.leaderboard__row {
+  display: grid;
+  grid-template-columns: 24px 1fr 90px 42px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.leaderboard--animate .leaderboard__row {
+  animation: decode-row-in 0.4s var(--row-delay, 0ms) ease-out both;
+}
+@keyframes decode-row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.leaderboard__rank { font: 700 12px 'Share Tech Mono', monospace; color: var(--muted); }
+.leaderboard__title { font: 700 13px 'Orbitron', sans-serif; text-transform: uppercase; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leaderboard__bar-track { grid-column: 1 / -1; height: 5px; background: rgba(255, 255, 255, 0.08); order: 5; }
+.leaderboard__bar { display: block; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+.leaderboard__pct { font: 12px 'Share Tech Mono', monospace; color: var(--cyan); text-align: right; }
+.leaderboard__votes { display: none; }
+.leaderboard__row--mine { background: rgba(157, 88, 255, 0.12); }
+.leaderboard__row--mine .leaderboard__title { color: var(--violet); }
+.leaderboard__marker {
+  grid-column: 1 / -1;
+  order: 6;
+  font: 10px 'Share Tech Mono', monospace;
+  letter-spacing: 0.16em;
+  color: var(--magenta);
+  text-shadow: 0 0 10px rgba(255, 66, 219, 0.6);
+}
+.leaderboard__total {
+  margin-top: 10px;
+  text-align: center;
+  font: 10px 'Share Tech Mono', monospace;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 720px) {
+  .site-nav { justify-content: center; text-align: center; }
+  .carousel__arrow--prev { left: 0; }
+  .carousel__arrow--next { right: 0; }
+  .leaderboard__row { grid-template-columns: 20px 1fr 70px 34px; }
+}
+
+@media (max-width: 420px) {
+  .player__transport { gap: 14px; }
+  .player__vote-actions { flex-direction: column; align-items: stretch; }
+  .decode__links { gap: 10px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .track-card { transition: none; }
+  .decode__streams span,
+  .decode__readout,
+  .decode__lock,
+  .decode__results,
+  .leaderboard--animate .leaderboard__row {
+    animation: none !important;
+  }
+}

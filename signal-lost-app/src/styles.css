@@ -1,0 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: #020208; font-family: 'Rajdhani', sans-serif; }
+a { color: inherit; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid #62f6ff; outline-offset: 2px; }

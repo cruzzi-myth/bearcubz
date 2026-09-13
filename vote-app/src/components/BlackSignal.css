@@ -1,0 +1,278 @@
+/* Entrance is done with plain CSS keyframes (no animation library is
+   installed in this repo) instead of the AnimatePresence/motion props
+   a Framer Motion version would use. Every animated rule below is
+   neutralized in the prefers-reduced-motion block at the bottom. */
+
+.black-signal {
+  --void: #020208;
+  --signal-cyan: #62f6ff;
+  --signal-violet: #9d58ff;
+  --signal-magenta: #ff42db;
+  --signal-red: #ff304f;
+  position: fixed;
+  inset: 0;
+  z-index: 1560;
+  display: grid;
+  place-items: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: clamp(1rem, 4vw, 4rem);
+  color: #f6f3ff;
+  font-family: 'Rajdhani', sans-serif;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(125, 65, 255, .2), transparent 27rem),
+    linear-gradient(145deg, #050413, var(--void) 58%, #08020e);
+  isolation: isolate;
+  animation: black-signal-in .4s ease-out both;
+}
+
+.black-signal--page {
+  position: relative;
+  min-height: 100svh;
+}
+
+.black-signal__noise {
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  opacity: .22;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    rgba(99, 246, 255, .15) 3px,
+    transparent 4px
+  );
+  animation: black-signal-scan 7s linear infinite;
+}
+
+.black-signal__entity {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  animation: black-signal-entity-in .9s cubic-bezier(.16,1,.3,1) both;
+}
+
+/* The asset (black-signal-156.svg) already has real alpha transparency —
+   a transparent canvas around a vector-wrapped character — so it's
+   presented normally: no mix-blend-mode/mask/filter trick standing in
+   for a cutout. Sizing/glow per the approved spec. */
+.black-signal__character {
+  display: block;
+  width: min(68vw, 680px);
+  height: auto;
+  max-height: min(74vh, 920px);
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: normal;
+  filter:
+    drop-shadow(0 0 16px rgba(65, 225, 255, 0.34))
+    drop-shadow(0 0 32px rgba(153, 70, 255, 0.25))
+    drop-shadow(0 0 50px rgba(255, 35, 118, 0.12));
+  animation: black-signal-drift 6.4s ease-in-out infinite, black-signal-interference 6.4s steps(1, end) infinite;
+}
+
+/* Chromatic-split ghosts: brief, offset, hue-shifted, screen-blended
+   copies of the SAME transparent image — used only for the glitch
+   pulse, never to hide anything on the base character above. */
+.black-signal__character--ghost {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.black-signal__character--cyan {
+  filter: hue-rotate(150deg) saturate(2.4) brightness(1.3) drop-shadow(0 0 14px rgba(65, 225, 255, 0.5));
+  animation: black-signal-ghost-cyan 6.4s steps(1, end) infinite;
+}
+
+.black-signal__character--magenta {
+  filter: hue-rotate(-40deg) saturate(2.4) brightness(1.2) drop-shadow(0 0 14px rgba(255, 35, 160, 0.5));
+  animation: black-signal-ghost-magenta 6.4s steps(1, end) infinite;
+}
+
+/* Brief red signal-corruption flash — a soft full-bleed tint, not a
+   panel or background, gone as quickly as it appears. */
+.black-signal__corruption {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 35, 79, .22), transparent 60%);
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: black-signal-corruption 6.4s steps(1, end) infinite;
+}
+
+.black-signal__panel {
+  width: min(44rem, 100%);
+  margin-top: min(42svh, 25rem);
+  padding: clamp(1.2rem, 4vw, 2.2rem);
+  border: 1px solid rgba(98, 246, 255, .38);
+  background: linear-gradient(135deg, rgba(4, 4, 16, .9), rgba(15, 4, 24, .72));
+  box-shadow: 0 0 50px rgba(95, 40, 180, .25), inset 0 0 35px rgba(98,246,255,.04);
+  backdrop-filter: blur(16px);
+  text-align: center;
+  animation: black-signal-panel-in .55s .35s cubic-bezier(.16,1,.3,1) both;
+}
+
+.black-signal__eyebrow,
+.black-signal__code,
+.black-signal__receipt,
+.black-signal__countdown {
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.black-signal__eyebrow { color: var(--signal-cyan); font-size: .85rem; margin: 0 0 .4rem; }
+.black-signal__code { color: var(--signal-red); font-size: .8rem; margin: 0 0 .2rem; }
+
+.black-signal h1 {
+  position: relative;
+  margin: .35rem 0 .75rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(2rem, 7vw, 5.2rem);
+  font-weight: 900;
+  line-height: .92;
+  letter-spacing: -.035em;
+  text-shadow: -2px 0 var(--signal-cyan), 2px 0 var(--signal-magenta);
+}
+
+.black-signal p { margin: 0 0 .5rem; font-size: 1rem; color: rgba(246, 243, 255, .82); }
+
+.black-signal__receipt { color: var(--signal-violet); }
+.black-signal__countdown { color: var(--signal-magenta); font-variant-numeric: tabular-nums; }
+
+.black-signal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .75rem;
+  margin-top: 1.3rem;
+}
+
+.black-signal__actions button,
+.black-signal__actions a {
+  min-height: 44px;
+  padding: .75rem 1rem;
+  border: 1px solid rgba(98,246,255,.55);
+  color: inherit;
+  background: rgba(4,5,17,.72);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: border-color .2s, color .2s;
+}
+
+.black-signal__actions :is(button, a):hover {
+  border-color: var(--signal-cyan);
+  color: var(--signal-cyan);
+}
+
+.black-signal__actions :is(button, a):focus-visible {
+  outline: 3px solid var(--signal-cyan);
+  outline-offset: 3px;
+}
+
+@keyframes black-signal-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes black-signal-entity-in {
+  from { opacity: 0; transform: scale(.86); filter: blur(18px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@keyframes black-signal-panel-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes black-signal-scan {
+  to { transform: translateY(12%); }
+}
+
+/* Every glitch keyframe below sits at rest for ~89% of its 6.4s cycle —
+   character fully visible, ghosts and corruption hidden — with a single
+   brief (~0.45s) disturbance near the end. That rest state is also
+   keyframe 0%/100%, so collapsing to near-zero duration under reduced
+   motion (below) always lands on the calm, fully legible frame. */
+
+@keyframes black-signal-drift {
+  0%, 89%, 100% { transform: translate(0, 0); }
+  90% { transform: translate(-7px, 2px); }
+  92% { transform: translate(9px, -2px); }
+  94% { transform: translate(-4px, 3px); }
+  96% { transform: translate(0, 0); }
+}
+
+@keyframes black-signal-interference {
+  0%, 88%, 100% { opacity: 1; }
+  89% { opacity: .6; }
+  90% { opacity: 1; }
+  93% { opacity: .72; }
+  95% { opacity: 1; }
+}
+
+@keyframes black-signal-ghost-cyan {
+  0%, 89%, 100% { opacity: 0; transform: translateX(0); clip-path: inset(0 0 0 0); }
+  90% { opacity: .55; transform: translateX(-10px); clip-path: inset(22% 0 55% 0); }
+  93% { opacity: .4; transform: translateX(-6px); clip-path: inset(48% 0 20% 0); }
+  96% { opacity: 0; transform: translateX(0); clip-path: inset(0 0 0 0); }
+}
+
+@keyframes black-signal-ghost-magenta {
+  0%, 89%, 100% { opacity: 0; transform: translateX(0); }
+  90% { opacity: .5; transform: translateX(10px); }
+  93% { opacity: .38; transform: translateX(6px); }
+  96% { opacity: 0; transform: translateX(0); }
+}
+
+@keyframes black-signal-corruption {
+  0%, 90%, 100% { opacity: 0; }
+  91% { opacity: .8; }
+  92% { opacity: .15; }
+  93% { opacity: .55; }
+  94% { opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .black-signal {
+    align-items: end;
+    padding-bottom: max(clamp(1rem, 4vw, 4rem), env(safe-area-inset-bottom));
+    padding-left: max(clamp(1rem, 4vw, 4rem), env(safe-area-inset-left));
+    padding-right: max(clamp(1rem, 4vw, 4rem), env(safe-area-inset-right));
+  }
+  .black-signal__panel { margin-top: 38svh; max-height: 58svh; overflow: auto; }
+  .black-signal__character { width: min(82vw, 520px); max-height: 42svh; }
+  .black-signal__actions { display: grid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .black-signal,
+  .black-signal__entity,
+  .black-signal__panel,
+  .black-signal *,
+  .black-signal *::before,
+  .black-signal *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  /* Land on the calm rest frame explicitly rather than relying on
+     collapsed-duration timing: character fully visible, both glitch
+     ghosts and the corruption flash hidden. */
+  .black-signal__character { opacity: 1; transform: none; }
+  .black-signal__character--ghost,
+  .black-signal__corruption {
+    opacity: 0 !important;
+  }
+}
