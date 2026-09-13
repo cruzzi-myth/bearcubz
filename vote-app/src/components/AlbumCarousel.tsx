@@ -59,20 +59,11 @@ export function AlbumCarousel({ tracks, selectedIndex, onSelect, suspend = false
 
   // Convert the live drag distance into a fraction of a card-slot so
   // the whole strip tracks the pointer/finger before snapping on release.
-  const dragOffset = dragStartX.current !== null ? dragX / 3.2 : 0;
+  const dragging = dragStartX.current !== null;
+  const dragOffset = dragging ? dragX / 3.2 : 0;
 
   return (
     <div className="album-carousel">
-      <button
-        type="button"
-        className="carousel__arrow carousel__arrow--prev"
-        onClick={() => onSelect(clamp(selectedIndex - 1))}
-        aria-label="Previous track"
-        disabled={selectedIndex === 0}
-      >
-        ‹
-      </button>
-
       <div
         className="carousel"
         role="listbox"
@@ -95,22 +86,42 @@ export function AlbumCarousel({ tracks, selectedIndex, onSelect, suspend = false
                   offset={index - selectedIndex}
                   onSelect={() => onSelect(index)}
                   suspend={suspend}
+                  dragging={dragging}
                 />
               ))}
             </div>
           </div>
         </div>
-      </div>
 
-      <button
-        type="button"
-        className="carousel__arrow carousel__arrow--next"
-        onClick={() => onSelect(clamp(selectedIndex + 1))}
-        aria-label="Next track"
-        disabled={selectedIndex === tracks.length - 1}
-      >
-        ›
-      </button>
+        {/*
+          Arrows overlay the full-width viewport rather than sharing
+          flex space with it — giving them their own flex column used
+          to shrink the clipped viewport by 2x44px, which on narrow
+          phones left the viewport box *narrower than the selected card
+          itself* (measured: ~30px of the selected artwork was being
+          clipped off each side at 320-430px, and neighbor cards had
+          zero visible peek). They sit above the card layer via z-index,
+          not by taking layout width away from it.
+        */}
+        <button
+          type="button"
+          className="carousel__arrow carousel__arrow--prev"
+          onClick={() => onSelect(clamp(selectedIndex - 1))}
+          aria-label="Previous track"
+          disabled={selectedIndex === 0}
+        >
+          ‹
+        </button>
+        <button
+          type="button"
+          className="carousel__arrow carousel__arrow--next"
+          onClick={() => onSelect(clamp(selectedIndex + 1))}
+          aria-label="Next track"
+          disabled={selectedIndex === tracks.length - 1}
+        >
+          ›
+        </button>
+      </div>
     </div>
   );
 }
