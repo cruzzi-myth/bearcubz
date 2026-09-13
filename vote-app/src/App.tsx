@@ -6,6 +6,7 @@ import { AlbumCarousel } from './components/AlbumCarousel';
 import { AudioPlayer } from './components/AudioPlayer';
 import { TransmissionDecoding } from './components/TransmissionDecoding';
 import { BlackSignal, type BlackSignalReason } from './components/BlackSignal';
+import { MoonRacerBackground } from './components/MoonRacerBackground';
 
 const HOME = 'https://cruzzi-myth.github.io/bearcubz/';
 const UNIVERSE = 'https://cruzzi-myth.github.io/bearcubz/universe/';
@@ -106,8 +107,19 @@ function App() {
 
   const clampIndex = (index: number) => Math.max(0, Math.min(tracks.length - 1, index));
 
+  // Non-essential background motion (orbits, particles, sweep, idle
+  // pulse, parallax) steps aside while a modal/overlay owns attention —
+  // Transmission Decoding, results, or Black Signal stay the strongest
+  // motion on the page either way.
+  const suspendBackground = ui.type === 'decoding' || ui.type === 'results' || ui.type === 'blocked' || ui.type === 'error';
+
   return (
     <main>
+      <MoonRacerBackground
+        selectedTrackId={track.id}
+        selectedArtworkSrc={track.artworkSrc ?? ''}
+        suspend={suspendBackground}
+      />
       <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="site-nav">
         <a className="wordmark" href={HOME} aria-label="BEλR CUBZ homepage">MOON RACER</a>
@@ -129,7 +141,12 @@ function App() {
           </p>
         </div>
 
-        <AlbumCarousel tracks={tracks} selectedIndex={selectedIndex} onSelect={(i) => setSelectedIndex(clampIndex(i))} />
+        <AlbumCarousel
+          tracks={tracks}
+          selectedIndex={selectedIndex}
+          onSelect={(i) => setSelectedIndex(clampIndex(i))}
+          suspend={suspendBackground}
+        />
 
         <AudioPlayer
           track={track}

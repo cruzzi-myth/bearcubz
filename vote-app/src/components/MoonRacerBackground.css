@@ -1,0 +1,242 @@
+/* Layer order (back to front): deep base -> selected-track blurred art
+   -> hero artwork -> tracklist fragment -> orbital rings/circuitry ->
+   telemetry -> signal particles -> vignette. The whole stack sits fixed
+   behind the page (.vote-shell/.site-nav get z-index:1 in styles.css;
+   .decode/.black-signal already sit far above at 1500/1560). */
+
+.vote-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  --parallax-x: 0;
+  --parallax-y: 0;
+  --bg-blur: 50px;
+}
+
+.vote-bg__base {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(93, 60, 200, 0.16), transparent 55%),
+    linear-gradient(180deg, #030309, #05060f 45%, #020208);
+}
+
+/* ---------- selected-track reactive art ---------- */
+.vote-bg__track-art {
+  position: absolute;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
+  object-fit: cover;
+  opacity: 0.13;
+  filter: blur(var(--bg-blur)) saturate(1.4) brightness(0.48);
+  transform: scale(1.08);
+  transition:
+    opacity 520ms ease,
+    filter 520ms ease,
+    transform 900ms cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+.vote-bg__track-art--entering {
+  opacity: 0;
+  animation: vote-bg-art-in 560ms ease forwards;
+}
+@keyframes vote-bg-art-in {
+  from { opacity: 0; transform: scale(1.12); }
+  to { opacity: 0.13; transform: scale(1.08); }
+}
+
+/* ---------- hero + tracklist fragments ---------- */
+.vote-bg__hero {
+  position: absolute;
+  right: -6%;
+  bottom: -8%;
+  width: min(72vw, 1000px);
+  height: auto;
+  opacity: 0.22;
+  object-fit: cover;
+  object-position: top center;
+  filter: saturate(1.15) contrast(1.05);
+  mask-image: radial-gradient(ellipse 70% 65% at 68% 35%, #000 45%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 65% at 68% 35%, #000 45%, transparent 85%);
+  transform: translate3d(calc(var(--parallax-x) * -14px), calc(var(--parallax-y) * -10px), 0);
+  transition: transform 120ms linear;
+}
+
+.vote-bg__tracklist {
+  position: absolute;
+  left: -8%;
+  top: -6%;
+  width: min(46vw, 620px);
+  height: auto;
+  opacity: 0.16;
+  object-fit: cover;
+  filter: saturate(1.1);
+  mask-image: linear-gradient(135deg, #000 30%, transparent 78%);
+  -webkit-mask-image: linear-gradient(135deg, #000 30%, transparent 78%);
+  transform: translate3d(calc(var(--parallax-x) * -8px), calc(var(--parallax-y) * -6px), 0);
+  transition: transform 120ms linear;
+}
+
+/* ---------- orbital rings + lunar circuitry ---------- */
+.vote-bg__orbital {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(150vh, 1400px);
+  height: min(150vh, 1400px);
+  transform: translate3d(calc(-50% + var(--parallax-x) * -6px), calc(-50% + var(--parallax-y) * -6px), 0);
+  opacity: 0.5;
+  overflow: visible;
+}
+.vote-bg__ring {
+  fill: none;
+  stroke-width: 1;
+  transform-origin: 500px 500px;
+}
+.vote-bg__ring--a { stroke: rgba(0, 229, 255, 0.4); animation: vote-bg-spin 140s linear infinite; }
+.vote-bg__ring--b { stroke: rgba(157, 88, 255, 0.32); animation: vote-bg-spin-reverse 200s linear infinite; }
+.vote-bg__ring--c { stroke: rgba(255, 66, 219, 0.22); animation: vote-bg-spin 95s linear infinite; }
+.vote-bg__node { fill: currentColor; color: rgba(120, 235, 255, 0.85); animation: vote-bg-node-pulse 3.4s ease-in-out infinite; }
+@keyframes vote-bg-spin { to { transform: rotate(360deg); } }
+@keyframes vote-bg-spin-reverse { to { transform: rotate(-360deg); } }
+@keyframes vote-bg-node-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+.vote-bg__signal-overlay {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(58vh, 560px);
+  height: auto;
+  transform: translate3d(-50%, -50%, 0);
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  animation: vote-bg-emblem-spin 260s linear infinite;
+}
+@keyframes vote-bg-emblem-spin { to { transform: translate3d(-50%, -50%, 0) rotate(360deg); } }
+
+/* ---------- racing telemetry ---------- */
+.vote-bg__telemetry {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.22;
+}
+.vote-bg__telemetry line { stroke: rgba(98, 220, 255, 0.28); stroke-width: 1; stroke-dasharray: 2 10; }
+.vote-bg__telemetry text {
+  fill: rgba(150, 235, 255, 0.55);
+  font: 11px 'Share Tech Mono', monospace;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- signal particles ---------- */
+.vote-bg__particles { position: absolute; inset: 0; }
+.vote-bg__particle {
+  position: absolute;
+  bottom: -5%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  opacity: 0;
+  animation-name: vote-bg-particle-rise;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.vote-bg__particle--cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.vote-bg__particle--violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
+.vote-bg__particle--magenta { background: var(--magenta); box-shadow: 0 0 6px var(--magenta); }
+@keyframes vote-bg-particle-rise {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: 0.7; }
+  88% { opacity: 0.5; }
+  100% { transform: translateY(-108vh); opacity: 0; }
+}
+
+/* ---------- readability vignette ---------- */
+.vote-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(3, 4, 14, 0.05) 0%, rgba(3, 4, 14, 0.48) 52%, rgba(2, 2, 9, 0.94) 100%),
+    linear-gradient(180deg, rgba(2, 3, 12, 0.24), rgba(2, 2, 8, 0.82));
+}
+
+/* ---------- pause background motion (modal open / tab hidden) ---------- */
+.vote-bg--paused .vote-bg__ring,
+.vote-bg--paused .vote-bg__node,
+.vote-bg--paused .vote-bg__signal-overlay,
+.vote-bg--paused .vote-bg__particle {
+  animation-play-state: paused;
+}
+
+/* ---------- mobile: simplify ---------- */
+@media (max-width: 600px) {
+  .vote-bg { --bg-blur: 24px; }
+  .vote-bg__tracklist { display: none; } /* heaviest decorative layer goes first */
+  .vote-bg__hero { opacity: 0.16; width: 92vw; }
+  .vote-bg__telemetry { opacity: 0.14; }
+  .vote-bg__particle:nth-child(n + 8) { display: none; }
+  .vote-bg__hero,
+  .vote-bg__tracklist,
+  .vote-bg__orbital {
+    transform: none !important; /* no parallax on touch */
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 601px) {
+  .vote-bg { --bg-blur: 38px; }
+}
+
+@media (pointer: coarse) {
+  .vote-bg__hero,
+  .vote-bg__tracklist,
+  .vote-bg__orbital {
+    transform: none !important;
+  }
+}
+
+/* ---------- reduced motion ---------- */
+.vote-bg--reduced-motion .vote-bg__ring,
+.vote-bg--reduced-motion .vote-bg__node,
+.vote-bg--reduced-motion .vote-bg__signal-overlay,
+.vote-bg--reduced-motion .vote-bg__particle {
+  animation: none !important;
+}
+.vote-bg--reduced-motion .vote-bg__particle { opacity: 0; }
+.vote-bg--reduced-motion .vote-bg__hero,
+.vote-bg--reduced-motion .vote-bg__tracklist,
+.vote-bg--reduced-motion .vote-bg__orbital {
+  transform: none !important;
+}
+.vote-bg--reduced-motion .vote-bg__track-art {
+  transition: opacity 200ms linear !important;
+}
+.vote-bg--reduced-motion .vote-bg__track-art--entering {
+  animation: none !important;
+  opacity: 0.13;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vote-bg__ring,
+  .vote-bg__node,
+  .vote-bg__signal-overlay,
+  .vote-bg__particle {
+    animation: none !important;
+  }
+  .vote-bg__particle { opacity: 0; }
+  .vote-bg__hero,
+  .vote-bg__tracklist,
+  .vote-bg__orbital {
+    transform: none !important;
+  }
+  .vote-bg__track-art {
+    transition: opacity 200ms linear !important;
+  }
+  .vote-bg__track-art--entering {
+    animation: none !important;
+    opacity: 0.13;
+  }
+}

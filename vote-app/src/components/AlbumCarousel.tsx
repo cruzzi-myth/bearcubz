@@ -6,11 +6,12 @@ type Props = {
   tracks: MoonRacerTrack[];
   selectedIndex: number;
   onSelect: (index: number) => void;
+  suspend?: boolean;
 };
 
 const SWIPE_THRESHOLD_PX = 44;
 
-export function AlbumCarousel({ tracks, selectedIndex, onSelect }: Props) {
+export function AlbumCarousel({ tracks, selectedIndex, onSelect, suspend = false }: Props) {
   // dragXRef is the source of truth read at release time; dragX (state)
   // only drives the live visual offset. Several pointermove events can
   // land in one synchronous batch (a fast flick, or events dispatched
@@ -61,30 +62,7 @@ export function AlbumCarousel({ tracks, selectedIndex, onSelect }: Props) {
   const dragOffset = dragStartX.current !== null ? dragX / 3.2 : 0;
 
   return (
-    <div
-      className="carousel"
-      role="listbox"
-      aria-label="Album tracks"
-      tabIndex={0}
-      onKeyDown={onKeyDown}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-    >
-      <div className="carousel__viewport">
-        <div className="carousel__track" style={{ transform: `translateX(${dragOffset}%)` }}>
-          {tracks.map((track, index) => (
-            <TrackCard
-              key={track.id}
-              track={track}
-              trackNumber={index + 1}
-              offset={index - selectedIndex}
-              onSelect={() => onSelect(index)}
-            />
-          ))}
-        </div>
-      </div>
+    <div className="album-carousel">
       <button
         type="button"
         className="carousel__arrow carousel__arrow--prev"
@@ -94,6 +72,36 @@ export function AlbumCarousel({ tracks, selectedIndex, onSelect }: Props) {
       >
         ‹
       </button>
+
+      <div
+        className="carousel"
+        role="listbox"
+        aria-label="Album tracks"
+        tabIndex={0}
+        onKeyDown={onKeyDown}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+      >
+        <div className="carousel__shell">
+          <div className="carousel__viewport">
+            <div className="carousel__track" style={{ transform: `translateX(${dragOffset}%)` }}>
+              {tracks.map((track, index) => (
+                <TrackCard
+                  key={track.id}
+                  track={track}
+                  trackNumber={index + 1}
+                  offset={index - selectedIndex}
+                  onSelect={() => onSelect(index)}
+                  suspend={suspend}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <button
         type="button"
         className="carousel__arrow carousel__arrow--next"
