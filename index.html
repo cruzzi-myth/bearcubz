@@ -164,13 +164,14 @@ section{padding:100px 80px;position:relative}
 .track-item.playing{background:rgba(0,229,255,.07);padding-left:14px}
 .track-num{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,255,255,.2);width:22px;text-align:right;flex-shrink:0}
 .track-play-btn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.track-play-icon{font-size:12px;color:var(--cyan);opacity:0;transition:opacity .2s}
-.track-item:hover .track-play-icon,.track-item.playing .track-play-icon{opacity:1}
+.track-play-icon{font:inherit;font-size:12px;color:var(--cyan);background:none;border:none;padding:0;margin:0;line-height:1;cursor:pointer;opacity:0;transition:opacity .2s}
+.track-item:hover .track-play-icon,.track-item.playing .track-play-icon,.track-play-icon:focus-visible{opacity:1}
 .track-name{font-family:'Rajdhani';font-weight:600;font-size:14px;color:rgba(255,255,255,.68);flex:1;letter-spacing:.04em;transition:color .2s}
 .track-item:hover .track-name,.track-item.playing .track-name{color:var(--cyan)}
 .track-status{font-size:8px;letter-spacing:.1em;padding:2px 8px;border:1px solid;flex-shrink:0}
 .track-status.out{color:var(--pink);border-color:rgba(255,45,120,.3)}
 .track-status.album{color:rgba(255,255,255,.2);border-color:rgba(255,255,255,.08)}
+.track-status.exclusive{font-family:inherit;color:#52ffb8;border-color:rgba(0,234,255,.4);background:linear-gradient(90deg,#00eaff 0%,#52ffb8 55%,#9dff00 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 5px rgba(0,234,255,.95),0 0 12px rgba(82,255,184,.8),0 0 22px rgba(157,255,0,.45)}
 
 /* MINI PLAYER */
 .mini-player{position:fixed;bottom:0;left:0;right:0;background:rgba(6,6,8,.96);backdrop-filter:blur(20px);border-top:1px solid rgba(0,229,255,.15);z-index:300;padding:12px 40px;display:flex;align-items:center;gap:20px;transform:translateY(100%);transition:transform .4s cubic-bezier(.22,.68,0,1.2)}
@@ -453,9 +454,9 @@ body.pp-modal-open{overflow:hidden}
     <div class="mp-times"><span id="mpCurrent">0:00</span><span id="mpDuration">-:--</span></div>
   </div>
   <div class="mp-controls">
-    <button class="mp-btn" onclick="prevTrack()">⏮</button>
-    <button class="mp-btn play-pause" id="mpPlayBtn" onclick="togglePlay()">▶</button>
-    <button class="mp-btn" onclick="nextTrack()">⏭</button>
+    <button class="mp-btn" onclick="prevTrack()" aria-label="Previous track">⏮</button>
+    <button class="mp-btn play-pause" id="mpPlayBtn" onclick="togglePlay()" aria-label="Play">▶</button>
+    <button class="mp-btn" onclick="nextTrack()" aria-label="Next track">⏭</button>
   </div>
   <div class="mp-vol">
     <span style="font-size:13px;color:rgba(255,255,255,.4)">🔊</span>
@@ -465,6 +466,9 @@ body.pp-modal-open{overflow:hidden}
   </div>
   <button class="mp-close" onclick="closePlayer()">×</button>
 </div>
+
+<!-- SHARED AUDIO ELEMENT — single element for all 22 tracks -->
+<audio id="sharedPlayer" preload="none" style="display:none"></audio>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -516,7 +520,7 @@ body.pp-modal-open{overflow:hidden}
       <span class="g" data-t="CUBZ">CUBZ</span>
     </h1>
     <p class="hero-sub">Los Angeles, CA · The Collective</p>
-    <p class="hero-tagline">The universe opens <em>August 21, 2026.</em><br>Before the world hears it — you hear it first.</p>
+    <p class="hero-tagline">the universe is now open! live, dream, race... moon racer</p>
     <div class="hero-btns">
       <a href="#music" class="btn-p">Stream Now</a>
       <a href="#events" class="btn-s">Live Experiences</a>
@@ -555,7 +559,7 @@ body.pp-modal-open{overflow:hidden}
   <div class="about-text">
     <div class="sec-hdr"><div class="sec-eye">The Artist</div><h2 class="sec-title">BE<span>λ</span>R CUBZ</h2></div>
     <p class="about-bio">BEλR CUBZ is a <strong>Los Angeles-based electronic music project</strong> operating at the intersection of dark tech house, bro-tech, and peak techno. Guided by orchestrator Cruzi, the project builds immersive sonic universes rooted in cyberpunk aesthetics and original character-driven storytelling.</p>
-    <p class="about-bio">The debut album <strong>Moon Racer I — Rise of the Moon Racers</strong> drops August 21, 2026 — a 22-track journey through the Great Freeze, a cyberpunk VR dystopia where three figures race toward an ending the world won't see coming.</p>
+    <p class="about-bio">The debut album <strong>Moon Racer I — Rise of the Moon Racers</strong> dropped August 21, 2026 — a 22-track journey through the Great Freeze, a cyberpunk VR dystopia where three figures race toward an ending the world won't see coming.</p>
     <div class="about-tags">
       <span class="tag">DARK TECH HOUSE</span><span class="tag">BRO-TECH</span><span class="tag">PEAK TECHNO</span><span class="tag">LOS ANGELES</span><span class="tag">THE COLLECTIVE</span>
     </div>
@@ -757,29 +761,35 @@ body.pp-modal-open{overflow:hidden}
 
 <script>
 // ── DATA ──
+// file: canonical audio filename from vote-app/src/data/tracks.ts, served from the
+// existing vote/audio/ directory (shared with the voting page — not duplicated).
 const TRACKS = [
-  {"num":"01","name":"L.I.F.E.","status":"out","spotify":"2mo4pK8KxVV6uQ2Snq9Vno"},
-  {"num":"02","name":"THE ANTHEM","status":"out","spotify":"1FOQsOpkJHNLYbEk5HF7YM"},
-  {"num":"03","name":"AUTONOMOUS GHOST","status":"album","spotify":""},
-  {"num":"04","name":"MOON RACER","status":"album","spotify":""},
-  {"num":"05","name":"THE GALACTIC DRIP","status":"album","spotify":""},
-  {"num":"06","name":"TRAP GANG","status":"out","spotify":"7Ha9p6MTOHT7Q8drl8Yy9X"},
-  {"num":"07","name":"GET IN THE WHIP","status":"album","spotify":""},
-  {"num":"08","name":"LAKE HOUSE","status":"album","spotify":""},
-  {"num":"09","name":"PUTTING GIRLS ON DIGITAL","status":"album","spotify":""},
-  {"num":"10","name":"GALACTIC STATIC","status":"album","spotify":""},
-  {"num":"11","name":"BINARY HEARTBEAT","status":"album","spotify":""},
-  {"num":"12","name":"NEON LEATHER","status":"out","spotify":"4LaHMYBmv1laHaJh6s1N5O"},
-  {"num":"13","name":"TOP GUN","status":"album","spotify":""},
-  {"num":"14","name":"BITTER VELVET","status":"album","spotify":""},
-  {"num":"15","name":"PENTHOUSE PURGATORY","status":"album","spotify":""},
-  {"num":"16","name":"GLASS FORTRESS","status":"album","spotify":""},
-  {"num":"17","name":"4AM PERSPECTIVE","status":"album","spotify":""},
-  {"num":"18","name":"CHROME HEARTS","status":"album","spotify":""},
-  {"num":"19","name":"ELEVATE","status":"album","spotify":""},
-  {"num":"20","name":"ARCTIC GLACIER","status":"album","spotify":""},
-  {"num":"21","name":"MERCURY CIRCUIT","status":"album","spotify":""},
-  {"num":"22","name":"760 (SAHARA MIX)","status":"out","spotify":"3kTfWeOoQ3E6MGPdWURmAQ"}
+  {"num":"01","name":"L.I.F.E.","status":"out","spotify":"2mo4pK8KxVV6uQ2Snq9Vno","file":"01-life.m4a"},
+  {"num":"02","name":"THE ANTHEM","status":"out","spotify":"1FOQsOpkJHNLYbEk5HF7YM","file":"02-the-anthem.m4a"},
+  {"num":"03","name":"AUTONOMOUS GHOST","status":"album","spotify":"","file":"03-autonomous-ghost.m4a"},
+  {"num":"04","name":"MOON RACER","status":"album","spotify":"","file":"04-moon-racer.m4a"},
+  {"num":"05","name":"THE GALACTIC DRIP","status":"album","spotify":"","file":"05-the-galactic-drip.m4a"},
+  {"num":"06","name":"TRAP GANG","status":"out","spotify":"7Ha9p6MTOHT7Q8drl8Yy9X","file":"06-trap-gang.m4a"},
+  {"num":"07","name":"GET IN THE WHIP","status":"album","spotify":"","file":"07-get-in-the-whip.m4a"},
+  {"num":"08","name":"LAKE HOUSE","status":"album","spotify":"","file":"08-lake-house.m4a"},
+  {"num":"09","name":"PUTTING GIRLS ON DIGITAL","status":"album","spotify":"","file":"09-putting-girls-on-digital.m4a"},
+  {"num":"10","name":"GALACTIC STATIC","status":"album","spotify":"","file":"10-galactic-static.m4a"},
+  {"num":"11","name":"BINARY HEARTBEAT","status":"album","spotify":"","file":"11-binary-heartbeat.m4a"},
+  {"num":"12","name":"NEON LEATHER","status":"out","spotify":"4LaHMYBmv1laHaJh6s1N5O","file":"12-neon-leather.m4a"},
+  {"num":"13","name":"TOP GUN","status":"album","spotify":"","file":"13-top-gun.m4a"},
+  {"num":"14","name":"BITTER VELVET","status":"album","spotify":"","file":"14-bitter-velvet.m4a"},
+  {"num":"15","name":"PENTHOUSE PURGATORY","status":"album","spotify":"","file":"15-penthouse-purgatory.m4a"},
+  {"num":"16","name":"GLASS FORTRESS","status":"album","spotify":"","file":"16-glass-fortress.m4a"},
+  {"num":"17","name":"4AM PERSPECTIVE","status":"album","spotify":"","file":"17-4am-perspective.m4a"},
+  {"num":"18","name":"CHROME HEARTS","status":"album","spotify":"","file":"18-chrome-hearts.m4a"},
+  {"num":"19","name":"ELEVATE","status":"album","spotify":"","file":"19-elevate.m4a"},
+  {"num":"20","name":"ARCTIC GLACIER","status":"album","spotify":"","file":"20-arctic-glacier.m4a"},
+  {"num":"21","name":"MERCURY CIRCUIT","status":"album","spotify":"","file":"21-mercury-circuit.m4a"},
+  {"num":"22","name":"760 (SAHARA MIX)","status":"out","spotify":"3kTfWeOoQ3E6MGPdWURmAQ","file":"22-760-sahara-mix.m4a"},
+  // Track 23 is a bonus/exclusive cut — NOT part of the 22-track voting album.
+  // Its audio lives at assets/audio/moon-racer/ (homepage-only), not vote/audio/,
+  // so `file` here is already a full relative path (see trackAudioUrl()).
+  {"num":"23","name":"RAGS TO RICHES","status":"exclusive","spotify":"","file":"assets/audio/moon-racer/23-rags-to-riches.m4a","exclusive":true}
 ];
 const MERCH  = [{"id": "t1", "name": "Moon Racer Tee \u2014 Tracklist Edition", "desc": "Black premium cotton. Full tracklist on back. Limited run.", "price": "35.00", "img": "tshirt1", "tag": "APPAREL", "sizes": ["S", "M", "L", "XL", "XXL"]}, {"id": "t2", "name": "Moon Racer Tee \u2014 City Edition", "desc": "Cyberpunk city front graphic. Bear Cubz back logo.", "price": "35.00", "img": "tshirt2", "tag": "APPAREL", "sizes": ["S", "M", "L", "XL", "XXL"]}, {"id": "t3", "name": "Moon Racer Tee \u2014 Duo Front/Back", "desc": "Characters front & back. The definitive fan shirt.", "price": "38.00", "img": "tshirt3", "tag": "APPAREL", "sizes": ["S", "M", "L", "XL", "XXL"]}, {"id": "st", "name": "Holographic Sticker Pack", "desc": "14 holographic die-cut stickers. Moon Racer universe characters & logos.", "price": "18.00", "img": "stickers", "tag": "COLLECTIBLE", "sizes": []}, {"id": "bt", "name": "Moon Racer Button Pack", "desc": "16 premium 1.5\" pinback buttons. Full character set.", "price": "22.00", "img": "buttons", "tag": "COLLECTIBLE", "sizes": []}, {"id": "cd", "name": "Moon Racer I \u2014 CD", "desc": "Physical CD. Full 22-track album. Limited pressing.", "price": "15.00", "img": "cd", "tag": "MUSIC", "sizes": []}, {"id": "vn", "name": "Moon Racer I \u2014 Vinyl", "desc": "Black vinyl LP. Full album. Collector's pressing. Limited to 300 units.", "price": "45.00", "img": "vinyl", "tag": "MUSIC", "sizes": []}];
 // Images loaded via FULL_MERCH_IMGS below
@@ -838,25 +848,99 @@ function showToast(msg){
   const el=document.getElementById('tracklistEl');
   TRACKS.forEach((t,i)=>{
     const div=document.createElement('div');
-    div.className='track-item';div.dataset.idx=i;
-    div.innerHTML=`<span class="track-num">${t.num}</span><span class="track-play-icon">▶</span><span class="track-name">${t.name}</span><span class="track-status ${t.status}">${t.status==='out'?'OUT NOW':'AUG 21'}</span>`;
-    div.addEventListener('click',()=>playTrack(i));
+    div.className='track-item'+(t.exclusive?' track-item--exclusive':'');div.dataset.idx=i;
+    const statusClass=t.exclusive?'exclusive':'out';
+    const statusLabel=t.exclusive?'EXCLUSIVE':'OUT NOW';
+    div.innerHTML=`<span class="track-num">${t.num}</span><button type="button" class="track-play-icon" aria-label="Play ${t.name}">▶</button><span class="track-name">${t.name}</span><span class="track-status ${statusClass}">${statusLabel}</span>`;
+    div.addEventListener('click',()=>toggleTrack(i));
     el.appendChild(div);
   });
 })();
 
-// ── PLAYER ──
+// ── PLAYER ── (single shared <audio> element for all 22 album tracks + the bonus track)
 let currentTrackIdx=-1;
+const sharedPlayer=document.getElementById('sharedPlayer');
 
-function playTrack(idx){
-  document.querySelectorAll('.track-item').forEach((el,i)=>el.classList.toggle('playing',i===idx));
-  currentTrackIdx=idx;
-  const t=TRACKS[idx];
-  if(t.spotify){
-    openSpotifyModal(t);
-  } else {
-    showToast('🔒 '+t.name+' — Drops Aug 21, 2026');
+function formatTime(s){
+  if(!isFinite(s)||s<0) return '-:--';
+  const m=Math.floor(s/60), sec=Math.floor(s%60);
+  return m+':'+String(sec).padStart(2,'0');
+}
+
+function trackAudioUrl(t){
+  // Track 23 (exclusive bonus) is not a voting-album track, so its file is
+  // already a full homepage-relative path (assets/audio/moon-racer/...),
+  // not one of the shared vote/audio/ files.
+  return t.exclusive ? t.file : 'vote/audio/'+t.file;
+}
+
+function syncPlayerUI(forceStopped){
+  const playing=!forceStopped && currentTrackIdx>-1 && !sharedPlayer.paused;
+  document.querySelectorAll('.track-item').forEach((row,i)=>{
+    const t=TRACKS[i];
+    const btn=row.querySelector('.track-play-icon');
+    const isThis=i===currentTrackIdx && playing;
+    row.classList.toggle('playing',isThis);
+    btn.textContent=isThis?'⏸':'▶';
+    btn.setAttribute('aria-label',(isThis?'Pause ':'Play ')+t.name);
+  });
+  const mpBtn=document.getElementById('mpPlayBtn');
+  if(currentTrackIdx>-1){
+    const t=TRACKS[currentTrackIdx];
+    mpBtn.textContent=playing?'⏸':'▶';
+    mpBtn.setAttribute('aria-label',(playing?'Pause ':'Play ')+t.name);
   }
+}
+
+function toggleTrack(idx){
+  const t=TRACKS[idx];
+  if(idx===currentTrackIdx){
+    if(sharedPlayer.paused){ sharedPlayer.play().catch(()=>{}); }
+    else { sharedPlayer.pause(); }
+    return;
+  }
+  currentTrackIdx=idx;
+  sharedPlayer.src=trackAudioUrl(t);
+  sharedPlayer.currentTime=0;
+  sharedPlayer.play().catch(()=>{});
+  document.getElementById('mpTitle').textContent=t.name;
+  document.getElementById('mpDuration').textContent='-:--';
+  document.getElementById('mpBarFill').style.width='0%';
+  document.getElementById('miniPlayer').classList.add('visible');
+}
+
+sharedPlayer.addEventListener('play',()=>syncPlayerUI());
+sharedPlayer.addEventListener('pause',()=>syncPlayerUI());
+sharedPlayer.addEventListener('ended',()=>syncPlayerUI(true));
+sharedPlayer.addEventListener('loadedmetadata',()=>{
+  document.getElementById('mpDuration').textContent=formatTime(sharedPlayer.duration);
+});
+sharedPlayer.addEventListener('timeupdate',()=>{
+  document.getElementById('mpCurrent').textContent=formatTime(sharedPlayer.currentTime);
+  if(sharedPlayer.duration){
+    document.getElementById('mpBarFill').style.width=(sharedPlayer.currentTime/sharedPlayer.duration*100)+'%';
+  }
+});
+
+function prevTrack(){
+  if(currentTrackIdx>0){ toggleTrack(currentTrackIdx-1); }
+}
+function nextTrack(){
+  if(currentTrackIdx>-1 && currentTrackIdx<TRACKS.length-1){ toggleTrack(currentTrackIdx+1); }
+}
+function togglePlay(){
+  if(currentTrackIdx>-1){ toggleTrack(currentTrackIdx); }
+}
+function closePlayer(){
+  sharedPlayer.pause();
+  document.getElementById('miniPlayer').classList.remove('visible');
+}
+function setVolume(e){
+  const slider=document.getElementById('mpVolSlider');
+  const r=slider.getBoundingClientRect();
+  const pct=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
+  sharedPlayer.volume=pct;
+  document.getElementById('mpVolFill').style.width=(pct*100)+'%';
 }
 
 function openSpotifyModal(t){
@@ -872,17 +956,6 @@ function closeSpotifyModal(){
   // Stop playback by clearing src
   setTimeout(()=>{ document.getElementById('spEmbed').src=''; },400);
 }
-
-function prevTrack(){
-  if(currentTrackIdx>0){ playTrack(currentTrackIdx-1); }
-}
-function nextTrack(){
-  if(currentTrackIdx<TRACKS.length-1){ playTrack(currentTrackIdx+1); }
-}
-// Keep stub functions so nothing else breaks
-function togglePlay(){}
-function closePlayer(){}
-function setVolume(){}
 
 // ── MERCH ──
 (function(){
@@ -999,11 +1072,12 @@ function ppCloseModal(){
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLightbox();closeCart();ppCloseModal()}});
 
-// ── PROGRESS BAR CLICK ──
+// ── PROGRESS BAR CLICK (seek) ──
 document.getElementById('mpBarBg')?.addEventListener('click',e=>{
+  if(!sharedPlayer.duration) return;
   const r=e.currentTarget.getBoundingClientRect();
-  fakeProgress=((e.clientX-r.left)/r.width)*100;
-  document.getElementById('mpBarFill').style.width=fakeProgress+'%';
+  const pct=(e.clientX-r.left)/r.width;
+  sharedPlayer.currentTime=pct*sharedPlayer.duration;
 });
 </script>
 
