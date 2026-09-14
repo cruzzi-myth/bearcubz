@@ -164,6 +164,7 @@ function App() {
           votedTrackTitle={todaysVote ? getTrackById(todaysVote.trackId)?.title : undefined}
           onVote={() => handleVote(track.id)}
           onViewResults={viewResults}
+          suspend={suspendBackground}
         />
 
         {voteUnavailable && ui.type === 'eligible' && (

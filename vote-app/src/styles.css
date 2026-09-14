@@ -477,14 +477,168 @@ h1, h2, h3 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; mar
   text-align: center;
 }
 
-/* ---------- player ---------- */
+/* ---------- player: holographic console panel ---------- */
+/* This is the primary holographic surface — the lower control console,
+   not the album-cover carousel card (which keeps its own, secondary
+   treatment from TrackCard.css/styles.css). */
 .player {
+  --player-holo-blur: 18px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   max-width: 640px;
   margin: 0 auto;
   padding: clamp(18px, 3vw, 30px);
-  border: 1px solid var(--line);
-  background: linear-gradient(160deg, rgba(13, 14, 20, 0.9), rgba(9, 10, 16, 0.9));
+  border: 1px solid rgba(92, 226, 255, 0.52);
+  background:
+    linear-gradient(145deg,
+      rgba(82, 223, 255, 0.075),
+      rgba(7, 10, 25, 0.9) 28%,
+      rgba(137, 65, 255, 0.075) 64%,
+      rgba(255, 37, 133, 0.045)),
+    rgba(3, 5, 15, 0.88);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+    inset 0 0 36px rgba(68, 213, 255, 0.045),
+    0 0 26px rgba(59, 215, 255, 0.13),
+    0 0 52px rgba(139, 66, 255, 0.09),
+    0 28px 70px rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(var(--player-holo-blur)) saturate(1.25);
+  -webkit-backdrop-filter: blur(var(--player-holo-blur)) saturate(1.25);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
+/* Playing state: the whole console reads as "energized" — brighter
+   edge, slow signal pulse. Never implies playback when actually paused
+   (this class is only ever added while isPlaying is true). */
+.player--playing {
+  border-color: rgba(92, 226, 255, 0.75);
+  animation: player-console-pulse 3.2s ease-in-out infinite;
+}
+.player--playing.player--suspended { animation-play-state: paused; }
+@keyframes player-console-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+      inset 0 0 36px rgba(68, 213, 255, 0.045),
+      0 0 26px rgba(59, 215, 255, 0.13),
+      0 0 52px rgba(139, 66, 255, 0.09),
+      0 28px 70px rgba(0, 0, 0, 0.52);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 0 44px rgba(68, 213, 255, 0.08),
+      0 0 36px rgba(59, 215, 255, 0.22),
+      0 0 68px rgba(139, 66, 255, 0.15),
+      0 28px 70px rgba(0, 0, 0, 0.52);
+  }
+}
+
+.player__content {
+  position: relative;
+  z-index: 10;
+}
+
+/* Holographic foil sheen — rests most of the time, one slow pass every
+   ~8.5s, matching the same "controlled, not constant" language used
+   for the album-cover card. */
+.player__hologram {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  background: linear-gradient(110deg,
+    transparent 8%,
+    rgba(68, 226, 255, 0.08) 24%,
+    rgba(255, 255, 255, 0.18) 34%,
+    rgba(151, 68, 255, 0.13) 43%,
+    rgba(255, 45, 142, 0.09) 51%,
+    transparent 67%);
+  background-size: 240% 100%;
+  animation: player-hologram-scan 8.5s ease-in-out infinite;
+}
+.player--suspended .player__hologram { animation-play-state: paused; }
+@keyframes player-hologram-scan {
+  0%, 72%, 100% { background-position: 175% 0; opacity: 0.16; }
+  78% { opacity: 0.38; }
+  90% { background-position: -75% 0; opacity: 0.22; }
+}
+
+/* Neon racing streaks — masked so they fade out over the center column
+   where the title/controls/progress bar live, per "do not wash over
+   text or make controls hard to see". */
+.player__streaks {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.24;
+  mix-blend-mode: screen;
+  background: linear-gradient(116deg,
+    transparent 0 24%,
+    rgba(62, 229, 255, 0.36) 25%,
+    transparent 26% 45%,
+    rgba(159, 69, 255, 0.28) 46%,
+    transparent 47% 68%,
+    rgba(255, 38, 129, 0.18) 69%,
+    transparent 70% 100%);
+  background-size: 280% 100%;
+  mask-image: radial-gradient(ellipse 65% 70% at 50% 45%, transparent 35%, #000 78%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 70% at 50% 45%, transparent 35%, #000 78%);
+  animation: player-neon-streak 9.2s ease-in-out infinite;
+}
+.player--suspended .player__streaks { animation-play-state: paused; }
+@keyframes player-neon-streak {
+  0%, 76%, 100% { background-position: 170% 0; opacity: 0.12; }
+  82% { opacity: 0.36; }
+  92% { background-position: -80% 0; opacity: 0.2; }
+}
+
+/* Console circuitry: chrome corner brackets, an orbital ring roughly
+   behind the transport row, and a couple of decorative signal-coordinate
+   marks. All flavor text is fixed/static — never real vote data. */
+.player__circuitry {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.player__circuitry svg { width: 100%; height: 100%; display: block; }
+.player__bracket {
+  fill: none;
+  stroke: rgba(210, 240, 255, 0.4);
+  stroke-width: 0.6;
+}
+.player__ring-group { transform-origin: 50px 42px; animation: player-ring-spin 90s linear infinite; }
+.player--suspended .player__ring-group { animation-play-state: paused; }
+@keyframes player-ring-spin { to { transform: rotate(360deg); } }
+.player__ring { fill: none; stroke: rgba(93, 232, 255, 0.28); stroke-width: 0.4; stroke-dasharray: 2 3; }
+.player__ring-node { fill: rgba(93, 232, 255, 0.7); }
+.player__coord {
+  fill: rgba(150, 235, 255, 0.4);
+  font: 3px 'Share Tech Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+/* Subtle internal scanline drift. */
+.player__scan {
+  position: absolute;
+  inset: -20% 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.1;
+  background-image: repeating-linear-gradient(0deg,
+    transparent 0 3px,
+    rgba(99, 246, 255, 0.5) 4px,
+    transparent 5px);
+  animation: player-scan-drift 9s linear infinite;
+}
+.player--suspended .player__scan { animation-play-state: paused; }
+@keyframes player-scan-drift { to { transform: translateY(12%); } }
+
 .player__meta { text-align: center; margin-bottom: 18px; }
 .player__index {
   display: block;
@@ -506,29 +660,120 @@ h1, h2, h3 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; mar
   place-items: center;
   transition: border-color 0.2s, color 0.2s;
 }
-.player__skip { width: 42px; height: 42px; }
+.player__skip { width: 44px; height: 44px; position: relative; z-index: 1; }
 .player__skip svg { width: 18px; height: 18px; fill: currentColor; }
-.player__play { width: 62px; height: 62px; border-radius: 50%; border-color: var(--cyan); color: var(--cyan); }
-.player__play svg { width: 24px; height: 24px; fill: currentColor; }
+/* The play button is the console's core — idle glass+cyan outline with
+   a slow orbital ring; playing state (below) energizes it further. */
+.player__play {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border-color: var(--cyan);
+  color: var(--cyan);
+  position: relative;
+  z-index: 1;
+  background: radial-gradient(circle at 50% 42%, rgba(10, 18, 30, 0.9), rgba(3, 5, 12, 0.95));
+}
+.player__play::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(93, 232, 255, 0.3);
+  border-top-color: rgba(93, 232, 255, 0.75);
+  animation: player-play-orbit 6s linear infinite;
+}
+.player--suspended .player__play::before { animation-play-state: paused; }
+@keyframes player-play-orbit { to { transform: rotate(360deg); } }
+.player--playing .player__play {
+  color: #eafcff;
+  border-color: rgba(158, 240, 255, 0.9);
+  box-shadow: 0 0 22px rgba(59, 215, 255, 0.5), 0 0 40px rgba(139, 66, 255, 0.28);
+  animation: player-play-signal 2.4s ease-in-out infinite;
+}
+.player--playing.player--suspended .player__play { animation-play-state: paused; }
+@keyframes player-play-signal {
+  0%, 100% { box-shadow: 0 0 22px rgba(59, 215, 255, 0.5), 0 0 40px rgba(139, 66, 255, 0.28); }
+  50% { box-shadow: 0 0 32px rgba(59, 215, 255, 0.75), 0 0 58px rgba(139, 66, 255, 0.42); }
+}
+.player__play svg { width: 24px; height: 24px; fill: currentColor; position: relative; }
 .player__skip:hover, .player__skip:focus-visible, .player__play:hover, .player__play:focus-visible {
   border-color: var(--cyan);
   color: var(--cyan);
   box-shadow: 0 0 18px rgba(0, 229, 255, 0.25);
 }
 
-.player__progress { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.player__progress { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; position: relative; z-index: 1; }
 .player__time { font: 11px 'Share Tech Mono', monospace; color: var(--muted); width: 38px; text-align: center; }
+/* Real, fully-functional <input type="range"> — --player-progress (set
+   inline from currentTime/duration in AudioPlayer.tsx) only colors it,
+   it never becomes a decorative stand-in. */
 .player__seek {
   flex: 1;
-  accent-color: var(--cyan);
-  height: 4px;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  background: linear-gradient(90deg,
+      var(--cyan) 0%, var(--violet) var(--player-progress),
+      rgba(255, 255, 255, 0.12) var(--player-progress), rgba(255, 255, 255, 0.12) 100%);
+  box-shadow: 0 0 8px rgba(59, 215, 255, 0.25);
+}
+.player__seek::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #eafcff;
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 10px rgba(59, 215, 255, 0.75);
   cursor: pointer;
 }
+.player__seek::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #eafcff;
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 10px rgba(59, 215, 255, 0.75);
+  cursor: pointer;
+}
+.player__seek::-moz-range-track { height: 5px; border-radius: 3px; background: transparent; }
+.player__seek:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 
-.player__vote { text-align: center; }
+.player__vote { text-align: center; position: relative; z-index: 1; }
 .player__voted-status { font: 12px 'Share Tech Mono', monospace; letter-spacing: 0.06em; color: var(--violet); margin: 0 0 12px; text-transform: uppercase; }
 .player__vote-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-.player__vote-btn { min-width: 220px; }
+/* Vote button: kept prominent above every decorative layer, with its
+   own restrained reflection + a one-pass streak on hover/focus only —
+   never a continuous animation that could distract from "vote now". */
+.player__vote-btn {
+  min-width: 220px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid rgba(255, 45, 145, 0.55);
+}
+.player__vote-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 48%, transparent 61%);
+  transform: translateX(-140%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+}
+.player__vote-btn:hover::after, .player__vote-btn:focus-visible::after {
+  transform: translateX(140%);
+}
+.player__vote-btn:disabled {
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+.player__vote-btn:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
 
 /* ---------- transmission decoding / results overlay ---------- */
 .decode {
@@ -733,6 +978,14 @@ h1, h2, h3 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; mar
   .track-card--selected .track-card__surface {
     transform: translateY(-12px) scale(var(--selected-card-scale)) !important;
   }
+
+  /* Same GPU-cost reasoning for the player console: less blur, fainter
+     streaks, smaller/fewer circuitry marks — panel height itself is
+     untouched (padding unchanged), so this doesn't grow the box. */
+  .player { --player-holo-blur: 9px; }
+  .player__streaks { opacity: 0.16; }
+  .player__circuitry { opacity: 0.32; }
+  .player__coord { display: none; }
 }
 
 @media (max-width: 420px) {
@@ -763,4 +1016,21 @@ h1, h2, h3 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; mar
     transform: translateY(-12px) scale(var(--selected-card-scale)) !important;
   }
   .track-card__hologram { opacity: 0.22 !important; background-position: 40% 0 !important; }
+
+  /* Player console: keep the static prismatic glass, the illuminated
+     border and every control fully functional — stop only the scan,
+     streak, orbital-ring and pulse motion. */
+  .player,
+  .player__hologram,
+  .player__streaks,
+  .player__ring-group,
+  .player__scan,
+  .player__play::before,
+  .player--playing .player__play,
+  .player__vote-btn::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .player__hologram { opacity: 0.16 !important; background-position: 40% 0 !important; }
+  .player__streaks { opacity: 0.12 !important; }
 }

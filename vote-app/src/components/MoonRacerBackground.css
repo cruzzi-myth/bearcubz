@@ -55,12 +55,37 @@
   bottom: -8%;
   width: min(72vw, 1000px);
   height: auto;
-  opacity: 0.22;
   object-fit: cover;
   object-position: top center;
-  filter: saturate(1.15) contrast(1.05);
-  mask-image: radial-gradient(ellipse 70% 65% at 68% 35%, #000 45%, transparent 85%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 65% at 68% 35%, #000 45%, transparent 85%);
+  /* Darkened/subtler per correction: recognizable only on close look,
+     fades to black well before its own edges so no rectangular boundary
+     is visible, and sits quietly behind the carousel/holographic player. */
+  opacity: 0.16;
+  filter:
+    brightness(0.38)
+    contrast(1.08)
+    saturate(0.82);
+  mix-blend-mode: normal;
+  mask-image:
+    radial-gradient(
+      ellipse 72% 68% at 68% 35%,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.7) 42%,
+      rgba(0, 0, 0, 0.3) 68%,
+      transparent 91%
+    );
+  -webkit-mask-image:
+    radial-gradient(
+      ellipse 72% 68% at 68% 35%,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.7) 42%,
+      rgba(0, 0, 0, 0.3) 68%,
+      transparent 91%
+    );
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: cover;
+  -webkit-mask-size: cover;
   transform: translate3d(calc(var(--parallax-x) * -14px), calc(var(--parallax-y) * -10px), 0);
   transition: transform 120ms linear;
 }
@@ -176,7 +201,14 @@
 @media (max-width: 600px) {
   .vote-bg { --bg-blur: 24px; }
   .vote-bg__tracklist { display: none; } /* heaviest decorative layer goes first */
-  .vote-bg__hero { opacity: 0.16; width: 92vw; }
+  .vote-bg__hero {
+    width: 92vw;
+    opacity: 0.1;
+    filter:
+      brightness(0.32)
+      contrast(1.06)
+      saturate(0.72);
+  }
   .vote-bg__telemetry { opacity: 0.14; }
   .vote-bg__particle:nth-child(n + 8) { display: none; }
   .vote-bg__hero,
