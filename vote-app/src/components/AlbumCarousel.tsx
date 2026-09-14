@@ -10,6 +10,18 @@ type Props = {
 };
 
 const SWIPE_THRESHOLD_PX = 44;
+// How far the pointer has to move before this becomes a drag. Below
+// this, pointer capture is never engaged, so the browser's native
+// click (on whichever button or card the user actually pressed) fires
+// normally. Capturing unconditionally on pointerdown — the previous
+// behavior — retargets that native click to the capturing element
+// (a real, spec-defined side effect of Pointer Capture on the
+// synthesized compatibility click event, not a bug in any one browser),
+// which silently ate every direct click on a track card AND, once the
+// arrows moved inside this element for the spacing pass, every arrow
+// click too. Deferring capture until real movement is seen fixes both
+// without giving up robust drag-tracking past the carousel's edges.
+const CAPTURE_THRESHOLD_PX = 6;
 
 export function AlbumCarousel({ tracks, selectedIndex, onSelect, suspend = false }: Props) {
   // dragXRef is the source of truth read at release time; dragX (state)
@@ -21,19 +33,25 @@ export function AlbumCarousel({ tracks, selectedIndex, onSelect, suspend = false
   const [dragX, setDragX] = useState(0);
   const dragXRef = useRef(0);
   const dragStartX = useRef<number | null>(null);
+  const captured = useRef(false);
 
   const clamp = (index: number) => Math.max(0, Math.min(tracks.length - 1, index));
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     dragStartX.current = event.clientX;
     dragXRef.current = 0;
-    event.currentTarget.setPointerCapture(event.pointerId);
+    captured.current = false;
+    // No setPointerCapture here — see CAPTURE_THRESHOLD_PX above.
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (dragStartX.current === null) return;
     const delta = event.clientX - dragStartX.current;
     dragXRef.current = delta;
+    if (!captured.current && Math.abs(delta) >= CAPTURE_THRESHOLD_PX) {
+      captured.current = true;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     setDragX(delta);
   };
 
@@ -44,6 +62,7 @@ export function AlbumCarousel({ tracks, selectedIndex, onSelect, suspend = false
     else if (delta >= SWIPE_THRESHOLD_PX) onSelect(clamp(selectedIndex - 1));
     dragStartX.current = null;
     dragXRef.current = 0;
+    captured.current = false;
     setDragX(0);
   };
 
