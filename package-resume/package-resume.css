@@ -342,6 +342,13 @@ input[type=range].pr-range:focus-visible{outline:2px solid var(--cyan);outline-o
 @media(max-width:720px){.pr-figrow{grid-template-columns:1fr}}
 .pr-figrow .pr-figure{margin:0}
 
+/* Oracle teaser: copy left, artwork right (Section: The Moon Racer Oracle) */
+.pr-oracle-feature{display:grid;grid-template-columns:1fr 1.25fr;gap:48px;align-items:center;margin-top:8px}
+.pr-oracle-feature__visual{border:1px solid rgba(255,255,255,.07)}
+.pr-oracle-feature__visual picture{display:block}
+.pr-oracle-feature__visual img{display:block;width:100%;height:auto}
+@media(max-width:720px){.pr-oracle-feature{grid-template-columns:1fr;gap:32px}}
+
 /* ============================================================
    6 — CURRENT DEVELOPMENT
    ============================================================ */
