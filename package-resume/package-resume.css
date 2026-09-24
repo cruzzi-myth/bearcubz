@@ -332,6 +332,7 @@ input[type=range].pr-range:focus-visible{outline:2px solid var(--cyan);outline-o
 .pr-figure{margin:40px 0 0;border:1px solid rgba(255,255,255,.07)}
 .pr-figure picture{display:block}
 .pr-figure img{width:100%;height:auto}
+.pr-figure video{display:block;width:100%;height:auto}
 .pr-figure figcaption{
   font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.16em;
   text-transform:uppercase;color:rgba(255,255,255,.3);padding:12px 16px;
