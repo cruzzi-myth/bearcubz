@@ -17,7 +17,7 @@
   // Classic Mode is static HTML and was never meant to be an SPA, so
   // it doesn't need or want this rewrite.
   (function () {
-    var UNIVERSE_BASE = '/bearcubz/universe/';
+    var UNIVERSE_BASE = '/universe/';
     var loc = window.location;
     if (loc.pathname.indexOf(UNIVERSE_BASE) === 0) {
       var rest = loc.pathname.slice(UNIVERSE_BASE.length); // e.g. "galaxy/" or ""
@@ -33,6 +33,6 @@
 </style>
 </head>
 <body>
-  <p>Page not found.<br><a href="/bearcubz/">Return to BEλR CUBZ</a></p>
+  <p>Page not found.<br><a href="/">Return to BEλR CUBZ</a></p>
 </body>
 </html>

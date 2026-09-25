@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
 // step to remember.
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'production' ? '/bearcubz/oracle/' : '/',
+  base: mode === 'production' ? '/oracle/' : '/',
   build: {
     outDir: '../oracle',
     emptyOutDir: true,

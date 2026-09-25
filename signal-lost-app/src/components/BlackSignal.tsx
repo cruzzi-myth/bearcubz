@@ -92,7 +92,7 @@ export function BlackSignal({
   votedTrackTitle,
   onClose,
   onViewResults,
-  networkHref = 'https://cruzzi-myth.github.io/bearcubz/universe/',
+  networkHref = '/universe/',
 }: Props) {
   const message = copy[reason];
   const countdown = useCountdown(resetAt);

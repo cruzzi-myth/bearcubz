@@ -14,7 +14,7 @@ import react from '@vitejs/plugin-react';
 // original `network-app/` name; only the deployed path/route changed.)
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'production' ? '/bearcubz/universe/' : '/',
+  base: mode === 'production' ? '/universe/' : '/',
   build: {
     outDir: '../universe',
     emptyOutDir: true,

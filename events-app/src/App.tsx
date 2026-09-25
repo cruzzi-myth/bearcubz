@@ -5,7 +5,7 @@ import archivePoster from '../../assets/events/transmission-003-complete.webp';
 import neonNexusPortrait from '../../assets/events/neon-nexus-portrait.webp';
 import neonNexusWide from '../../assets/events/neon-nexus-wide.webp';
 
-const ROOT = '/bearcubz/';
+const ROOT = '/';
 const links = {
   home: ROOT,
   music: `${ROOT}#music`,

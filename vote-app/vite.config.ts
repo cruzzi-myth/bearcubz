@@ -8,7 +8,7 @@ import react from '@vitejs/plugin-react';
 // the dist folder" step to remember.
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'production' ? '/bearcubz/vote/' : '/',
+  base: mode === 'production' ? '/vote/' : '/',
   build: {
     outDir: '../vote',
     emptyOutDir: true,

@@ -19,7 +19,7 @@ function ReturnBar() {
       }}
     >
       <a
-        href="/bearcubz/package-resume/"
+        href="/package-resume/"
         style={{ color: 'inherit', textDecoration: 'none', opacity: 0.85 }}
       >
         ← Artist Package

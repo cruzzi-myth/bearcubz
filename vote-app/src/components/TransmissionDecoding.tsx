@@ -15,10 +15,10 @@ type Props = {
   onReturn: () => void;
 };
 
-const HOME = 'https://cruzzi-myth.github.io/bearcubz/';
-const UNIVERSE = 'https://cruzzi-myth.github.io/bearcubz/universe/';
-const EVENTS = 'https://cruzzi-myth.github.io/bearcubz/events/';
-const PACKAGE = 'https://cruzzi-myth.github.io/bearcubz/package-resume/';
+const HOME = '/';
+const UNIVERSE = '/universe/';
+const EVENTS = '/events/';
+const PACKAGE = '/package-resume/';
 
 export function TransmissionDecoding({ trackId, results, resetAt, skipIntro = false, onDone, onReturn }: Props) {
   const track = getTrackById(trackId);

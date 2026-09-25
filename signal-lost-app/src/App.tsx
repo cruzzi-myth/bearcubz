@@ -26,7 +26,7 @@ function App() {
     <BlackSignal
       mode="page"
       reason={reason}
-      networkHref="https://cruzzi-myth.github.io/bearcubz/universe/"
+      networkHref="/universe/"
     />
   );
 }

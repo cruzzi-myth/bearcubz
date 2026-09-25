@@ -13,7 +13,7 @@
          something worth indexing. Remove once real content ships. -->
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#060608" />
-    <link rel="icon" href="https://cruzzi-myth.github.io/bearcubz/passport/assets/moon-racer-logo.png" />
+    <link rel="icon" href="/passport/assets/moon-racer-logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap"
@@ -30,7 +30,7 @@
         var params = new URLSearchParams(window.location.search);
         var deepPath = params.get('p');
         if (deepPath) {
-          var restored = '/bearcubz/universe' + deepPath + window.location.hash;
+          var restored = '/universe' + deepPath + window.location.hash;
           window.history.replaceState(null, '', restored);
         }
       })();

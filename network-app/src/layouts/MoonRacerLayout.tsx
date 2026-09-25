@@ -10,7 +10,7 @@ import { trackEvent } from '../services/analytics';
 import { MobileNav } from './MobileNav';
 import './moon-racer-layout.css';
 
-const CLASSIC_URL = 'https://cruzzi-myth.github.io/bearcubz/';
+const CLASSIC_URL = 'https://bearcubz.com/';
 
 /**
  * The RPG shell. HUD reads real player state once signed in (Passport

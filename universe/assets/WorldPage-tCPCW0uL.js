@@ -1,0 +1,1 @@
+import{c as e,t}from"./jsx-runtime-cTn0nPUw.js";import{t as n}from"./WorldTemplate-T8nJcenR.js";var r=t();function i(){let{worldId:t}=e();return(0,r.jsx)(n,{worldId:t??``})}export{i as WorldPage};

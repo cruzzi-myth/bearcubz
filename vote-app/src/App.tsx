@@ -8,10 +8,10 @@ import { TransmissionDecoding } from './components/TransmissionDecoding';
 import { BlackSignal, type BlackSignalReason } from './components/BlackSignal';
 import { MoonRacerBackground } from './components/MoonRacerBackground';
 
-const HOME = 'https://cruzzi-myth.github.io/bearcubz/';
-const UNIVERSE = 'https://cruzzi-myth.github.io/bearcubz/universe/';
-const EVENTS = 'https://cruzzi-myth.github.io/bearcubz/events/';
-const PACKAGE = 'https://cruzzi-myth.github.io/bearcubz/package-resume/';
+const HOME = '/';
+const UNIVERSE = '/universe/';
+const EVENTS = '/events/';
+const PACKAGE = '/package-resume/';
 
 type TodaysVote = { trackId: number; results: VoteResult[]; resetAt: string };
 

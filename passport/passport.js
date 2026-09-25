@@ -11,8 +11,8 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const SUPABASE_URL = 'https://drsidtagxezznqviupsr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Vv_H-4keeGhwKknSz0tOlA_FNNE9YUN';
-const SITE_URL = 'https://cruzzi-myth.github.io/bearcubz/';
-const PASSPORT_URL = 'https://cruzzi-myth.github.io/bearcubz/passport/';
+const SITE_URL = 'https://bearcubz.com/';
+const PASSPORT_URL = 'https://bearcubz.com/passport/';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

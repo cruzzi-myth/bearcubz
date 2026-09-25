@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 // straight to ../signal-lost (the repo root folder GitHub Pages serves).
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'production' ? '/bearcubz/signal-lost/' : '/',
+  base: mode === 'production' ? '/signal-lost/' : '/',
   build: {
     outDir: '../signal-lost',
     emptyOutDir: true,

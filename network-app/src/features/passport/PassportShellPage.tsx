@@ -68,7 +68,7 @@ export function PassportShellPage() {
       title="Your Passport"
       description="Sign in to see your linked Passport here. Not registered yet? Claim one at the standalone Passport page."
     >
-      <a href="https://cruzzi-myth.github.io/bearcubz/passport/" className="network-btn" style={{ textDecoration: 'none' }}>
+      <a href="/passport/" className="network-btn" style={{ textDecoration: 'none' }}>
         Open Passport Registration →
       </a>
     </RouteShell>
