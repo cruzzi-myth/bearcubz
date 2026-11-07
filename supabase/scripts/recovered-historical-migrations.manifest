@@ -1,0 +1,18 @@
+# SIGNAL PORTAL — recovered historical migration provenance (Stage I3J)
+# Each file's content was extracted VERBATIM, read-only, from production's
+# supabase_migrations.schema_migrations.statements[1] for the matching version,
+# via 'db query --read-only' through with-readonly-prod-guard.sh on 2026-11-07.
+# SHA-256 below is of the file as committed; it is provably identical to what
+# production's own bookkeeping table stores for that version (verified by
+# direct byte-length + hash comparison against the live row at export time).
+# It is NOT provably identical to whatever file, if any, existed on a local
+# machine before being run -- that artifact was never recorded anywhere.
+#
+6492fdd007f553c2f3129eee0f4d54791a712f0d997653333654bc8ee87568ac  supabase/migrations/20260821015614_create_passport_members.sql
+2be3d1d1cbe98716344bb1168933f9a12b7ce2c09b88f37cfeb2026d187ce106  supabase/migrations/20260822192348_add_passport_account_linking.sql
+854bb5e904d0cb19defa17bfea826b16e3cb30ec8f18853a63685137fa1c532d  supabase/migrations/20260822192444_tighten_link_my_passport_grant.sql
+4d18baf0856adf361bc2ac97f66ccac70f70c9ef1a048e2e27feecb9e0587dba  supabase/migrations/20260822200231_phase2_player_identity_layer.sql
+61c27a03ffad7828c0b966a193972ba01a68e5f62d8696d171500fc473e042b6  supabase/migrations/20260822205730_phase2_rls_perf_and_search_path_hardening.sql
+cdd38a3f8d8e6fe830167661245917e74999c0e94b53fab3ce507137f7866443  supabase/migrations/20260822215446_avatar_phase1_species_foundation.sql
+927ffeaa26b2afefb925437d1afed669ae29f61f9d37b6f5c76b209aa8f0efc7  supabase/migrations/20260822235023_avatar_phase2c_permanent_species_lock.sql
+09a9fbbf72cc3d93f5ac1a18c643fb5add0cbc334e155f8cdb3932edd6b3368f  supabase/migrations/20260822235140_avatar_phase2c_tighten_grants.sql
