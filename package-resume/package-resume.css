@@ -508,3 +508,96 @@ input[type=range].pr-range:focus-visible{outline:2px solid var(--cyan);outline-o
   .pr-track>picture,.pr-track__art{width:96px;height:96px}
   .pr-player{flex-wrap:wrap}
 }
+
+/* ============================================================
+   SIGNAL PORTAL — access point around the closing emblem, and the
+   Artist Package → Portal entrance transition. Isolated under
+   `pr-signal-*` so none of this touches the existing `pr-close*`
+   rules above; the emblem artwork itself is untouched, only wrapped.
+   ============================================================ */
+.pr-signal-link{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  min-height:44px; /* touch target */
+}
+.pr-signal-link:focus-visible{outline:2px solid var(--cyan);outline-offset:10px;border-radius:28px}
+
+.pr-signal-link__art-wrap{position:relative;display:block}
+
+.pr-signal-link__ring{
+  position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(0,229,255,.16),0 0 26px rgba(0,229,255,.14),0 0 48px rgba(255,45,120,.10);
+  transition:box-shadow .35s ease;
+}
+.pr-signal-link:hover .pr-signal-link__ring,
+.pr-signal-link:focus-visible .pr-signal-link__ring{
+  box-shadow:0 0 0 1.5px rgba(0,229,255,.5),0 0 44px rgba(0,229,255,.4),0 0 80px rgba(255,45,120,.3);
+}
+
+.pr-signal-link__scan{
+  position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none;opacity:0;
+  background:linear-gradient(115deg,transparent 42%,rgba(0,229,255,.26) 49%,rgba(255,45,120,.26) 53%,transparent 60%);
+  background-size:240% 240%;background-position:-130% 0;
+}
+.pr-signal-link:hover .pr-signal-link__scan,
+.pr-signal-link:focus-visible .pr-signal-link__scan{
+  opacity:1;animation:pr-signal-scan 1.1s ease forwards;
+}
+@keyframes pr-signal-scan{
+  from{background-position:-130% 0}
+  to{background-position:130% 0}
+}
+
+.pr-signal-link__label{
+  position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  margin-top:6px;
+}
+.pr-signal-link__title{
+  font-family:'Orbitron',monospace;font-weight:700;font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;color:#fff;transition:color .25s ease;
+}
+.pr-signal-link__subtitle{
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-faint);
+}
+.pr-signal-link:hover .pr-signal-link__title,
+.pr-signal-link:focus-visible .pr-signal-link__title{color:var(--cyan)}
+
+@media(prefers-reduced-motion:reduce){
+  .pr-signal-link__scan{display:none}
+  .pr-signal-link__ring{transition:none}
+}
+
+/* ---------- Transition A: Artist Package -> Portal entrance ---------- */
+.pr-signal-transition{
+  position:fixed;inset:0;z-index:9999;pointer-events:none;
+  opacity:0;background:radial-gradient(circle at 50% 55%,rgba(0,229,255,.08),rgba(6,6,8,.92) 55%,#060608 85%);
+  display:flex;align-items:center;justify-content:center;
+}
+.pr-signal-transition__ring{
+  width:40px;height:40px;border-radius:50%;
+  border:2px solid rgba(0,229,255,.6);
+  box-shadow:0 0 30px rgba(0,229,255,.5),0 0 60px rgba(255,45,120,.35);
+  opacity:0;transform:scale(.4);
+}
+.pr-signal-transition.pr-signal-transition--active{
+  opacity:1;animation:pr-signal-dim .9s ease forwards;
+}
+.pr-signal-transition.pr-signal-transition--active .pr-signal-transition__ring{
+  animation:pr-signal-ring .9s cubic-bezier(.3,.9,.4,1) forwards;
+}
+@keyframes pr-signal-dim{
+  0%{opacity:0}
+  12%{opacity:1}
+  70%{opacity:1}
+  100%{opacity:1;background:#060608}
+}
+@keyframes pr-signal-ring{
+  0%{opacity:0;transform:scale(.3)}
+  18%{opacity:1;transform:scale(.6)}
+  60%{opacity:1;transform:scale(14)}
+  100%{opacity:0;transform:scale(22)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pr-signal-transition,.pr-signal-transition__ring{animation:none!important;transition:none!important}
+}

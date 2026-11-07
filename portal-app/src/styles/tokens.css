@@ -1,0 +1,69 @@
+/* ============================================================
+   Design tokens — copied verbatim from the Classic site's :root
+   (bearcubz/index.html) so the Signal Portal feels like the same
+   platform, not a different app. If Classic's palette ever changes,
+   update both places. A few portal-specific additions are grouped
+   separately below and are safe to extend without touching the
+   copied block.
+   ============================================================ */
+
+:root {
+  --cyan: #00e5ff;
+  --pink: #ff2d78;
+  --purple: #bf5fff;
+  --amber: #ffb700;
+  --red: #ff2d55;
+  --dark: #060608;
+  --mid: #0d0e14;
+  --panel: #0f0f1e;
+  --panel2: #13132a;
+  --border: rgba(0, 229, 255, 0.12);
+  --glow-c: 0 0 24px rgba(0, 229, 255, 0.45);
+  --glow-p: 0 0 24px rgba(255, 45, 120, 0.45);
+
+  /* ---- Signal Portal additions ---- */
+  --sp-glass-bg: rgba(10, 8, 20, 0.55);
+  --sp-glass-border: rgba(0, 229, 255, 0.28);
+  --sp-ring-glow: 0 0 32px rgba(0, 229, 255, 0.35), 0 0 60px rgba(255, 45, 120, 0.25);
+  --sp-scan: rgba(0, 229, 255, 0.5);
+  --sp-ink: #e7e4ef;
+  --sp-ink-soft: rgba(231, 228, 239, 0.64);
+  /* Stage I2E: raised from 0.4 to 0.55 — measured via axe-core
+     (Stage I2C) at 3.19:1 against the portal's dark backgrounds,
+     below WCAG AA's 4.5:1 for normal text. 0.55 composites to ~5.2:1
+     against #060608, with margin, while staying visibly fainter than
+     --sp-ink-soft above it. */
+  --sp-ink-faint: rgba(231, 228, 239, 0.55);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--dark);
+  color: var(--sp-ink);
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Stage I2H: shared visually-hidden utility — content present for
+   screen readers/accessible-name computation, never for sighted
+   users. Used where a control's real accessible name needs a word
+   the visible design doesn't show (e.g. "View" before a gallery
+   tile's already-visible label), without overriding that visible
+   text via aria-label (which is what caused the Stage I2G
+   label-content-name-mismatch finding in the first place). */
+.sp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,148 @@
+.sp-collab-card {
+  background: var(--sp-glass-bg);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.sp-collab-card__cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.sp-collab-card__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-collab-card__cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sp-ink-faint);
+  font-size: 22px;
+  border: 1px dashed var(--sp-glass-border);
+}
+
+.sp-collab-card__cover--loading {
+  animation: sp-cover-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes sp-cover-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-collab-card__cover--loading {
+    animation: none;
+  }
+}
+
+.sp-collab-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sp-collab-card__title {
+  margin: 0;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+}
+
+.sp-collab-card__status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.sp-collab-card__artist {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sp-ink-soft);
+}
+
+.sp-collab-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  margin: 4px 0 0;
+}
+
+.sp-collab-card__meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sp-collab-card__meta dt {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+}
+
+.sp-collab-card__meta dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sp-ink);
+}
+
+.sp-collab-card__actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sp-collab-card__action {
+  text-align: center;
+  padding: 9px 4px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--cyan);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+}
+
+.sp-collab-card__action:hover,
+.sp-collab-card__action:focus-visible {
+  background: rgba(0, 229, 255, 0.22);
+}
+
+.sp-collab-card__action--unavailable {
+  background: transparent;
+  color: var(--sp-ink-faint);
+  border-color: rgba(255, 255, 255, 0.12);
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .sp-collab-card__actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

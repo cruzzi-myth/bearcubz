@@ -1,0 +1,383 @@
+/* Stage I2G: the Command Center now shares the same full-bleed
+   background + scrim + glass-panel system already proven on the
+   Dashboard and the four chambers (see dashboard-page.css /
+   portal-chamber-layout.css) — same mechanism, not a new pattern.
+   The scrim here is deliberately heavier than those pages' (0.85 at
+   the ends, 0.74 mid-scroll vs. their ~0.8/0.5) because dense tables
+   and forms need more guaranteed contrast than an audio player or a
+   gallery grid does; "practical and readable" was an explicit
+   requirement, not a suggestion. */
+.sp-admin {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  color: var(--sp-ink);
+}
+
+.sp-admin__bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
+.sp-admin__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(6, 6, 8, 0.85) 0%, rgba(6, 6, 8, 0.74) 28%, rgba(6, 6, 8, 0.9) 100%);
+}
+
+.sp-admin__head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  padding: 16px clamp(16px, 4vw, 32px);
+  border-bottom: 1px solid var(--sp-glass-border);
+  background: rgba(6, 6, 10, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.sp-admin__brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.sp-admin__brand-main {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 14px;
+  color: #fff;
+}
+
+.sp-admin__brand-main span {
+  color: var(--cyan);
+}
+
+.sp-admin__brand-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--pink);
+}
+
+.sp-admin__identity {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--sp-ink-faint);
+}
+
+.sp-admin__head-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sp-admin__head-actions a,
+.sp-admin__head-actions button {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-soft);
+  background: transparent;
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 36px;
+}
+
+.sp-admin__head-actions a:hover,
+.sp-admin__head-actions button:hover,
+.sp-admin__head-actions a:focus-visible,
+.sp-admin__head-actions button:focus-visible {
+  color: #fff;
+  border-color: var(--cyan);
+}
+
+.sp-admin__tabs {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px clamp(16px, 4vw, 32px);
+  border-bottom: 1px solid var(--sp-glass-border);
+  background: rgba(6, 6, 10, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-x: auto;
+}
+
+.sp-admin__tab {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sp-ink-faint);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 36px;
+}
+
+.sp-admin__tab:hover,
+.sp-admin__tab:focus-visible {
+  color: var(--sp-ink);
+}
+
+.sp-admin__tab[aria-current='page'] {
+  color: var(--cyan);
+  border-color: rgba(0, 229, 255, 0.4);
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.sp-admin__main {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 36px);
+}
+
+.sp-admin__main h2 {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  margin: 0 0 18px;
+}
+
+/* ---------- metric cards ---------- */
+.sp-admin__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.sp-admin__metric {
+  background: var(--sp-glass-bg);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* Subtle holographic-terminal cut corner, same construction as the
+     entrance's illustrated panels and the chamber eyebrow marks —
+     restrained enough not to clip the value/label text inside. */
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  position: relative;
+}
+
+.sp-admin__metric::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border-top: 1px solid rgba(0, 229, 255, 0.5);
+  border-right: 1px solid rgba(0, 229, 255, 0.5);
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+}
+
+.sp-admin__metric-value {
+  font-family: 'Orbitron', monospace;
+  font-weight: 900;
+  font-size: 26px;
+  color: var(--cyan);
+}
+
+.sp-admin__metric-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+  margin-top: 4px;
+}
+
+/* ---------- tables ---------- */
+.sp-admin__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 12px;
+  background: rgba(8, 7, 15, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.sp-admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.sp-admin__table th,
+.sp-admin__table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.sp-admin__table th {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.sp-admin__table tr:last-child td {
+  border-bottom: none;
+}
+
+.sp-admin__pill {
+  display: inline-block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  color: var(--cyan);
+}
+
+.sp-admin__pill--warn {
+  border-color: rgba(255, 183, 0, 0.5);
+  color: var(--amber);
+}
+
+.sp-admin__pill--bad {
+  border-color: rgba(255, 45, 85, 0.5);
+  color: var(--red);
+}
+
+.sp-admin__pill--muted {
+  border-color: var(--sp-glass-border);
+  color: var(--sp-ink-faint);
+}
+
+/* ---------- forms ---------- */
+.sp-admin__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 480px;
+}
+
+.sp-admin__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sp-admin__field label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+}
+
+.sp-admin__field input,
+.sp-admin__field select,
+.sp-admin__field textarea {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--sp-ink);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  min-height: 40px;
+}
+
+.sp-admin__btn {
+  align-self: flex-start;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(90deg, var(--pink), var(--cyan));
+  color: #060608;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.sp-admin__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sp-admin__btn--ghost {
+  background: transparent;
+  border: 1px solid var(--sp-glass-border);
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin__btn--danger {
+  background: transparent;
+  border: 1px solid rgba(255, 45, 85, 0.5);
+  color: var(--red);
+}
+
+.sp-admin__row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.sp-admin__status-msg {
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+
+.sp-admin__status-msg--error {
+  color: var(--red);
+}
+
+.sp-admin__status-msg--success {
+  color: var(--cyan);
+}
+
+.sp-admin__section {
+  margin-bottom: 32px;
+}
+
+.sp-admin__empty {
+  color: var(--sp-ink-soft);
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .sp-admin__table-wrap {
+    font-size: 12px;
+  }
+}

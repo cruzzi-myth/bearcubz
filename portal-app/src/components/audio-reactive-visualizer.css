@@ -1,0 +1,33 @@
+.sp-visualizer {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  display: block;
+}
+
+.sp-visualizer--static {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 120px;
+}
+
+.sp-visualizer__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--cyan);
+  opacity: 0.4;
+}
+
+.sp-visualizer__dot--playing {
+  opacity: 0.9;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.6);
+}
+
+@media (max-width: 560px) {
+  .sp-visualizer {
+    max-width: 220px;
+  }
+}

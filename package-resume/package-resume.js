@@ -126,4 +126,29 @@
     paintRange(seek);
     players.push(api);
   });
+
+  /* ---------- Signal Portal — Transition A (Artist Package -> /portal/) ---------- */
+  var portalLinks = document.querySelectorAll('.js-signal-portal-link');
+  var transitionEl = document.getElementById('prSignalTransition');
+  var transitionFiring = false;
+  var TRANSITION_MS = 900;
+
+  portalLinks.forEach(function (link) {
+    link.addEventListener('click', function (event) {
+      var href = link.getAttribute('href');
+      if (!href) return;
+
+      // No animation element, already mid-transition, or the visitor
+      // prefers reduced motion — just navigate immediately. A failed
+      // or skipped animation must never block getting to the Portal.
+      if (!transitionEl || transitionFiring || reduce) return;
+
+      event.preventDefault();
+      transitionFiring = true;
+      transitionEl.classList.add('pr-signal-transition--active');
+      window.setTimeout(function () {
+        window.location.href = href;
+      }, TRANSITION_MS);
+    });
+  });
 })();

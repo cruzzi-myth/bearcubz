@@ -1,0 +1,287 @@
+/* ============================================================
+   Stage I2D/I2E — the reference artwork IS the interface. No separate
+   hero thumbnail, no duplicate heading, no second login card, no
+   second row of navigation cards below it. Every interactive element
+   is a transparent, precisely-positioned overlay on top of the single
+   full-bleed image (see entranceOverlayRegions.ts for the measured
+   coordinates). Stage I2E replaced the blurred-ambient side treatment
+   with a genuine wide composition (portal-entrance-wide.webp) at
+   desktop widths — see EntrancePage.tsx's useEntranceVariant for the
+   portrait/landscape switch.
+   ============================================================ */
+
+.sp-entrance-v2 {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #060608;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sp-entrance-v2 {
+    animation: sp-entrance-in 0.6s ease-out both;
+  }
+}
+
+@keyframes sp-entrance-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The artwork's own aspect ratio, sized to fit entirely within the
+   viewport on every axis — never cropped, never distorted, never
+   needing a scroll to reach the terminal. --sp-stage-ratio is set
+   inline per-render from the actual variant in use (portrait or
+   Stage I2E's wide composition — see useEntranceVariant), so this
+   rule works for either without a separate ambient fill: the wide
+   image's own extended environment fills the width directly at the
+   desktop sizes it's used at. Every overlay inside is positioned in
+   percentages of THIS box, so it stays attached to its illustrated
+   control at any size. */
+.sp-entrance-v2__stage {
+  position: relative;
+  z-index: 1;
+  width: min(100vw, calc(100vh * var(--sp-stage-ratio)));
+  max-height: 100vh;
+  margin: 0 auto;
+}
+
+.sp-entrance-v2__art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.sp-entrance-v2__sr-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sp-entrance-v2__auth-form {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sp-entrance-v2__auth-form > * {
+  pointer-events: auto;
+}
+
+/* ---------- Artist email (real input, over the illustrated field) ---------- */
+.sp-entrance-v2__email {
+  position: absolute;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: clamp(4px, 0.8vw, 10px);
+  padding: 0 clamp(8px, 2.2vw, 20px) 0 clamp(28px, 6.5vw, 58px);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(10px, 1.7vw, 16px);
+  color: #fff;
+  caret-color: var(--pink, #ff2d78);
+}
+
+.sp-entrance-v2__email:focus-visible,
+.sp-entrance-v2__email:not(:placeholder-shown) {
+  background: rgba(6, 6, 10, 0.55);
+  border-color: rgba(255, 45, 120, 0.55);
+}
+
+.sp-entrance-v2__email:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.5), 0 0 14px rgba(0, 229, 255, 0.35);
+}
+
+.sp-entrance-v2__email[aria-invalid='true'] {
+  border-color: var(--red, #ff3b3b);
+}
+
+/* ---------- Access Portal (transparent button over the illustrated pink bar) ---------- */
+.sp-entrance-v2__access-portal {
+  position: absolute;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: clamp(8px, 1.6vw, 16px);
+  cursor: pointer;
+  padding: 0;
+}
+
+.sp-entrance-v2__access-portal:hover:not(:disabled),
+.sp-entrance-v2__access-portal:focus-visible {
+  background: rgba(255, 45, 120, 0.14);
+  box-shadow: 0 0 0 1px rgba(255, 45, 120, 0.6), 0 0 22px rgba(255, 45, 120, 0.45);
+}
+
+.sp-entrance-v2__access-portal:focus-visible {
+  outline: none;
+}
+
+.sp-entrance-v2__access-portal:disabled {
+  cursor: progress;
+}
+
+/* ---------- Fingerprint scanner (transparent, same submit action) ---------- */
+.sp-entrance-v2__fingerprint {
+  position: absolute;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: clamp(6px, 1.2vw, 14px);
+  cursor: pointer;
+  padding: 0;
+}
+
+.sp-entrance-v2__fingerprint:hover:not(:disabled),
+.sp-entrance-v2__fingerprint:focus-visible {
+  background: rgba(255, 45, 120, 0.1);
+  box-shadow: 0 0 0 1px rgba(255, 45, 120, 0.55), 0 0 18px rgba(255, 45, 120, 0.4);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sp-entrance-v2__fingerprint:hover:not(:disabled),
+  .sp-entrance-v2__fingerprint:focus-visible {
+    animation: sp-fingerprint-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes sp-fingerprint-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(255, 45, 120, 0.55), 0 0 10px rgba(255, 45, 120, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(255, 45, 120, 0.8), 0 0 24px rgba(255, 45, 120, 0.55);
+  }
+}
+
+.sp-entrance-v2__fingerprint:focus-visible {
+  outline: none;
+}
+
+/* ---------- The four illustrated navigation panels ---------- */
+.sp-entrance-v2__panel {
+  position: absolute;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  clip-path: polygon(8% 0, 100% 0, 100% 85%, 92% 100%, 0 100%, 0 15%);
+}
+
+.sp-entrance-v2__panel:hover,
+.sp-entrance-v2__panel:focus-visible {
+  background: rgba(0, 229, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(0, 229, 255, 0.6), 0 0 20px rgba(0, 229, 255, 0.35);
+}
+
+.sp-entrance-v2__panel:focus-visible {
+  outline: none;
+}
+
+/* ---------- Left-side nav labels (MUSIC / COLLABORATIONS / PROPOSALS / VISUALS / TRANSMISSIONS) ---------- */
+a.sp-entrance-v2__nav-link,
+button.sp-entrance-v2__nav-link {
+  position: absolute;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+}
+
+.sp-entrance-v2__nav-link:hover,
+.sp-entrance-v2__nav-link:focus-visible {
+  box-shadow: inset 2px 0 0 0 rgba(0, 229, 255, 0.8);
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.sp-entrance-v2__nav-link:focus-visible {
+  outline: none;
+}
+
+/* ---------- Status dock — the only persistent UI below the artwork itself ---------- */
+.sp-entrance-v2__status-dock {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 92vw);
+  margin: 10px auto clamp(16px, 4vw, 32px);
+  text-align: center;
+}
+
+.sp-entrance-v2__status-msg {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--sp-ink-soft, rgba(231, 228, 239, 0.64));
+  margin: 0 0 8px;
+}
+
+.sp-entrance-v2__status-msg--error {
+  color: var(--red, #ff3b3b);
+}
+
+.sp-entrance-v2__choice-prompt {
+  margin-bottom: 8px;
+}
+
+.sp-entrance-v2__choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sp-entrance-v2__choice-buttons button {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(255, 45, 120, 0.12);
+  border: 1px solid rgba(255, 45, 120, 0.5);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.sp-entrance-v2__choice-buttons button:hover,
+.sp-entrance-v2__choice-buttons button:focus-visible {
+  background: rgba(255, 45, 120, 0.22);
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(255, 45, 120, 0.7);
+}
+
+.sp-entrance-v2__legal-notice {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sp-ink-faint, rgba(231, 228, 239, 0.4));
+  margin: 12px 0 10px;
+}
+
+.sp-entrance-v2__return {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint, rgba(231, 228, 239, 0.4));
+  text-decoration: none;
+}
+
+.sp-entrance-v2__return:hover,
+.sp-entrance-v2__return:focus-visible {
+  color: var(--cyan, #00e5ff);
+}

@@ -1,0 +1,285 @@
+/* Shared inner-content styling for all four chambers — rendered
+   inside PortalChamberLayout's .sp-chamber__panel. */
+
+.sp-listen,
+.sp-proposal,
+.sp-gallery,
+.sp-transmission {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sp-listen__meta,
+.sp-proposal__meta {
+  margin: 0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+}
+
+.sp-listen__title,
+.sp-proposal__title {
+  margin: 0;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+}
+
+.sp-listen__empty,
+.sp-proposal__empty,
+.sp-gallery__empty {
+  margin: 0;
+  color: var(--sp-ink-soft);
+  font-size: 14px;
+}
+
+.sp-listen__tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sp-listen__track-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--sp-ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sp-listen__track-kind {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+/* ---------- proposal archive ---------- */
+.sp-proposal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sp-proposal__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.sp-proposal__item-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sp-proposal__item-version {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--sp-ink-faint);
+}
+
+.sp-proposal__view-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sp-proposal__view-btn:hover,
+.sp-proposal__view-btn:focus-visible {
+  background: rgba(0, 229, 255, 0.22);
+}
+
+.sp-proposal__notice {
+  margin: 0;
+  font-size: 11px;
+  color: var(--sp-ink-faint);
+}
+
+/* ---------- visual gallery ---------- */
+.sp-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.sp-gallery__tile {
+  position: relative;
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.sp-gallery__tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-gallery__tile-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), transparent);
+  color: #fff;
+  font-size: 11px;
+  padding: 16px 8px 6px;
+  text-align: left;
+}
+
+.sp-gallery__tile-status {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.sp-gallery__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.sp-gallery__lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.sp-gallery__lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ---------- transmission chamber ---------- */
+.sp-transmission__thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.sp-transmission__msg {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.sp-transmission__msg--admin {
+  border-color: rgba(255, 45, 120, 0.35);
+}
+
+.sp-transmission__msg-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+  margin-bottom: 4px;
+}
+
+.sp-transmission__msg-body {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sp-ink);
+  white-space: pre-wrap;
+}
+
+.sp-transmission__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-transmission__textarea {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--sp-ink);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.sp-transmission__submit {
+  align-self: flex-start;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--pink), var(--cyan));
+  color: #060608;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sp-transmission__submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sp-transmission__status {
+  margin: 0;
+  font-size: 12px;
+}
+
+.sp-transmission__status--error {
+  color: var(--red);
+}
+
+.sp-transmission__status--success {
+  color: var(--cyan);
+}

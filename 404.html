@@ -26,6 +26,21 @@
       loc.replace(target);
     }
   })();
+
+  // Isolated copy of the same mechanism, for the Signal Portal SPA.
+  // Independent of the Universe block above — touching one must
+  // never require touching the other. See portal-app/index.html for
+  // the matching restore half of this pair.
+  (function () {
+    var PORTAL_BASE = '/portal/';
+    var loc = window.location;
+    if (loc.pathname.indexOf(PORTAL_BASE) === 0) {
+      var rest = loc.pathname.slice(PORTAL_BASE.length); // e.g. "dashboard" or ""
+      var extraParams = loc.search ? '&' + loc.search.slice(1) : '';
+      var target = PORTAL_BASE + '?p=' + encodeURIComponent('/' + rest) + extraParams + loc.hash;
+      loc.replace(target);
+    }
+  })();
 </script>
 <style>
   body{background:#060608;color:#bbb;font-family:'Rajdhani',sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;text-align:center;padding:24px}

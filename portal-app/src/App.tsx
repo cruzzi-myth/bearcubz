@@ -1,0 +1,28 @@
+import { BrowserRouter, useRoutes } from 'react-router-dom';
+import { portalRoutes } from './routes';
+import { PortalAuthProvider } from './features/auth/PortalAuthContext';
+import { PortalHostProvider } from './features/portal-host/PortalHostProvider';
+
+// Vite's BASE_URL is "/portal/" in production (see vite.config.ts)
+// and "/" in local dev — either way, strip the trailing slash for
+// React Router's basename.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+function AppRoutes() {
+  return useRoutes(portalRoutes);
+}
+
+export default function App() {
+  return (
+    <PortalAuthProvider>
+      {/* Above the router so Nyx's conversation history survives
+          client-side navigation between pages — cleared entirely on
+          sign-out/account-change inside the provider itself, not here. */}
+      <PortalHostProvider>
+        <BrowserRouter basename={basename}>
+          <AppRoutes />
+        </BrowserRouter>
+      </PortalHostProvider>
+    </PortalAuthProvider>
+  );
+}

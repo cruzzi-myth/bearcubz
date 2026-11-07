@@ -7,3 +7,8 @@ node_modules/
 *.tsbuildinfo
 events-app/vite.config.js
 events-app/vite.config.d.ts
+
+# Supabase CLI local link state (Stage I2B) — holds only the linked
+# project ref, never a secret, but standard practice is to keep it
+# out of version control since it's machine/session-local.
+supabase/.temp/

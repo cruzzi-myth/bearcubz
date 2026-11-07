@@ -1,0 +1,28 @@
+.sp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.sp-empty__message {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--sp-ink-soft);
+  margin: 0;
+}
+
+.sp-empty__link {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.sp-empty__link:hover,
+.sp-empty__link:focus-visible {
+  color: var(--pink);
+}
