@@ -1,0 +1,15 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# Stage I3H: defense-in-depth only -- real backups always live at
+# ~/MoonRacer-Secure-Backups/, outside this repo entirely, and
+# create-production-backup.sh itself refuses to write inside the repo.
+# This just ensures a mistaken local copy is never committed.
+moon-racer-production-*/
+MoonRacer-Secure-Backups/

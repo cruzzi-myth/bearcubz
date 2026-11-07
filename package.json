@@ -1,0 +1,8 @@
+{
+  "name": "bearcubz-supabase-tooling",
+  "private": true,
+  "description": "Repo-root scope for the Supabase CLI (devDependency only) so it can be installed project-locally, per supabase/ at this root. Not a buildable app itself.",
+  "devDependencies": {
+    "supabase": "^3.0.0"
+  }
+}
