@@ -10,6 +10,7 @@ export type DashboardCollaboration = {
   bpm: number | null;
   musicalKey: string | null;
   genreTags: string[] | null;
+  notes: string | null;
   updatedAt: string;
   availableAssetTypes: Set<string>;
   primaryCoverAssetId: string | null;
@@ -77,7 +78,7 @@ export function useDashboardData(): DashboardData {
       const [collabResult, assetResult, feedbackResult] = await Promise.all([
         supabase
           .from('collaborations')
-          .select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, updated_at')
+          .select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, notes, updated_at')
           .in('id', activeIds),
         supabase
           .from('collaboration_assets')
@@ -127,6 +128,7 @@ export function useDashboardData(): DashboardData {
         bpm: row.bpm,
         musicalKey: row.musical_key,
         genreTags: row.genre_tags,
+        notes: row.notes,
         updatedAt: row.updated_at,
         availableAssetTypes: assetsByCollaboration.get(row.id) ?? new Set<string>(),
         primaryCoverAssetId: primaryCoverByCollaboration.get(row.id) ?? null,

@@ -1,0 +1,204 @@
+.sp-asset-row-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(8, 7, 15, 0.6);
+}
+
+.sp-asset-row-list__empty {
+  color: var(--sp-ink-soft);
+  font-size: 13px;
+}
+
+.sp-asset-row-li {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+/* Stage K1.4.1 — a compact, music-library-style row: ~72px tall
+   (within the 64-84px desktop target), a small square cover, title +
+   artist stacked in the middle, a classification badge, and
+   right-aligned metadata. Thin illuminated separators between rows
+   instead of per-row card borders/padding/shadow, which is what made
+   the previous grid read as oversized project cards rather than a
+   scannable list. */
+.sp-asset-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  min-height: 72px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sp-asset-row:last-child {
+  border-bottom: none;
+}
+
+/* Side indicator + illumination on hover/focus, never a scale
+   transform -- a scaling row would shift its neighbors, which Part
+   II explicitly asks to avoid. */
+.sp-asset-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--cyan);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sp-asset-row:hover,
+.sp-asset-row:focus-visible {
+  background: rgba(0, 229, 255, 0.06);
+  outline: none;
+}
+
+.sp-asset-row:hover::before,
+.sp-asset-row:focus-visible::before {
+  opacity: 1;
+}
+
+.sp-asset-row:hover .sp-asset-row__title,
+.sp-asset-row:focus-visible .sp-asset-row__title {
+  color: var(--cyan);
+}
+
+.sp-asset-row:hover .sp-asset-row__cover img,
+.sp-asset-row:focus-visible .sp-asset-row__cover img {
+  filter: brightness(1.15);
+}
+
+.sp-asset-row--selected {
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.sp-asset-row--selected::before {
+  opacity: 1;
+}
+
+.sp-asset-row__cover {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.sp-asset-row__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.15s ease;
+}
+
+.sp-asset-row__cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sp-ink-faint);
+  font-size: 18px;
+  border: 1px dashed var(--sp-glass-border);
+}
+
+.sp-asset-row__cover--loading {
+  animation: sp-asset-row-cover-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes sp-asset-row-cover-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.sp-asset-row__info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sp-asset-row__title {
+  margin: 0;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.sp-asset-row__artist {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: var(--sp-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-asset-row__meta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sp-asset-row__meta-item {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--sp-ink-faint);
+  white-space: nowrap;
+}
+
+.sp-asset-row__status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: 999px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-asset-row__cover--loading {
+    animation: none;
+  }
+}
+
+/* Mobile target: metadata moves to a second line beneath title/artist
+   rather than being squeezed horizontally or truncating the title;
+   the classification badge and cover stay put so they're always
+   visible. */
+@media (max-width: 560px) {
+  .sp-asset-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .sp-asset-row__info {
+    flex: 1 1 auto;
+  }
+  .sp-asset-row__title {
+    white-space: normal;
+  }
+  .sp-asset-row__meta {
+    flex: 1 0 100%;
+    margin-left: 68px;
+  }
+}

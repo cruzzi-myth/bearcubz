@@ -3,9 +3,11 @@ import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { useAdminAssets } from '../hooks/useAdminAssets';
 import { updateAsset, markAssetInactive, confirmUpload } from '../services/adminApi';
 import { AssetUploadForm } from './AssetUploadForm';
+import { AssetLibraryList } from '../../../components/AssetLibraryList';
+import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
 import { useSignedAssetUrl } from '../../../hooks/useSignedAssetUrl';
 import { isCoverEligible } from '../lib/coverEligibility';
-import type { ApprovalStatus } from '../types/adminTypes';
+import type { ApprovalStatus, AdminCollaboration } from '../types/adminTypes';
 
 function formatBytes(bytes: number | null): string {
   if (bytes == null) return '—';
@@ -43,6 +45,7 @@ function PreviewButton({ assetId }: { assetId: string }) {
 export function AssetsTab() {
   const { state: collabState } = useAdminCollaborations();
   const [selectedCollaboration, setSelectedCollaboration] = useState<string>('');
+  const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const { state: assetState, reload } = useAdminAssets(selectedCollaboration || undefined);
 
   async function handleApprovalChange(assetId: string, approvalStatus: ApprovalStatus) {
@@ -70,6 +73,18 @@ export function AssetsTab() {
   return (
     <>
       <h2>Asset Library</h2>
+
+      {/* Stage K1.4.1 — the compact music-library-style browser (same
+          shared row component the artist-facing Asset Library uses).
+          This is the visual project browser; selecting a row opens
+          its briefing (the same one Collaborations uses) rather than
+          driving the dropdown/table below — that filter and the
+          management table underneath are untouched, still the real
+          administrative interface. */}
+      <div style={{ marginBottom: 24 }}>
+        <AssetLibraryList rows={collaborations} selectedId={briefingTarget?.id ?? null} onSelect={(row) => setBriefingTarget(row)} />
+      </div>
+
       <div className="sp-admin__field" style={{ maxWidth: 420, marginBottom: 20 }}>
         <label htmlFor="asset-collab-filter">Collaboration</label>
         <select id="asset-collab-filter" value={selectedCollaboration} onChange={(e) => setSelectedCollaboration(e.target.value)}>
@@ -121,7 +136,11 @@ export function AssetsTab() {
                     </td>
                     <td>
                       {asset.approvalStatus ? (
-                        <select value={asset.approvalStatus} onChange={(e) => handleApprovalChange(asset.id, e.target.value as ApprovalStatus)}>
+                        <select
+                          aria-label={`Change approval status for ${asset.displayLabel}`}
+                          value={asset.approvalStatus}
+                          onChange={(e) => handleApprovalChange(asset.id, e.target.value as ApprovalStatus)}
+                        >
                           <option value="pending">pending</option>
                           <option value="approved">approved</option>
                           <option value="rejected">rejected</option>
@@ -160,6 +179,8 @@ export function AssetsTab() {
           </div>
         )}
       </div>
+
+      {briefingTarget && <AdminCollaborationBriefing collaboration={briefingTarget} onClose={() => setBriefingTarget(null)} />}
     </>
   );
 }

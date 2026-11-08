@@ -24,6 +24,7 @@ export type AdminCollaboration = {
   createdAt: string;
   updatedAt: string;
   assetCount: number;
+  primaryCoverAssetId: string | null;
 };
 
 export type AdminMembership = {

@@ -54,14 +54,22 @@ export async function listMemberships(userId?: string): Promise<ApiResult<AdminM
 }
 
 export async function listCollaborations(): Promise<ApiResult<AdminCollaboration[]>> {
-  const [collabResult, assetCounts] = await Promise.all([
+  const [collabResult, assetCounts, primaryCovers] = await Promise.all([
     supabase.from('collaborations').select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, notes, created_at, updated_at'),
     supabase.from('collaboration_assets').select('collaboration_id').eq('is_active', true),
+    // Stage K1.4: same is_primary_cover column useDashboardData already
+    // reads for the artist-facing card -- additive query, no schema
+    // change, so the Asset Library/Collaborations briefing can show the
+    // real cover thumbnail for admins too.
+    supabase.from('collaboration_assets').select('id, collaboration_id').eq('is_primary_cover', true).eq('is_active', true),
   ]);
   if (collabResult.error) return { ok: false, error: collabResult.error.message };
 
   const counts = new Map<string, number>();
   for (const row of assetCounts.data ?? []) counts.set(row.collaboration_id, (counts.get(row.collaboration_id) ?? 0) + 1);
+
+  const primaryCoverByCollaboration = new Map<string, string>();
+  for (const row of primaryCovers.data ?? []) primaryCoverByCollaboration.set(row.collaboration_id, row.id);
 
   return {
     ok: true,
@@ -77,6 +85,7 @@ export async function listCollaborations(): Promise<ApiResult<AdminCollaboration
       createdAt: r.created_at,
       updatedAt: r.updated_at,
       assetCount: counts.get(r.id) ?? 0,
+      primaryCoverAssetId: primaryCoverByCollaboration.get(r.id) ?? null,
     })),
   };
 }

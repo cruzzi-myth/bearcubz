@@ -692,5 +692,210 @@ await check('Artist A: quick-reply from the inbox panel reaches the same Transmi
   return (data?.length ?? 0) === 1;
 });
 
+// ---------- Stage K1.4/K1.4.1: Asset Library / Collaborations / Briefing Modal ----------
+await check('Artist A: Asset Library shows the compact row layout with a TRACK classification badge for Project A (bpm/key both set)', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  const rowCount = await page.locator('.sp-asset-row').count();
+  const text = await page.textContent('.sp-asset-row-list');
+  await context.close();
+  return rowCount >= 1 && text.includes('Track');
+});
+
+await check('Artist A: Asset Library row height is compact (music-library style, not an oversized card)', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  const height = await page.locator('.sp-asset-row').first().evaluate((el) => el.getBoundingClientRect().height);
+  await context.close();
+  // Target is 64-84px; allow a little slack for font rendering differences across environments.
+  return height >= 60 && height <= 100;
+});
+
+await check('Artist A: clicking an Asset Library row opens the same briefing modal the Collaborations view uses', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.locator('.sp-asset-row', { hasText: 'Ghost Signal' }).click();
+  await page.waitForTimeout(500);
+  const dialog = page.locator('[role="dialog"]');
+  const text = await dialog.textContent();
+  await context.close();
+  return text.includes('Ghost Signal') && text.includes('Collaboration Materials');
+});
+
+await check('administrator: Parallel Transmission (no bpm/key recorded) shows UNCLASSIFIED, never an invented classification', async () => {
+  const { context, page } = await freshPage('admin', '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(1200);
+  const row = page.locator('tr', { hasText: 'Parallel Transmission' }).first();
+  const text = await row.textContent();
+  await context.close();
+  return text.includes('Unclassified');
+});
+
+await check('Artist A: switching to the Collaborations view shows the report-style list with a classification column', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  const text = await page.textContent('.sp-collab-report');
+  await context.close();
+  return text.includes('Ghost Signal') && text.includes('Classification') && text.includes('Track');
+});
+
+await check('Artist B: the Collaborations report never shows Artist A\'s project (same isolation as the Asset Library)', async () => {
+  const { context, page } = await freshPage('artistB', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  const text = await page.textContent('.sp-collab-report');
+  await context.close();
+  return text.includes('Static Bloom') && !text.includes('Ghost Signal') && !text.includes('Parallel Transmission');
+});
+
+await check('Artist A: clicking a Collaborations row opens the briefing modal with the correct project\'s real data', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  await page.locator('tr[role="button"]', { hasText: 'Ghost Signal' }).click();
+  await page.waitForTimeout(500);
+  const dialog = page.locator('[role="dialog"]');
+  const text = await dialog.textContent();
+  await context.close();
+  return text.includes('Ghost Signal') && text.includes('128') && text.includes('Deliverables') && text.includes('Collaboration Materials');
+});
+
+await check('Artist A: the briefing modal never fabricates the full WAV master as complete when it was never uploaded', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  await page.locator('tr[role="button"]', { hasText: 'Ghost Signal' }).click();
+  await page.waitForTimeout(500);
+  const row = page.locator('[role="dialog"] li', { hasText: 'Full WAV Master' });
+  const text = await row.textContent();
+  await context.close();
+  return text.includes('Pending');
+});
+
+await check('Artist A: Escape closes the briefing modal and restores focus to the row that opened it', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  const row = page.locator('tr[role="button"]', { hasText: 'Ghost Signal' });
+  await row.focus();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(400);
+  const openedCount = await page.locator('[role="dialog"]').count();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  const closedCount = await page.locator('[role="dialog"]').count();
+  const focusReturnedToRow = await row.evaluate((el) => el === document.activeElement);
+  await context.close();
+  return openedCount === 1 && closedCount === 0 && focusReturnedToRow;
+});
+
+await check('Artist A: Tab cycling inside the open briefing modal never escapes to the page behind it (focus trap)', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  await page.locator('tr[role="button"]', { hasText: 'Ghost Signal' }).click();
+  await page.waitForTimeout(500);
+  // Tab far more times than there are focusable elements inside the dialog.
+  for (let i = 0; i < 15; i++) await page.keyboard.press('Tab');
+  const focusInsideDialog = await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    return Boolean(dialog && dialog.contains(document.activeElement));
+  });
+  await context.close();
+  return focusInsideDialog;
+});
+
+await check('administrator: the Asset Library compact row list renders real projects with classification badges, management table unchanged', async () => {
+  const { context, page } = await freshPage('admin', '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Asset Library' }).click();
+  await page.waitForTimeout(1000);
+  const listText = await page.textContent('.sp-asset-row-list');
+  const hasManagementTable = (await page.locator('.sp-admin__table-wrap').count()) > 0;
+  const hasUploadDropdown = (await page.locator('#asset-collab-filter').count()) > 0;
+  await context.close();
+  return listText.includes('Ghost Signal') && listText.includes('Track') && hasManagementTable && hasUploadDropdown;
+});
+
+await check('administrator: Asset Library rows are compact (64-100px), not the previous oversized cinematic cards', async () => {
+  const { context, page } = await freshPage('admin', '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Asset Library' }).click();
+  await page.waitForTimeout(1000);
+  const height = await page.locator('.sp-asset-row').first().evaluate((el) => el.getBoundingClientRect().height);
+  await context.close();
+  return height >= 60 && height <= 100;
+});
+
+await check('administrator: selecting a project in the Asset Library row list opens its briefing modal, and the existing upload/filter dropdown still drives the management table independently', async () => {
+  const { context, page } = await freshPage('admin', '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Asset Library' }).click();
+  await page.waitForTimeout(1000);
+  await page.locator('.sp-asset-row', { hasText: 'Static Bloom' }).click();
+  await page.waitForTimeout(600);
+  const dialogText = await page.locator('[role="dialog"]').textContent();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+
+  // The pre-existing dropdown filter (unchanged) must still work independently of the row click above.
+  await page.selectOption('#asset-collab-filter', dataset.collaborations.projectB);
+  await page.waitForTimeout(600);
+  const selectValue = await page.locator('#asset-collab-filter').inputValue();
+  await context.close();
+  return dialogText.includes('Static Bloom') && selectValue === dataset.collaborations.projectB;
+});
+
+await check('administrator: opening a collaboration briefing from the admin Collaborations tab shows real per-asset availability', async () => {
+  const { context, page } = await freshPage('admin', '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(1200);
+  await page.locator('tr[role="button"]', { hasText: 'Ghost Signal' }).click();
+  await page.waitForTimeout(1200);
+  const dialog = page.locator('[role="dialog"]');
+  const materialsText = await dialog.locator('li', { hasText: 'Audio (Demo / Master)' }).textContent().catch(() => '');
+  const linkCount = await dialog.getByRole('link', { name: /Audio \(Demo \/ Master\)/ }).count();
+  await context.close();
+  // Project A has a real audio_short asset in the review dataset, so this must be a real link, not "not yet available" text.
+  return linkCount === 1 && !materialsText.includes('not yet available');
+});
+
+await check('accessibility (axe-core): artist Collaborations report + open briefing modal has zero serious/critical violations', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1200);
+  await page.getByRole('tab', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(600);
+  await page.locator('tr[role="button"]', { hasText: 'Ghost Signal' }).click();
+  await page.waitForTimeout(500);
+  const results = await new AxeBuilder({ page }).analyze();
+  await context.close();
+  const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  return serious.length === 0;
+});
+
+await check('administrator: Asset Library compact row list + Collaborations report have zero serious/critical axe violations', async () => {
+  const { context, page } = await freshPage('admin', '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Asset Library' }).click();
+  await page.waitForTimeout(1000);
+  const gridResults = await new AxeBuilder({ page }).analyze();
+  await page.getByRole('button', { name: 'Collaborations' }).click();
+  await page.waitForTimeout(1200);
+  const reportResults = await new AxeBuilder({ page }).analyze();
+  await context.close();
+  const serious = [...gridResults.violations, ...reportResults.violations].filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  return serious.length === 0;
+});
+
 await browser.close();
 summary('Signal Portal browser suite (Stage I2C)');

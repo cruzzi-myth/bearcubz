@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { createCollaboration, updateCollaboration } from '../services/adminApi';
-import type { CollaborationStatus } from '../types/adminTypes';
+import { CollaborationsReport } from '../../../components/CollaborationsReport';
+import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
+import type { AdminCollaboration, CollaborationStatus } from '../types/adminTypes';
 
 const STATUSES: CollaborationStatus[] = ['draft', 'invited', 'active', 'completed', 'archived'];
 
@@ -15,6 +17,7 @@ function formatAt(iso: string): string {
 
 export function CollaborationsTab() {
   const { state, reload } = useAdminCollaborations();
+  const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const [title, setTitle] = useState('');
   const [artistDisplayName, setArtistDisplayName] = useState('');
   const [bpm, setBpm] = useState('');
@@ -87,8 +90,23 @@ export function CollaborationsTab() {
         </button>
       </form>
 
+      {/* Stage K1.4: report-style browse + briefing experience, built
+          on the exact same already-fetched `state.collaborations` —
+          the management table below is untouched, so every existing
+          create/status-edit capability keeps working exactly as
+          before. */}
       <div className="sp-admin__section" style={{ marginTop: 32 }}>
-        <h2>Collaborations</h2>
+        <h2>Collaboration Briefings</h2>
+        {state.kind === 'loading' && <p className="sp-admin__empty">Loading…</p>}
+        {state.kind === 'backend-unavailable' && <p className="sp-admin__status-msg sp-admin__status-msg--error">Backend not configured in this environment yet.</p>}
+        {state.kind === 'error' && <p className="sp-admin__status-msg sp-admin__status-msg--error">{state.message}</p>}
+        {state.kind === 'ready' && (
+          <CollaborationsReport rows={state.collaborations} selectedId={briefingTarget?.id ?? null} onSelect={(row) => setBriefingTarget(row)} />
+        )}
+      </div>
+
+      <div className="sp-admin__section" style={{ marginTop: 32 }}>
+        <h2>Manage Collaborations</h2>
         {state.kind === 'loading' && <p className="sp-admin__empty">Loading…</p>}
         {state.kind === 'backend-unavailable' && <p className="sp-admin__status-msg sp-admin__status-msg--error">Backend not configured in this environment yet.</p>}
         {state.kind === 'error' && <p className="sp-admin__status-msg sp-admin__status-msg--error">{state.message}</p>}
@@ -115,7 +133,11 @@ export function CollaborationsTab() {
                     <td>{c.title}</td>
                     <td>{c.artistDisplayName}</td>
                     <td>
-                      <select value={c.status} onChange={(e) => handleStatusChange(c.id, e.target.value as CollaborationStatus)}>
+                      <select
+                        aria-label={`Change status for ${c.title}`}
+                        value={c.status}
+                        onChange={(e) => handleStatusChange(c.id, e.target.value as CollaborationStatus)}
+                      >
                         {STATUSES.map((s) => (
                           <option key={s} value={s}>
                             {s}
@@ -136,6 +158,8 @@ export function CollaborationsTab() {
           </div>
         )}
       </div>
+
+      {briefingTarget && <AdminCollaborationBriefing collaboration={briefingTarget} onClose={() => setBriefingTarget(null)} />}
     </>
   );
 }

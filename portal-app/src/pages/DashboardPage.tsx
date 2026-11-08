@@ -1,10 +1,15 @@
-import { useDashboardData } from '../hooks/useDashboardData';
+import { useState } from 'react';
+import { useDashboardData, type DashboardCollaboration } from '../hooks/useDashboardData';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
-import { CollaborationCard } from '../components/CollaborationCard';
+import { AssetLibraryList } from '../components/AssetLibraryList';
+import { CollaborationsReport } from '../components/CollaborationsReport';
+import { CollaborationBriefingModal } from '../components/CollaborationBriefingModal';
 import { PortalEmptyState } from '../components/PortalEmptyState';
 import { PortalHost } from '../features/portal-host/PortalHost';
 import { portalAsset } from '../lib/assetPath';
 import './dashboard-page.css';
+
+type LibraryView = 'asset-library' | 'collaborations';
 
 function formatActivityDate(iso: string): string {
   try {
@@ -17,6 +22,8 @@ function formatActivityDate(iso: string): string {
 export function DashboardPage() {
   const data = useDashboardData();
   const { signOut } = usePortalAuth();
+  const [view, setView] = useState<LibraryView>('asset-library');
+  const [briefingTarget, setBriefingTarget] = useState<DashboardCollaboration | null>(null);
 
   return (
     <div className="sp-dash">
@@ -60,7 +67,32 @@ export function DashboardPage() {
         </section>
 
         <section className="sp-dash__section" aria-labelledby="collabs-h">
-          <h2 id="collabs-h">Your Collaborations</h2>
+          <div className="sp-dash__section-head">
+            <h2 id="collabs-h">Your Collaborations</h2>
+            {/* Stage K1.4: two differentiated views over the exact same
+                already-authorized `data.collaborations` array — no second
+                query, no parallel data store. */}
+            <div className="sp-dash__view-toggle" role="tablist" aria-label="Collaboration view">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === 'asset-library'}
+                className={view === 'asset-library' ? 'sp-dash__view-tab sp-dash__view-tab--active' : 'sp-dash__view-tab'}
+                onClick={() => setView('asset-library')}
+              >
+                Asset Library
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={view === 'collaborations'}
+                className={view === 'collaborations' ? 'sp-dash__view-tab sp-dash__view-tab--active' : 'sp-dash__view-tab'}
+                onClick={() => setView('collaborations')}
+              >
+                Collaborations
+              </button>
+            </div>
+          </div>
 
           {data.kind === 'loading' && <PortalEmptyState message="Loading your authorized collaborations…" showReturnLink={false} />}
 
@@ -76,12 +108,20 @@ export function DashboardPage() {
             <PortalEmptyState message="You're authorized, but no collaborations are assigned to you yet. Check back once one is." showReturnLink={false} />
           )}
 
-          {data.kind === 'ready' && data.collaborations.length > 0 && (
-            <div className="sp-dash__grid">
-              {data.collaborations.map((c) => (
-                <CollaborationCard key={c.id} collaboration={c} />
-              ))}
-            </div>
+          {data.kind === 'ready' && data.collaborations.length > 0 && view === 'asset-library' && (
+            <AssetLibraryList
+              rows={data.collaborations}
+              selectedId={briefingTarget?.id ?? null}
+              onSelect={(row) => setBriefingTarget(row)}
+            />
+          )}
+
+          {data.kind === 'ready' && data.collaborations.length > 0 && view === 'collaborations' && (
+            <CollaborationsReport
+              rows={data.collaborations}
+              selectedId={briefingTarget?.id ?? null}
+              onSelect={(row) => setBriefingTarget(row)}
+            />
           )}
         </section>
 
@@ -109,6 +149,14 @@ export function DashboardPage() {
       </main>
 
       <PortalHost />
+
+      {briefingTarget && (
+        <CollaborationBriefingModal
+          collaboration={briefingTarget}
+          availableAssetTypes={briefingTarget.availableAssetTypes}
+          onClose={() => setBriefingTarget(null)}
+        />
+      )}
     </div>
   );
 }
