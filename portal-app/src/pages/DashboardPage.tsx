@@ -5,6 +5,7 @@ import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { AssetLibraryList } from '../components/AssetLibraryList';
 import { CollaborationsReport } from '../components/CollaborationsReport';
 import { CollaborationBriefingModal } from '../components/CollaborationBriefingModal';
+import { ChamberNav } from '../components/ChamberNav';
 import { PortalEmptyState } from '../components/PortalEmptyState';
 import { PortalHost } from '../features/portal-host/PortalHost';
 import { portalAsset } from '../lib/assetPath';
@@ -71,6 +72,10 @@ export function DashboardPage() {
         </nav>
       </header>
 
+      <div className="sp-dash__nav-row">
+        <ChamberNav />
+      </div>
+
       <main className="sp-dash__main">
         <section className="sp-dash__welcome" aria-labelledby="welcome-h">
           <p className="sp-dash__eyebrow" id="welcome-h">
@@ -123,7 +128,30 @@ export function DashboardPage() {
             <PortalEmptyState message="Couldn't load your collaborations right now. Please try again." showReturnLink={false} />
           )}
 
-          {data.kind === 'ready' && data.collaborations.length === 0 && (
+          {/* Stage K1.6A: the admin-preview empty state is never shown to
+              an ordinary artist account (isAdmin only ever reflects a
+              real, server-verified is_portal_admin() result — see
+              PortalChamberLayout's identical guard), and never implies
+              administrative controls to one. */}
+          {data.kind === 'ready' && data.collaborations.length === 0 && isAdmin && (
+            <PortalEmptyState
+              message={
+                <>
+                  <strong>ADMINISTRATOR PREVIEW</strong>
+                  <br />
+                  No collaboration projects have been created yet.
+                  <br />
+                  Create your first collaboration in the Command Center to activate the listening, proposal, visual
+                  concept, and transmission chambers.
+                </>
+              }
+              showReturnLink
+              returnLinkTo="/admin"
+              returnLinkLabel="Return to Command Center"
+            />
+          )}
+
+          {data.kind === 'ready' && data.collaborations.length === 0 && !isAdmin && (
             <PortalEmptyState message="You're authorized, but no collaborations are assigned to you yet. Check back once one is." showReturnLink={false} />
           )}
 

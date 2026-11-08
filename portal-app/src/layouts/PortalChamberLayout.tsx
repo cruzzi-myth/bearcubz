@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
+import { ChamberNav } from '../components/ChamberNav';
 import { portalAsset } from '../lib/assetPath';
 import './portal-chamber-layout.css';
 
@@ -33,6 +34,12 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
   // is_portal_admin() result (see PortalAuthContext), same guarantee
   // every other admin-only control in this app already relies on.
   const { isAdmin } = usePortalAuth();
+  // Stage K1.6A: this layout is shared by all four chambers, each
+  // matched by the exact same `collaboration/:id/<segment>` route
+  // shape -- reading :id here (once) is what lets ChamberNav preserve
+  // the current project across chamber-to-chamber navigation without
+  // any component needing to pass it down explicitly.
+  const { id } = useParams<{ id: string }>();
 
   return (
     <div className="sp-chamber">
@@ -56,6 +63,9 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
           </Link>
         )}
       </header>
+      <div className="sp-chamber__nav-row">
+        <ChamberNav currentCollaborationId={id} />
+      </div>
       <main className="sp-chamber__stage">
         <p className="sp-chamber__eyebrow">{eyebrow}</p>
         <h1 className="sp-chamber__title">{title}</h1>

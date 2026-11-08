@@ -1,0 +1,152 @@
+/* Stage K1.6A — shared navigation bar, rendered on the Dashboard and
+   all four chambers via PortalChamberLayout. A translucent surface
+   over the cinematic background, never a solid block that competes
+   with it. */
+.sp-chamber-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(8, 7, 15, 0.55);
+  border: 1px solid var(--sp-glass-border);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sp-chamber-nav__link {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 7px 12px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 32px;
+}
+
+button.sp-chamber-nav__link {
+  font: inherit;
+}
+
+.sp-chamber-nav__link:hover,
+.sp-chamber-nav__link:focus-visible {
+  color: #fff;
+  border-color: var(--sp-glass-border);
+}
+
+.sp-chamber-nav__link:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.sp-chamber-nav__link[aria-current='page'] {
+  color: var(--cyan);
+  border-color: rgba(0, 229, 255, 0.4);
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.sp-chamber-nav__link--inert {
+  color: var(--sp-ink-faint);
+  cursor: default;
+  opacity: 0.6;
+}
+
+.sp-chamber-nav__empty-note {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--sp-ink-faint);
+  white-space: nowrap;
+}
+
+.sp-chamber-nav__project-picker select {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: var(--sp-ink);
+  min-height: 32px;
+  max-width: 200px;
+}
+
+.sp-chamber-nav__prompt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(191, 95, 255, 0.1);
+  border: 1px solid rgba(191, 95, 255, 0.4);
+  font-size: 12px;
+}
+
+.sp-chamber-nav__prompt p {
+  margin: 0;
+  color: var(--sp-ink);
+  white-space: nowrap;
+}
+
+.sp-chamber-nav__prompt-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sp-chamber-nav__prompt-choices button {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--purple);
+  background: transparent;
+  border: 1px solid rgba(191, 95, 255, 0.4);
+  border-radius: 999px;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sp-chamber-nav__prompt-choices button:hover,
+.sp-chamber-nav__prompt-choices button:focus-visible {
+  color: #fff;
+  border-color: var(--purple);
+}
+
+.sp-chamber-nav__prompt-cancel {
+  background: transparent;
+  border: none;
+  color: var(--sp-ink-faint);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.sp-chamber-nav__prompt-cancel:hover,
+.sp-chamber-nav__prompt-cancel:focus-visible {
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .sp-chamber-nav {
+    gap: 6px;
+  }
+  .sp-chamber-nav__link {
+    font-size: 10px;
+    padding: 6px 9px;
+  }
+}

@@ -979,7 +979,12 @@ await check('Artist A: the classification badge is visible but no edit control e
   const { context, page } = await freshPage('artistA', '/dashboard');
   await page.waitForTimeout(1200);
   const badgeText = await page.locator('.sp-asset-row', { hasText: 'Ghost Signal' }).locator('.sp-class-badge').textContent();
-  const selectCount = await page.locator('select').count();
+  // Stage K1.6A added ChamberNav's own <select> project-switcher
+  // (shown because Artist A has 2 authorized projects) -- that is a
+  // navigation control, not a classification editor, so it is
+  // deliberately excluded from this count rather than widening what
+  // this assertion is willing to allow.
+  const selectCount = await page.$$eval('select', (els) => els.filter((el) => !el.closest('.sp-chamber-nav')).length);
   await context.close();
   return badgeText.includes('Track') && selectCount === 0;
 });
@@ -1338,6 +1343,93 @@ await check('Artist A still cannot change a classification — the Edge Function
   const body = await result.json();
   const after = await admin.from('collaborations').select('classification').eq('id', dataset.collaborations.projectA).single();
   return result.status === 403 && body.error === 'NOT_AUTHORIZED' && after.data.classification === before.data.classification;
+});
+
+// --- Stage K1.6A verification checkpoint: administrator dashboard with
+// a MOCKED zero-collaboration state. The real dev project always has
+// 3 seeded fixture collaborations and must stay that way for every
+// other test in this file, so this isolates the empty state entirely
+// at the network layer -- intercepting only this one page's requests
+// to the `collaborations` REST endpoint and fulfilling them with an
+// empty array -- rather than creating or deleting any real row. ---
+async function freshAdminPageWithZeroCollaborations() {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.route('**/rest/v1/collaborations*', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  );
+  const session = await sessionFor('admin');
+  const key = authStorageKey(supabaseUrl);
+  await page.goto(`${BASE}/dashboard`);
+  await page.evaluate(([k, v]) => localStorage.setItem(k, v), [key, JSON.stringify(session)]);
+  await page.reload();
+  await page.waitForTimeout(1500);
+  return { context, page };
+}
+
+await check('administrator (mocked zero-collaboration state): shows the ADMINISTRATOR PREVIEW empty state, never the artist-facing message', async () => {
+  const { context, page } = await freshAdminPageWithZeroCollaborations();
+  const text = await page.textContent('body');
+  await context.close();
+  return (
+    text.includes('ADMINISTRATOR PREVIEW') &&
+    text.includes('No collaboration projects have been created yet') &&
+    text.includes('activate the listening, proposal, visual concept, and transmission chambers') &&
+    !text.includes("You're authorized, but no collaborations are assigned to you yet")
+  );
+});
+
+await check('administrator (mocked zero-collaboration state): a working "Return to Command Center" action is present in the empty state itself', async () => {
+  const { context, page } = await freshAdminPageWithZeroCollaborations();
+  const link = page.locator('.sp-empty').getByRole('link', { name: 'Return to Command Center' });
+  const href = await link.getAttribute('href');
+  await link.click();
+  await page.waitForTimeout(800);
+  const url = page.url();
+  await context.close();
+  return href === '/admin' && url.endsWith('/admin');
+});
+
+await check('administrator (mocked zero-collaboration state): all 5 nav destinations remain visible, but the 4 project-dependent ones are inert, not broken links', async () => {
+  const { context, page } = await freshAdminPageWithZeroCollaborations();
+  const nav = page.locator('.sp-chamber-nav');
+  const navText = await nav.textContent();
+  const dashboardLink = nav.getByRole('link', { name: 'Dashboard' });
+  const dashboardHref = await dashboardLink.getAttribute('href');
+  const inertSpans = nav.locator('.sp-chamber-nav__link--inert');
+  const inertCount = await inertSpans.count();
+  const inertTexts = await inertSpans.allTextContents();
+  // None of the 4 inert placeholders may carry an href or onClick-style
+  // role -- a <span aria-disabled> cannot construct a route at all,
+  // valid or otherwise, and exposes no project id.
+  const anyInertHasHref = await inertSpans.evaluateAll((els) => els.some((el) => el.hasAttribute('href')));
+  const anyAnchorOrButtonInert = await inertSpans.evaluateAll((els) => els.some((el) => el.tagName !== 'SPAN'));
+  const emptyNote = await nav.locator('.sp-chamber-nav__empty-note').textContent();
+  await context.close();
+  return (
+    navText.includes('Dashboard') &&
+    dashboardHref === '/dashboard' &&
+    inertCount === 4 &&
+    ['Listening Chamber', 'Transmission Chamber', 'Visual Concept Chamber', 'Proposal Chamber'].every((label) =>
+      inertTexts.includes(label),
+    ) &&
+    !anyInertHasHref &&
+    !anyAnchorOrButtonInert &&
+    emptyNote.includes('No authorized projects yet')
+  );
+});
+
+await check('administrator (mocked zero-collaboration state): clicking an inert chamber destination never navigates away from the dashboard', async () => {
+  const { context, page } = await freshAdminPageWithZeroCollaborations();
+  const before = page.url();
+  // aria-disabled spans have no click handler at all; this forces the
+  // click through anyway to prove nothing happens, rather than only
+  // trusting the DOM shape above.
+  await page.locator('.sp-chamber-nav__link--inert', { hasText: 'Listening Chamber' }).click({ force: true });
+  await page.waitForTimeout(500);
+  const after = page.url();
+  await context.close();
+  return before === after;
 });
 
 await browser.close();
