@@ -162,6 +162,20 @@ export function EntrancePage() {
 
   return (
     <main className="sp-entrance-v2">
+      {/* Stage K1.3: a dedicated, fixed full-viewport environment layer,
+          independent of the hero stage box below — it covers 100% of
+          the viewport on every axis via object-fit: cover regardless
+          of the hero's own aspect-ratio-constrained width, and sits at
+          z-index 0 so it never intercepts clicks/keyboard focus (the
+          hero stage is z-index 1, every interactive overlay above
+          that). Same <img>-as-fixed-backdrop pattern already used for
+          the Command Center's own background (AdminLayout.tsx) —
+          decorative only, hence aria-hidden, same as that one. */}
+      <picture>
+        <source type="image/webp" srcSet={portalAsset('signal-portal-environment.webp')} />
+        <img className="sp-entrance-v2__environment-bg" src={portalAsset('signal-portal-environment.png')} alt="" aria-hidden="true" />
+      </picture>
+
       {/* Stage I2G: a real (though visually-hidden) h1 and a <main>
           landmark — the Stage I2D/I2E redesign baked the visible
           "Signal Portal" title into the artwork image itself, which

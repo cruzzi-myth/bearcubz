@@ -15,28 +15,46 @@
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
-  /* Stage K1.2: the artwork's own stage box is sized to its real
-     aspect ratio (min(100vw, 100vh * ratio)) so it's never cropped or
-     distorted -- on a viewport proportionally wider than the artwork,
-     that correctly leaves bare space on either side. Rather than
-     stretch or duplicate the artwork into that space (ruled out --
-     Stage I2E deliberately moved away from a blurred-copy treatment),
-     this fills it with an atmospheric, CSS-only cyberpunk backdrop in
-     the same magenta/cyan/black palette as the artwork itself, so the
-     margin reads as "the environment continues past the frame," not
-     as blank background. Sized to the viewport, not the stage box, so
-     it always reaches every edge regardless of aspect ratio.
-     Reduced-motion is irrelevant here -- this is a static gradient,
-     nothing animates. */
-  background:
-    radial-gradient(ellipse 55% 60% at 0% 45%, rgba(0, 229, 255, 0.1), transparent 70%),
-    radial-gradient(ellipse 55% 60% at 100% 55%, rgba(255, 45, 120, 0.1), transparent 70%),
-    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(191, 95, 255, 0.06), transparent 70%),
-    linear-gradient(180deg, #0a0a14 0%, #060608 55%, #040405 100%);
+  /* Stage K1.3: solid fallback only -- the real backdrop is now the
+     fixed <picture>/<img> environment layer below, not a CSS
+     gradient. This color only ever shows for the instant before that
+     image paints (or if it fails to load), so it's picked to match
+     the environment art's own darkest tone rather than pure black. */
+  background: #060608;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+}
+
+/* Stage K1.3: the <picture> wrapper contributes no layout box of its
+   own (display: contents) -- only the fixed-positioned <img> inside
+   it matters, so it can never introduce a stray flex item/gap into
+   .sp-entrance-v2's column layout. */
+.sp-entrance-v2 > picture {
+  display: contents;
+}
+
+/* Full-viewport MOON RACER cyberpunk environment -- a dedicated layer
+   independent of the hero stage box, fixed to the viewport (not the
+   document) so it always covers exactly 100% of the visible area on
+   every axis via object-fit: cover, regardless of the hero's own
+   aspect-ratio-constrained width. z-index 0 keeps it strictly behind
+   the stage (z-index 1 below) and pointer-events: none means it can
+   never intercept a click or keyboard focus meant for the hero's
+   overlays. Same pattern as AdminLayout's .sp-admin__bg. */
+.sp-entrance-v2__environment-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -72,35 +90,45 @@
   margin: 0 auto;
 }
 
-/* Stage K1.2: on a viewport proportionally wider than the artwork, the
-   stage box above stops short of the viewport edge, leaving the
-   gradient backdrop to show through -- but a flat gradient butting
-   straight against the image's own edge reads as a visible seam, not
-   "the environment continuing past the frame." These two glows sit
-   immediately outside the stage box (never over the artwork itself —
-   translateX pushes each one fully past its own edge) and fade out
-   into the backdrop, so the transition from image to ambient gradient
-   is soft rather than a hard cut. They render at 0×0 effective size
-   (and are invisible) whenever the stage already spans the full
-   viewport width, which is the common case at typical aspect ratios. */
+/* Stage K1.2 (kept under K1.3): on a viewport proportionally wider
+   than the hero artwork, the stage box above stops short of the
+   viewport edge, leaving the fixed environment layer to show through
+   behind it. Even though that environment art is the same city/scene
+   as the hero (Stage K1.3), a hard cut at the hero's own edge can
+   still read as a seam -- these two glows sit immediately outside the
+   stage box (never over the artwork itself) and fade out, softening
+   that boundary into "the environment continuing past the frame."
+   They render at 0×0 effective size (invisible) whenever the stage
+   already spans the full viewport width. */
 .sp-entrance-v2__stage::before,
 .sp-entrance-v2__stage::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  width: min(18vw, 240px);
+  width: min(20vw, 280px);
   pointer-events: none;
 }
 
+/* Each is two layers: a dark fade hugging the seam itself (the hero's
+   own rendering is brighter/more contrasty right at its frame edge
+   than the environment art immediately beside it -- darkening that
+   exact boundary hides the brightness jump far better than trying to
+   color-match it) plus the wider ambient color glow further out,
+   fading to fully transparent well before the real environment
+   artwork's own detail needs to show through untouched. */
 .sp-entrance-v2__stage::before {
   right: 100%;
-  background: radial-gradient(ellipse 100% 70% at 100% 50%, rgba(255, 45, 120, 0.22), transparent 75%);
+  background:
+    linear-gradient(to left, rgba(4, 4, 5, 0.6) 0%, rgba(4, 4, 5, 0.22) 25%, transparent 55%),
+    radial-gradient(ellipse 100% 70% at 100% 50%, rgba(255, 45, 120, 0.22), transparent 75%);
 }
 
 .sp-entrance-v2__stage::after {
   left: 100%;
-  background: radial-gradient(ellipse 100% 70% at 0% 50%, rgba(0, 229, 255, 0.2), transparent 75%);
+  background:
+    linear-gradient(to right, rgba(4, 4, 5, 0.6) 0%, rgba(4, 4, 5, 0.22) 25%, transparent 55%),
+    radial-gradient(ellipse 100% 70% at 0% 50%, rgba(0, 229, 255, 0.2), transparent 75%);
 }
 
 .sp-entrance-v2__art {
