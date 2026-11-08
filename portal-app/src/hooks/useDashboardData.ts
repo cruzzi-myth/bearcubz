@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { isBackendUnavailableError } from '../lib/supabaseErrors';
+import { usePortalAuth } from '../features/auth/PortalAuthContext';
+import type { StorableClassification } from '../lib/collaborationClassification';
 
 export type DashboardCollaboration = {
   id: string;
@@ -11,6 +13,7 @@ export type DashboardCollaboration = {
   musicalKey: string | null;
   genreTags: string[] | null;
   notes: string | null;
+  classification: StorableClassification | null;
   updatedAt: string;
   availableAssetTypes: Set<string>;
   primaryCoverAssetId: string | null;
@@ -40,6 +43,17 @@ const RECENT_ACTIVITY_LIMIT = 5;
  * neither is ever inferred from the other.
  */
 export function useDashboardData(): DashboardData {
+  // Stage K1.5B: an administrator has no collaboration_members row of
+  // their own (that's a real membership, not an admin flag) -- so the
+  // membership-scoped query below would always return zero rows for
+  // them, leaving the dashboard permanently empty even though they're
+  // fully authorized. For an admin, source the id list from the same
+  // "admin select all collaborations" RLS policy the Command Center
+  // already relies on (not a new grant) instead of the membership
+  // table. Ordinary artists are completely unaffected — this branch
+  // never runs for them, and their own query is byte-for-byte what it
+  // was before this stage.
+  const { isAdmin } = usePortalAuth();
   const [data, setData] = useState<DashboardData>({ kind: 'loading' });
 
   useEffect(() => {
@@ -55,21 +69,36 @@ export function useDashboardData(): DashboardData {
         return;
       }
 
-      const memberships = await supabase
-        .from('collaboration_members')
-        .select('collaboration_id')
-        .eq('status', 'active');
-      if (cancelled) return;
-      if (isBackendUnavailableError(memberships.error)) {
-        setData({ kind: 'backend-unavailable' });
-        return;
-      }
-      if (memberships.error) {
-        setData({ kind: 'error' });
-        return;
+      let activeIds: string[];
+      if (isAdmin) {
+        const allCollabs = await supabase.from('collaborations').select('id');
+        if (cancelled) return;
+        if (isBackendUnavailableError(allCollabs.error)) {
+          setData({ kind: 'backend-unavailable' });
+          return;
+        }
+        if (allCollabs.error) {
+          setData({ kind: 'error' });
+          return;
+        }
+        activeIds = (allCollabs.data ?? []).map((row) => row.id);
+      } else {
+        const memberships = await supabase
+          .from('collaboration_members')
+          .select('collaboration_id')
+          .eq('status', 'active');
+        if (cancelled) return;
+        if (isBackendUnavailableError(memberships.error)) {
+          setData({ kind: 'backend-unavailable' });
+          return;
+        }
+        if (memberships.error) {
+          setData({ kind: 'error' });
+          return;
+        }
+        activeIds = (memberships.data ?? []).map((row) => row.collaboration_id);
       }
 
-      const activeIds = (memberships.data ?? []).map((row) => row.collaboration_id);
       if (activeIds.length === 0) {
         setData({ kind: 'ready', displayName: profileResult.data?.display_name ?? null, collaborations: [], activity: [] });
         return;
@@ -78,7 +107,7 @@ export function useDashboardData(): DashboardData {
       const [collabResult, assetResult, feedbackResult] = await Promise.all([
         supabase
           .from('collaborations')
-          .select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, notes, updated_at')
+          .select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, notes, classification, updated_at')
           .in('id', activeIds),
         supabase
           .from('collaboration_assets')
@@ -129,6 +158,7 @@ export function useDashboardData(): DashboardData {
         musicalKey: row.musical_key,
         genreTags: row.genre_tags,
         notes: row.notes,
+        classification: row.classification,
         updatedAt: row.updated_at,
         availableAssetTypes: assetsByCollaboration.get(row.id) ?? new Set<string>(),
         primaryCoverAssetId: primaryCoverByCollaboration.get(row.id) ?? null,
@@ -161,7 +191,14 @@ export function useDashboardData(): DashboardData {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // isAdmin starts false and may flip true once PortalAuthContext's
+    // own check resolves (never the reverse, same guarantee every
+    // other isAdmin-gated control in this app already relies on) --
+    // re-running this effect when it does is what lets an admin who
+    // loads the page before that check resolves still end up with the
+    // admin-wide (not empty) collaboration list, rather than loading
+    // once as "not admin yet" and never re-fetching.
+  }, [isAdmin]);
 
   return data;
 }

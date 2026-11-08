@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { Modal } from './Modal';
 import { ClassificationBadge } from './ClassificationBadge';
-import { classifyCollaboration } from '../lib/collaborationClassification';
+import { classifyCollaboration, type StorableClassification } from '../lib/collaborationClassification';
 import { buildDeliverables, buildMaterials } from '../lib/collaborationMaterials';
 import { useSignedAssetUrl } from '../hooks/useSignedAssetUrl';
 import './collaboration-briefing-modal.css';
@@ -12,6 +12,8 @@ export type BriefingCollaboration = {
   title: string;
   artistDisplayName: string;
   status: string;
+  // Stage K1.5B: optional — see AssetLibraryRow.tsx's identical note.
+  classification?: StorableClassification | null;
   bpm: number | null;
   musicalKey: string | null;
   genreTags: string[] | null;
@@ -65,7 +67,7 @@ function CoverArt({ assetId }: { assetId: string | null }) {
  */
 export function CollaborationBriefingModal({ collaboration: c, availableAssetTypes, onClose }: Props) {
   const titleId = useId();
-  const classification = classifyCollaboration({ bpm: c.bpm, musicalKey: c.musicalKey });
+  const classification = classifyCollaboration({ classification: c.classification, bpm: c.bpm, musicalKey: c.musicalKey });
   const deliverables = buildDeliverables(availableAssetTypes);
   const materials = buildMaterials(availableAssetTypes);
   const hasProductionDetails = c.bpm !== null || (c.musicalKey !== null && c.musicalKey.trim() !== '');

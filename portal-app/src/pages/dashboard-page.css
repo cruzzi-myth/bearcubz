@@ -70,6 +70,34 @@
   white-space: nowrap;
 }
 
+/* Stage K1.5B: same shape as .sp-dash__badge, cyan instead of pink —
+   distinct enough at a glance that an admin previewing this page
+   never mistakes it for their own artist identity badge. */
+.sp-dash__badge--admin {
+  color: var(--cyan);
+  border-color: rgba(0, 229, 255, 0.4);
+}
+
+.sp-dash__admin-return {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink);
+  border: 1px solid rgba(255, 45, 120, 0.4);
+  border-radius: 8px;
+  padding: 7px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sp-dash__admin-return:hover,
+.sp-dash__admin-return:focus-visible {
+  color: #fff;
+  border-color: var(--pink);
+  background: rgba(255, 45, 120, 0.12);
+}
+
 .sp-dash__nav {
   margin-left: auto;
   display: flex;

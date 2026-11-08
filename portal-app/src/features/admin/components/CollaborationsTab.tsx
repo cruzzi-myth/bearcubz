@@ -3,9 +3,19 @@ import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { createCollaboration, updateCollaboration } from '../services/adminApi';
 import { CollaborationsReport } from '../../../components/CollaborationsReport';
 import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
-import type { AdminCollaboration, CollaborationStatus } from '../types/adminTypes';
+import { CLASSIFICATION_META, isStorableClassification } from '../../../lib/collaborationClassification';
+import type { AdminCollaboration, CollaborationStatus, ProjectClassification } from '../types/adminTypes';
 
 const STATUSES: CollaborationStatus[] = ['draft', 'invited', 'active', 'completed', 'archived'];
+// '' stands in for NULL/UNCLASSIFIED in the <select>'s own value space
+// (a native <select> cannot hold a real null) -- translated back to a
+// real null right before it's sent to updateCollaboration.
+const CLASSIFICATION_OPTIONS: { value: ProjectClassification | ''; label: string }[] = [
+  { value: '', label: CLASSIFICATION_META.unclassified.label.toUpperCase() },
+  { value: 'track', label: CLASSIFICATION_META.track.label.toUpperCase() },
+  { value: 'music_video', label: CLASSIFICATION_META.music_video.label.toUpperCase() },
+  { value: 'artwork', label: CLASSIFICATION_META.artwork.label.toUpperCase() },
+];
 
 function formatAt(iso: string): string {
   try {
@@ -23,8 +33,14 @@ export function CollaborationsTab() {
   const [bpm, setBpm] = useState('');
   const [musicalKey, setMusicalKey] = useState('');
   const [genre, setGenre] = useState('');
+  const [classification, setClassification] = useState<ProjectClassification | ''>('');
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Per-row transient feedback for classification saves specifically —
+  // 'saved' auto-clears; 'error' persists until the next attempt. Status
+  // changes keep their existing silent reload()-only behavior (unchanged),
+  // since only classification was asked for explicit success/error feedback.
+  const [classificationFeedback, setClassificationFeedback] = useState<Record<string, 'saving' | 'saved' | 'error'>>({});
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -37,6 +53,7 @@ export function CollaborationsTab() {
       bpm: bpm ? Number(bpm) : undefined,
       musicalKey: musicalKey.trim() || undefined,
       genreTags: genre ? genre.split(',').map((g) => g.trim()).filter(Boolean) : undefined,
+      classification: isStorableClassification(classification) ? classification : undefined,
     });
     setCreating(false);
     if (!result.ok) {
@@ -48,12 +65,32 @@ export function CollaborationsTab() {
     setBpm('');
     setMusicalKey('');
     setGenre('');
+    setClassification('');
     reload();
   }
 
   async function handleStatusChange(collaborationId: string, status: CollaborationStatus) {
     await updateCollaboration(collaborationId, { status });
     reload();
+  }
+
+  async function handleClassificationChange(collaborationId: string, value: ProjectClassification | '') {
+    setClassificationFeedback((prev) => ({ ...prev, [collaborationId]: 'saving' }));
+    const result = await updateCollaboration(collaborationId, { classification: value === '' ? null : value });
+    if (!result.ok) {
+      setClassificationFeedback((prev) => ({ ...prev, [collaborationId]: 'error' }));
+      return;
+    }
+    setClassificationFeedback((prev) => ({ ...prev, [collaborationId]: 'saved' }));
+    reload();
+    setTimeout(() => {
+      setClassificationFeedback((prev) => {
+        if (prev[collaborationId] !== 'saved') return prev;
+        const next = { ...prev };
+        delete next[collaborationId];
+        return next;
+      });
+    }, 2500);
   }
 
   return (
@@ -83,6 +120,16 @@ export function CollaborationsTab() {
         <div className="sp-admin__field">
           <label htmlFor="collab-genre">Genre Tags (comma-separated)</label>
           <input id="collab-genre" value={genre} onChange={(e) => setGenre(e.target.value)} />
+        </div>
+        <div className="sp-admin__field">
+          <label htmlFor="collab-classification">Classification</label>
+          <select id="collab-classification" value={classification} onChange={(e) => setClassification(e.target.value as ProjectClassification | '')}>
+            {CLASSIFICATION_OPTIONS.map((opt) => (
+              <option key={opt.value || 'unclassified'} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
         {formError && <p className="sp-admin__status-msg sp-admin__status-msg--error">{formError}</p>}
         <button type="submit" className="sp-admin__btn" disabled={creating}>
@@ -119,6 +166,7 @@ export function CollaborationsTab() {
                   <th>Title</th>
                   <th>Artist</th>
                   <th>Status</th>
+                  <th>Classification</th>
                   <th>BPM</th>
                   <th>Key</th>
                   <th>Genre</th>
@@ -144,6 +192,22 @@ export function CollaborationsTab() {
                           </option>
                         ))}
                       </select>
+                    </td>
+                    <td>
+                      <select
+                        aria-label={`Change classification for ${c.title}`}
+                        value={c.classification ?? ''}
+                        onChange={(e) => handleClassificationChange(c.id, e.target.value as ProjectClassification | '')}
+                      >
+                        {CLASSIFICATION_OPTIONS.map((opt) => (
+                          <option key={opt.value || 'unclassified'} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      {classificationFeedback[c.id] === 'saving' && <span className="sp-admin__status-msg"> Saving…</span>}
+                      {classificationFeedback[c.id] === 'saved' && <span className="sp-admin__status-msg sp-admin__status-msg--success"> Saved</span>}
+                      {classificationFeedback[c.id] === 'error' && <span className="sp-admin__status-msg sp-admin__status-msg--error"> Failed — try again</span>}
                     </td>
                     <td>{c.bpm ?? '—'}</td>
                     <td>{c.musicalKey ?? '—'}</td>

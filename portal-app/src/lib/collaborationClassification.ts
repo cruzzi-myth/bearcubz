@@ -1,35 +1,43 @@
 /**
- * Stage K1.4 — project classification (TRACK / MUSIC VIDEO / ARTWORK).
+ * Stage K1.4 → K1.5B — project classification (TRACK / MUSIC VIDEO /
+ * ARTWORK / UNCLASSIFIED).
  *
- * There is no `classification` column on `collaborations` today — this
- * was verified against the real schema (supabase/migrations/*), not
- * assumed. Per the K1.4 brief's own instruction for a missing field
- * ("determine whether existing metadata can safely supply it... do not
- * invent classifications based solely on file extensions"), this
- * resolves classification from `bpm`/`musical_key` — collaboration-level
- * fields an admin deliberately records when setting up a MUSIC
- * collaboration, not a file's MIME type or storage format, so using them
- * doesn't cross the brief's "do not conflate classification with file
- * type" line. A collaboration with neither set has no authoritative
- * signal at all and is UNCLASSIFIED, exactly as the brief specifies.
+ * Stage K1.5B applied the authoritative `collaborations.classification`
+ * column (dev only — see supabase/migrations/20261108080000_...). This
+ * resolver now treats that column as the single source of truth: an
+ * explicit value always wins, and an explicit NULL means UNCLASSIFIED
+ * — never re-derived from bpm/musical_key once the column is actually
+ * present in the query result.
  *
- * MUSIC VIDEO has no authoritative signal of any kind today — there is
- * no video asset type in the schema (collaboration_assets' asset_type
- * check constraint has no video variant). The classification UI below
- * fully supports it so nothing else needs to change once a real
- * schema field (and a video asset type) exists; until then no
- * collaboration can ever resolve to it from real data.
+ * The bpm/musical_key heuristic (Stage K1.4's original mechanism) is
+ * kept ONLY as a transition fallback for a caller that hasn't been
+ * migrated to select the new column yet (`classification` key absent
+ * from the input entirely, as opposed to present-and-null) — every
+ * consumer has now been updated (Stage K1.5B), so this branch is dead
+ * in practice today and exists purely so a not-yet-updated caller
+ * elsewhere in the codebase degrades to the old behavior instead of
+ * crashing. Retire it entirely in a separately reviewed cleanup once
+ * every production caller is confirmed migrated (see the K1.5A
+ * architecture report's "safe transition plan").
  *
- * REQUIRED FUTURE SCHEMA CHANGE (documented, not applied this stage):
- *   alter table public.collaborations
- *     add column classification text null
- *     check (classification in ('track', 'music_video', 'artwork'));
- * Once that lands, replace this heuristic with a direct read of that
- * column (falling back to 'unclassified' when null) — every caller
- * already goes through `classifyCollaboration`, so that's a one-place
- * change.
+ * MUSIC VIDEO is now a selectable, storable classification (the
+ * column and its CHECK constraint already allow it) even though no
+ * video asset type or storage bucket exists yet — classification and
+ * asset-type support are independent, by design (K1.5A §F).
  */
 export type Classification = 'track' | 'music_video' | 'artwork' | 'unclassified';
+
+/** The exact set of values the database CHECK constraint allows,
+ * excluding null/unclassified — used to validate a value before ever
+ * sending it to the admin API, so a typo fails fast in the browser
+ * instead of round-tripping to the Edge Function only to be rejected
+ * there too. */
+export const STORABLE_CLASSIFICATIONS = ['track', 'music_video', 'artwork'] as const;
+export type StorableClassification = (typeof STORABLE_CLASSIFICATIONS)[number];
+
+export function isStorableClassification(value: unknown): value is StorableClassification {
+  return typeof value === 'string' && (STORABLE_CLASSIFICATIONS as readonly string[]).includes(value);
+}
 
 export type ClassificationMeta = {
   label: string;
@@ -48,7 +56,20 @@ export const CLASSIFICATION_META: Record<Classification, ClassificationMeta> = {
   unclassified: { label: 'Unclassified', glyph: '—', accentVar: '--sp-ink' },
 };
 
-export function classifyCollaboration(input: { bpm: number | null; musicalKey: string | null }): Classification {
+type ClassifyInput = {
+  // Optional and distinct from `null`: omitted entirely means "this
+  // caller hasn't been migrated to select the column yet" (heuristic
+  // fallback applies); present as `null` means "the database says
+  // unclassified" (authoritative, heuristic never runs).
+  classification?: StorableClassification | null;
+  bpm: number | null;
+  musicalKey: string | null;
+};
+
+export function classifyCollaboration(input: ClassifyInput): Classification {
+  if (isStorableClassification(input.classification)) return input.classification;
+  if (input.classification === null) return 'unclassified';
+  // input.classification is `undefined` here -- not-yet-migrated caller.
   if (input.bpm !== null || (input.musicalKey !== null && input.musicalKey.trim() !== '')) return 'track';
   return 'unclassified';
 }

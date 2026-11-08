@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { classifyCollaboration } from '../lib/collaborationClassification';
+import { classifyCollaboration, type StorableClassification } from '../lib/collaborationClassification';
 import { filterCollaborationRows } from '../lib/collaborationReportFilter';
 import { ClassificationBadge } from './ClassificationBadge';
 import './collaborations-report.css';
@@ -9,6 +9,8 @@ export type ReportRow = {
   title: string;
   artistDisplayName: string;
   status: string;
+  // Stage K1.5B: optional — see AssetLibraryRow.tsx's identical note.
+  classification?: StorableClassification | null;
   bpm: number | null;
   musicalKey: string | null;
   updatedAt: string;
@@ -74,7 +76,7 @@ export function CollaborationsReport<T extends ReportRow>({ rows, onSelect, sele
             </thead>
             <tbody>
               {filtered.map((row) => {
-                const classification = classifyCollaboration({ bpm: row.bpm, musicalKey: row.musicalKey });
+                const classification = classifyCollaboration({ classification: row.classification, bpm: row.bpm, musicalKey: row.musicalKey });
                 const selected = selectedId === row.id;
                 return (
                   <tr

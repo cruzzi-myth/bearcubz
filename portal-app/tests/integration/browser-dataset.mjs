@@ -63,12 +63,12 @@ export async function createBrowserDataset(clients, ctx) {
 
   const projectA = await clients.admin
     .from('collaborations')
-    .insert({ title: 'Ghost Signal (Review Project A)', artist_display_name: 'Artist A (Review)', status: 'active', bpm: 128, musical_key: 'A minor', created_by: adminIdentity.uid })
+    .insert({ title: 'Ghost Signal (Review Project A)', artist_display_name: 'Artist A (Review)', status: 'active', bpm: 128, musical_key: 'A minor', classification: 'track', created_by: adminIdentity.uid })
     .select('id')
     .single();
   const projectB = await clients.admin
     .from('collaborations')
-    .insert({ title: 'Static Bloom (Review Project B)', artist_display_name: 'Artist B (Review)', status: 'active', bpm: 96, musical_key: 'D major', created_by: adminIdentity.uid })
+    .insert({ title: 'Static Bloom (Review Project B)', artist_display_name: 'Artist B (Review)', status: 'active', bpm: 96, musical_key: 'D major', classification: 'track', created_by: adminIdentity.uid })
     .select('id')
     .single();
   const projectC = await clients.admin

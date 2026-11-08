@@ -21,6 +21,11 @@ const VALID_OPS: Op[] = [
 ];
 const VALID_STATUSES = ['draft', 'invited', 'active', 'completed', 'archived'];
 const VALID_APPROVAL_STATUSES = ['pending', 'approved', 'rejected'];
+// Stage K1.5B: mirrors the CHECK constraint on collaborations.classification
+// exactly (supabase/migrations/20261108080000_...) — validated here too so a
+// bad value is rejected with a clear error before ever reaching Postgres,
+// not just caught by the database as a generic constraint-violation 500.
+const VALID_CLASSIFICATIONS = ['track', 'music_video', 'artwork'];
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -56,6 +61,13 @@ Deno.serve(async (request) => {
     const title = String(body.title ?? '').trim();
     const artistDisplayName = String(body.artistDisplayName ?? '').trim();
     if (!title || !artistDisplayName) return json({ error: 'INVALID_INPUT' }, 400);
+    // classification is optional at creation (defaults to NULL /
+    // UNCLASSIFIED, same as every pre-K1.5B row) — only reject it if
+    // a value was actually supplied and it's not one of the three
+    // approved values. `null` is accepted explicitly (same as omitting it).
+    if (body.classification !== undefined && body.classification !== null && !VALID_CLASSIFICATIONS.includes(String(body.classification))) {
+      return json({ error: 'INVALID_CLASSIFICATION' }, 400);
+    }
 
     const inserted = await adminClient
       .from('collaborations')
@@ -66,13 +78,14 @@ Deno.serve(async (request) => {
         musical_key: typeof body.musicalKey === 'string' ? body.musicalKey : null,
         genre_tags: Array.isArray(body.genreTags) ? body.genreTags : null,
         notes: typeof body.notes === 'string' ? body.notes : null,
+        classification: typeof body.classification === 'string' ? body.classification : null,
         created_by: admin.uid,
       })
       .select('id')
       .single();
 
     if (inserted.error) return json({ error: 'CREATE_FAILED' }, 500);
-    await audit('create_collaboration', 'collaborations', inserted.data.id, { title });
+    await audit('create_collaboration', 'collaborations', inserted.data.id, { title, classification: body.classification ?? null });
     return json({ ok: true, collaborationId: inserted.data.id });
   }
 
@@ -83,16 +96,43 @@ Deno.serve(async (request) => {
     if (status !== undefined && !VALID_STATUSES.includes(String(status))) {
       return json({ error: 'INVALID_STATUS' }, 400);
     }
+    // Distinguish "field not sent at all" (undefined -> leave
+    // unchanged) from "field sent as null" (explicit clear) from "an
+    // invalid non-null value" (reject) -- a naive `!body.classification`
+    // check would wrongly treat null and "" the same as "not provided".
+    const classificationProvided = Object.prototype.hasOwnProperty.call(body, 'classification');
+    if (classificationProvided && body.classification !== null && !VALID_CLASSIFICATIONS.includes(String(body.classification))) {
+      return json({ error: 'INVALID_CLASSIFICATION' }, 400);
+    }
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (status !== undefined) patch.status = status;
     if (typeof body.notes === 'string') patch.notes = body.notes;
     if (typeof body.bpm === 'number') patch.bpm = body.bpm;
     if (typeof body.musicalKey === 'string') patch.musical_key = body.musicalKey;
+    if (classificationProvided) patch.classification = body.classification;
+
+    // Stage K1.5B: capture the PREVIOUS classification before writing,
+    // so the audit record shows a real before/after pair rather than
+    // only the new value every other field in this generic patch gets.
+    // Only bothers with the extra read when classification is actually
+    // part of this update, to avoid an unnecessary query on every
+    // ordinary status/notes/bpm-only edit.
+    let previousClassification: string | null | undefined;
+    if (classificationProvided) {
+      const existing = await adminClient.from('collaborations').select('classification').eq('id', id).single();
+      previousClassification = existing.data?.classification ?? null;
+    }
 
     const updated = await adminClient.from('collaborations').update(patch).eq('id', id);
     if (updated.error) return json({ error: 'UPDATE_FAILED' }, 500);
-    await audit('update_collaboration', 'collaborations', id, patch);
+
+    const auditDetails: Record<string, unknown> = { ...patch };
+    if (classificationProvided) {
+      auditDetails.previousClassification = previousClassification;
+      auditDetails.newClassification = body.classification;
+    }
+    await audit('update_collaboration', 'collaborations', id, auditDetails);
     return json({ ok: true });
   }
 

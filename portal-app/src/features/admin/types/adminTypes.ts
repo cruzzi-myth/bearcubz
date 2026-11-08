@@ -1,4 +1,10 @@
+import type { StorableClassification } from '../../../lib/collaborationClassification';
+
 export type CollaborationStatus = 'draft' | 'invited' | 'active' | 'completed' | 'archived';
+// Stage K1.5B: the single source of truth for the three storable
+// values is collaborationClassification.ts — imported, not
+// redefined, so the two can never drift out of sync.
+export type ProjectClassification = StorableClassification;
 export type InvitationStatus = 'pending' | 'accepted' | 'revoked' | 'expired';
 export type UploadStatus = 'pending' | 'uploading' | 'verifying' | 'ready' | 'failed';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -25,6 +31,7 @@ export type AdminCollaboration = {
   updatedAt: string;
   assetCount: number;
   primaryCoverAssetId: string | null;
+  classification: ProjectClassification | null;
 };
 
 export type AdminMembership = {

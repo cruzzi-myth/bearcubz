@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { portalAsset } from '../lib/assetPath';
 import './portal-chamber-layout.css';
 
@@ -26,6 +27,13 @@ type Props = {
  * the seven environments read as one continuous system.
  */
 export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, eyebrow, title, children }: Props) {
+  // Stage K1.5B: one shared layout, so this single check covers all
+  // four chambers at once — never rendered for an ordinary artist
+  // account, since isAdmin only ever reflects a real, server-verified
+  // is_portal_admin() result (see PortalAuthContext), same guarantee
+  // every other admin-only control in this app already relies on.
+  const { isAdmin } = usePortalAuth();
+
   return (
     <div className="sp-chamber">
       {/* Stage I2G: decorative ambient art, not content — aria-hidden so
@@ -42,6 +50,11 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
         <Link to="/" className="sp-chamber__brand">
           BE<span>λ</span>R CUBZ <span aria-hidden="true">·</span> SIGNAL PORTAL
         </Link>
+        {isAdmin && (
+          <Link to="/admin" className="sp-chamber__admin-return">
+            Return to Command Center
+          </Link>
+        )}
       </header>
       <main className="sp-chamber__stage">
         <p className="sp-chamber__eyebrow">{eyebrow}</p>

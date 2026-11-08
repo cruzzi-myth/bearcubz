@@ -10,6 +10,7 @@ import type {
   ApprovalStatus,
   AssetType,
   CollaborationStatus,
+  ProjectClassification,
 } from '../types/adminTypes';
 
 /**
@@ -55,7 +56,7 @@ export async function listMemberships(userId?: string): Promise<ApiResult<AdminM
 
 export async function listCollaborations(): Promise<ApiResult<AdminCollaboration[]>> {
   const [collabResult, assetCounts, primaryCovers] = await Promise.all([
-    supabase.from('collaborations').select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, notes, created_at, updated_at'),
+    supabase.from('collaborations').select('id, title, artist_display_name, status, bpm, musical_key, genre_tags, notes, classification, created_at, updated_at'),
     supabase.from('collaboration_assets').select('collaboration_id').eq('is_active', true),
     // Stage K1.4: same is_primary_cover column useDashboardData already
     // reads for the artist-facing card -- additive query, no schema
@@ -82,6 +83,7 @@ export async function listCollaborations(): Promise<ApiResult<AdminCollaboration
       musicalKey: r.musical_key,
       genreTags: r.genre_tags,
       notes: r.notes,
+      classification: r.classification,
       createdAt: r.created_at,
       updatedAt: r.updated_at,
       assetCount: counts.get(r.id) ?? 0,
@@ -169,11 +171,21 @@ export function createCollaboration(input: {
   musicalKey?: string;
   genreTags?: string[];
   notes?: string;
+  classification?: ProjectClassification;
 }) {
   return invokeManage({ op: 'create_collaboration', ...input });
 }
 
-export function updateCollaboration(collaborationId: string, patch: { status?: CollaborationStatus; notes?: string; bpm?: number; musicalKey?: string }) {
+export function updateCollaboration(
+  collaborationId: string,
+  // `classification` is deliberately `| null` (not just optional) —
+  // callers that want to CLEAR it pass `classification: null`
+  // explicitly, which is a real key in the request body (JSON.stringify
+  // keeps `null`, unlike `undefined`), distinct from omitting the key
+  // entirely to leave it unchanged. The Edge Function distinguishes
+  // the two exactly this way (Object.prototype.hasOwnProperty).
+  patch: { status?: CollaborationStatus; notes?: string; bpm?: number; musicalKey?: string; classification?: ProjectClassification | null },
+) {
   return invokeManage({ op: 'update_collaboration', collaborationId, ...patch });
 }
 

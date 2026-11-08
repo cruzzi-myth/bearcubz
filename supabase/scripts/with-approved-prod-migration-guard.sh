@@ -76,14 +76,14 @@ if [ "$proj_name" != "$EXPECTED_PROJECT_NAME" ]; then
 fi
 
 # ---------- 3 & 4 & 6. the approved migration files, byte-for-byte, by hash ----------
-# Stage K1.1: raised from 5 to 6 -- a deliberate, reviewed extension to
-# cover the newly-approved read-receipts migration
-# (20261107220000_signal_portal_feedback_read_receipts.sql), not a
+# Stage K1.5C: raised from 6 to 7 -- a deliberate, reviewed extension
+# to cover the newly-approved project-classification migration
+# (20261108080000_signal_portal_project_classification.sql), not a
 # loosening of the check itself. It still fails closed on any count
 # other than exactly what's been reviewed.
 [ -f "$MANIFEST" ] || refuse "approved-migrations.manifest is missing -- cannot verify migration integrity without it."
 manifest_count="$(wc -l < "$MANIFEST" | tr -d ' ')"
-[ "$manifest_count" -eq 6 ] || refuse "manifest does not list exactly 6 migrations (found $manifest_count) -- failing closed."
+[ "$manifest_count" -eq 7 ] || refuse "manifest does not list exactly 7 migrations (found $manifest_count) -- failing closed."
 if ! ( cd "$REPO_ROOT" && shasum -a 256 -c "$MANIFEST" --status ); then
   refuse "one or more approved migration files does not match its reviewed SHA-256 hash in $MANIFEST -- a changed migration file is never auto-approved, regardless of how small the change."
 fi
@@ -110,7 +110,7 @@ fi
 history_json="$(npx supabase migration list --remote="$PRODUCTION_REF" --output-format json 2>/dev/null)" \
   || refuse "could not read production migration history -- failing closed rather than assuming it is safe to proceed."
 pending="$(printf '%s' "$history_json" | jq -r '.migrations[]? | select(.local != "" and .remote == "") | .local' | sort)"
-approved_versions="20261106140000 20261106140100 20261106150000 20261106160000 20261106170000 20261107220000"
+approved_versions="20261106140000 20261106140100 20261106150000 20261106160000 20261106170000 20261107220000 20261108080000"
 if [ -z "$pending" ]; then
   refuse "no migration is pending at all -- nothing for this guarded db push to apply. Failing closed rather than running a no-op push."
 fi

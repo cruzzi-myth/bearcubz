@@ -62,6 +62,11 @@ export function AdminLayout({ activeTab, onTabChange, children }: Props) {
               in App.tsx, correctly lands back on the Signal Portal
               welcome page instead -- a client-side navigation, so the
               persisted session is never touched either way. */}
+          {/* Stage K1.5B: the artist-facing dashboard, same client-side
+              Link/session as "Return to Signal Portal" above it —
+              navigating here never signs the admin out and never
+              creates or touches a collaboration_members row. */}
+          <Link to="/dashboard">View Artist Portal</Link>
           <Link to="/">← Return to Signal Portal</Link>
           <button type="button" onClick={() => void signOut()}>
             Sign Out

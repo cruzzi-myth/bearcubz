@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSignedAssetUrl } from '../hooks/useSignedAssetUrl';
-import { classifyCollaboration } from '../lib/collaborationClassification';
+import { classifyCollaboration, type StorableClassification } from '../lib/collaborationClassification';
 import { ClassificationBadge } from './ClassificationBadge';
 import './asset-library-row.css';
 
@@ -9,6 +9,11 @@ export type AssetLibraryRowData = {
   title: string;
   artistDisplayName: string;
   status: string;
+  // Stage K1.5B: optional, not required — a caller that hasn't been
+  // migrated to select the real column yet simply omits it, and
+  // classifyCollaboration() falls back to the bpm/key heuristic for
+  // that one call site only (see collaborationClassification.ts).
+  classification?: StorableClassification | null;
   bpm: number | null;
   musicalKey: string | null;
   primaryCoverAssetId: string | null;
@@ -43,7 +48,7 @@ function RowCover({ assetId }: { assetId: string | null }) {
  * single classifyCollaboration() every other surface uses.
  */
 export function AssetLibraryRow<T extends AssetLibraryRowData>({ row, selected, onSelect }: { row: T; selected?: boolean; onSelect: (row: T) => void }) {
-  const classification = classifyCollaboration({ bpm: row.bpm, musicalKey: row.musicalKey });
+  const classification = classifyCollaboration({ classification: row.classification, bpm: row.bpm, musicalKey: row.musicalKey });
   const isTrack = classification === 'track';
 
   return (

@@ -145,8 +145,35 @@ storage.objects:storage-metadata.sql
     exported="$(copy_count "$tfile" "$tbl")"
     exported="${exported:-0}"
     echo "select '$tbl' as t, count(*) as n from $tbl;" > "$QFILE"
-    live_json="$(SIGNAL_PORTAL_READONLY_PROD_CONFIRMED=1 "$GUARD" npx supabase db query --read-only --remote="$PRODUCTION_REF" --file="$QFILE" 2>/dev/null)"
-    live="$(printf '%s' "$live_json" | jq -r '.rows[0].n // "ERROR"' 2>/dev/null)"
+    # Stage K1.5C fix (round 2): --output-format=json alone was not
+    # enough -- the CLI also auto-detects whether it's being called by
+    # an agent (its own --agent flag, confirmed via `db query --help`)
+    # and changes the JSON SHAPE accordingly: agent-detected contexts
+    # get an object wrapper ({"rows":[...], "boundary":..., "warning":
+    # ...} -- a prompt-injection safety wrapper around untrusted DB
+    # content, added for agent callers specifically), while a plain
+    # human terminal gets a bare top-level array ([{...}]), no "rows"
+    # key at all. Confirmed empirically by running the identical
+    # command with --agent=no and comparing the raw byte output to the
+    # same command without it -- not inferred from documentation
+    # alone. --agent=no forces the plain, deterministic array shape
+    # regardless of who/what actually invokes this script, so the
+    # parser below only ever has to handle ONE confirmed shape.
+    live_json="$(SIGNAL_PORTAL_READONLY_PROD_CONFIRMED=1 "$GUARD" npx supabase db query --read-only --output-format=json --agent=no --remote="$PRODUCTION_REF" --file="$QFILE" 2>/dev/null)"
+    # Strict parsing: the output must be valid JSON AND shaped exactly
+    # as the confirmed --agent=no response (a top-level array with
+    # exactly one object, whose "t" matches the table just queried and
+    # whose "n" is a number) before "n" is trusted at all. Malformed,
+    # empty, truncated, wrapped-object, table-formatted, or any other
+    # unexpectedly-shaped output is rejected outright, never silently
+    # misread as a row count (never hardcoded; "live" always comes
+    # from this exact response or not at all).
+    if ! printf '%s' "$live_json" | jq -e 'type == "array" and length == 1 and .[0].t == $t and (.[0].n | type) == "number"' --arg t "$tbl" >/dev/null 2>&1; then
+      note "FAIL: live query response for $tbl was not a valid, well-shaped JSON array (output-format/agent-mode mismatch, empty response, or unexpected shape) -- never treated as a row count"
+      FAILURES+=("live-query-malformed:$tbl")
+      continue
+    fi
+    live="$(printf '%s' "$live_json" | jq -r '.[0].n')"
     if [ "$live" = "ERROR" ] || [ -z "$live" ]; then
       note "FAIL: could not read live row count for $tbl"
       FAILURES+=("live-query-failed:$tbl")

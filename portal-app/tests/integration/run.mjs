@@ -10,7 +10,7 @@ import { buildClients } from './_client.mjs';
 import { createFixtureSet, teardownFixtureSet } from './fixtures.mjs';
 import { summary } from './_harness.mjs';
 
-const SCENARIOS = ['auth', 'invitations', 'rls', 'storage', 'artwork', 'feedback', 'access'];
+const SCENARIOS = ['auth', 'invitations', 'rls', 'storage', 'artwork', 'feedback', 'access', 'classification'];
 
 async function main() {
   let safe;

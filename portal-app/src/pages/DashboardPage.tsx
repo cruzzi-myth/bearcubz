@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useDashboardData, type DashboardCollaboration } from '../hooks/useDashboardData';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { AssetLibraryList } from '../components/AssetLibraryList';
@@ -21,7 +22,7 @@ function formatActivityDate(iso: string): string {
 
 export function DashboardPage() {
   const data = useDashboardData();
-  const { signOut } = usePortalAuth();
+  const { signOut, isAdmin } = usePortalAuth();
   const [view, setView] = useState<LibraryView>('asset-library');
   const [briefingTarget, setBriefingTarget] = useState<DashboardCollaboration | null>(null);
 
@@ -45,11 +46,25 @@ export function DashboardPage() {
           </span>
           <span className="sp-dash__brand-sub">THE COLLECTIVE</span>
         </div>
-        <span className="sp-dash__badge">Signal Portal // Artist Access</span>
+        {/* Stage K1.5B: the artist-facing badge is replaced, not
+            supplemented, when an admin is previewing this page —
+            this is never shown for an ordinary artist account, and
+            never implies the admin has "become" an artist (no
+            membership row is created or implied by this label). */}
+        {isAdmin ? (
+          <span className="sp-dash__badge sp-dash__badge--admin">Administrator View · Signal Portal</span>
+        ) : (
+          <span className="sp-dash__badge">Signal Portal // Artist Access</span>
+        )}
         <nav className="sp-dash__nav" aria-label="Dashboard navigation">
           <span className="sp-dash__nav-current" aria-current="page">
             Dashboard
           </span>
+          {isAdmin && (
+            <Link to="/admin" className="sp-dash__admin-return">
+              Return to Command Center
+            </Link>
+          )}
           <button type="button" className="sp-dash__signout" onClick={() => void signOut()}>
             Sign Out
           </button>
@@ -62,7 +77,11 @@ export function DashboardPage() {
             Welcome To The Signal
           </p>
           <h1>
-            {data.kind === 'ready' && data.displayName ? `Welcome back, ${data.displayName}.` : 'Welcome.'}
+            {isAdmin
+              ? 'Administrator Preview.'
+              : data.kind === 'ready' && data.displayName
+                ? `Welcome back, ${data.displayName}.`
+                : 'Welcome.'}
           </h1>
         </section>
 
