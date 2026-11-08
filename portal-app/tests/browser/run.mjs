@@ -484,6 +484,120 @@ await check('NYX ARDENT: available on a chamber page too, not just the dashboard
   return count > 0;
 });
 
+// ---------- Stage K1.6A.1: standalone NYX ARDENT companion ----------
+await check('NYX ARDENT companion: renders as a standalone transparent character, no circular/rectangular frame remains', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  const oldToggleCount = await page.locator('.sp-host__toggle').count();
+  const companion = page.locator('.sp-host__companion');
+  const companionCount = await companion.count();
+  const borderRadius = await companion.evaluate((el) => getComputedStyle(el).borderRadius);
+  const background = await companion.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const imgSrc = await page.locator('.sp-host__companion img').getAttribute('src');
+  await context.close();
+  return (
+    oldToggleCount === 0 &&
+    companionCount === 1 &&
+    borderRadius === '0px' &&
+    background === 'rgba(0, 0, 0, 0)' &&
+    imgSrc.includes('nyx-ardent-standalone.webp')
+  );
+});
+
+await check('NYX ARDENT companion: can be dragged to a new position, and that position stays within the viewport', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  const handle = page.locator('.sp-host__companion');
+  const box = await handle.boundingBox();
+  const startX = box.x + box.width / 2;
+  const startY = box.y + box.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  // Drag far past the top-left corner -- clamping, not the drag
+  // distance, must be what keeps her on-screen.
+  await page.mouse.move(-500, -500, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+  const newBox = await handle.boundingBox();
+  await context.close();
+  return newBox.x >= 0 && newBox.y >= 0 && (newBox.x !== box.x || newBox.y !== box.y);
+});
+
+await check('NYX ARDENT companion: a real drag never also opens the chat dialog', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  const handle = page.locator('.sp-host__companion');
+  const box = await handle.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 120, box.y - 80, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  const dialogCount = await page.locator('[role="dialog"][aria-label*="Nyx Ardent"]').count();
+  await context.close();
+  return dialogCount === 0;
+});
+
+await check('NYX ARDENT companion: a reset-position control appears after dragging and returns her to the default corner', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  const handle = page.locator('.sp-host__companion');
+  const defaultBox = await handle.boundingBox();
+  await page.mouse.move(defaultBox.x + defaultBox.width / 2, defaultBox.y + defaultBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(defaultBox.x - 200, defaultBox.y - 200, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+  const draggedBox = await handle.boundingBox();
+  const resetButton = page.getByRole('button', { name: /Reset Nyx Ardent's position/i });
+  const resetVisibleAfterDrag = await resetButton.count();
+  await resetButton.click();
+  await page.waitForTimeout(200);
+  const resetBox = await handle.boundingBox();
+  await context.close();
+  return (
+    resetVisibleAfterDrag === 1 &&
+    (draggedBox.x !== defaultBox.x || draggedBox.y !== defaultBox.y) &&
+    Math.abs(resetBox.x - defaultBox.x) < 2 &&
+    Math.abs(resetBox.y - defaultBox.y) < 2
+  );
+});
+
+await check('NYX ARDENT companion: keyboard-only activation (Tab + Enter) opens the chat, same as a click', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').focus();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  const dialogCount = await page.locator('[role="dialog"][aria-label*="Nyx Ardent"]').count();
+  await context.close();
+  return dialogCount === 1;
+});
+
+await check('NYX ARDENT companion: prefers-reduced-motion disables the float/pulse/entrance animations entirely', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.waitForTimeout(500);
+  const wrapAnimation = await page.locator('.sp-host__companion-wrap').evaluate((el) => getComputedStyle(el).animationName);
+  const imgAnimation = await page.locator('.sp-host__companion img').evaluate((el) => getComputedStyle(el).animationName);
+  const stillVisible = await page.locator('.sp-host__companion img').isVisible();
+  await context.close();
+  return wrapAnimation === 'none' && imgAnimation === 'none' && stillVisible;
+});
+
+await check('NYX ARDENT companion: mobile viewport sizes her down and never covers the Sign Out control', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const session = await sessionFor('artistA');
+  await seedSessionAndReload(page, supabaseUrl, session, '/dashboard');
+  await page.waitForTimeout(1500);
+  const companionBox = await page.locator('.sp-host__companion img').boundingBox();
+  const signOutBox = await page.getByRole('button', { name: 'Sign Out' }).boundingBox();
+  await context.close();
+  const noOverlap = companionBox.y > signOutBox.y + signOutBox.height;
+  return companionBox.height <= 150 && noOverlap;
+});
+
 // ---------- 13. Missing artwork ----------
 await check('missing primary cover (Project C has no artwork at all): dashboard card shows a placeholder, not broken/missing image markup', async () => {
   const { context, page } = await freshPage('artistA', '/dashboard');

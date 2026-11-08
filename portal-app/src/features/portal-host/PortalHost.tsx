@@ -4,6 +4,7 @@ import { usePortalHost } from './PortalHostProvider';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { portalAsset } from '../../lib/assetPath';
 import { PORTAL_HOST_CONFIG } from './portalHostConfig';
+import { NyxCompanion } from './NyxCompanion';
 import { QUICK_ACTIONS, type HostCollaboration } from './portalHostTypes';
 import { WELCOME_MESSAGE, matchFaq } from './portalHostDialogue';
 import { resolveQuickAction, resolveForCollaboration } from './portalHostActions';
@@ -89,17 +90,7 @@ export function PortalHost() {
   }
 
   if (!host.isOpen) {
-    return (
-      <button
-        type="button"
-        className="sp-host__toggle"
-        onClick={host.open}
-        aria-label={`Open ${PORTAL_HOST_CONFIG.displayName}, Signal Portal host`}
-      >
-        <img src={portalAsset(PORTAL_HOST_CONFIG.artworkSrc)} alt="" aria-hidden="true" />
-        <span className="sp-host__toggle-indicator" aria-hidden="true" />
-      </button>
-    );
+    return <NyxCompanion onOpen={host.open} />;
   }
 
   return (

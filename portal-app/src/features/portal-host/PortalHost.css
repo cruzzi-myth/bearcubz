@@ -1,52 +1,127 @@
-/* ---------- collapsed toggle ---------- */
-.sp-host__toggle {
+/* ---------- Stage K1.6A.1: standalone full-body companion ---------- */
+.sp-host__companion-wrap {
   position: fixed;
   z-index: 40;
   right: clamp(16px, 4vw, 32px);
   bottom: clamp(16px, 4vw, 32px);
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  padding: 0;
-  overflow: hidden;
-  background: var(--sp-glass-bg);
-  border: 1px solid var(--sp-glass-border);
-  box-shadow: var(--sp-ring-glow);
-  cursor: pointer;
-}
-
-.sp-host__toggle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-}
-
-.sp-host__toggle-indicator {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--cyan);
-  box-shadow: 0 0 8px var(--cyan);
+  /* No fixed width — the <img> below sets its own height and keeps
+     its natural (portrait) aspect ratio, so the silhouette is never
+     stretched or cropped. */
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .sp-host__toggle-indicator {
-    animation: sp-host-pulse 2s ease-in-out infinite;
+  .sp-host__companion-wrap {
+    animation: sp-companion-in 0.6s ease-out both;
   }
 }
 
-@keyframes sp-host-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+.sp-host__companion {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  /* The whole hit-target is the character's own silhouette, not an
+     invisible box around it -- there is no circular/rectangular
+     frame to click through. */
+  touch-action: none;
 }
 
-.sp-host__toggle:focus-visible {
+.sp-host__companion:focus-visible {
   outline: 2px solid var(--cyan);
-  outline-offset: 3px;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.sp-host__companion img {
+  display: block;
+  height: clamp(220px, 22vw, 260px);
+  width: auto;
+  max-width: 44vw;
+  pointer-events: none;
+  filter: drop-shadow(0 0 20px rgba(191, 95, 255, 0.35)) drop-shadow(0 6px 24px rgba(0, 0, 0, 0.55));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sp-host__companion img {
+    animation:
+      sp-companion-float 5.5s ease-in-out infinite,
+      sp-companion-pulse 4.5s ease-in-out infinite;
+  }
+}
+
+/* Mid-drag: no float/pulse fighting the pointer, and no entrance
+   transition replaying — the character should track the pointer
+   exactly, nothing else. */
+.sp-host__companion-wrap--dragging .sp-host__companion img {
+  animation: none;
+}
+
+@keyframes sp-companion-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sp-companion-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes sp-companion-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(191, 95, 255, 0.35)) drop-shadow(0 6px 24px rgba(0, 0, 0, 0.55));
+  }
+  50% {
+    filter: drop-shadow(0 0 32px rgba(0, 229, 255, 0.45)) drop-shadow(0 6px 24px rgba(0, 0, 0, 0.55));
+  }
+}
+
+.sp-host__companion-reset {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--sp-glass-border);
+  background: var(--sp-glass-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--sp-ink-soft);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sp-host__companion-reset:hover,
+.sp-host__companion-reset:focus-visible {
+  color: #fff;
+  border-color: var(--cyan);
+  outline: 2px solid var(--cyan);
+  outline-offset: 1px;
+}
+
+@media (max-width: 1024px) {
+  .sp-host__companion img {
+    height: clamp(160px, 20vw, 200px);
+  }
+}
+
+@media (max-width: 600px) {
+  .sp-host__companion img {
+    height: clamp(110px, 28vw, 150px);
+  }
 }
 
 /* ---------- expanded panel ---------- */
@@ -266,7 +341,7 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
-  .sp-host__toggle {
+  .sp-host__companion-wrap {
     bottom: max(16px, env(safe-area-inset-bottom, 0px));
   }
 }
