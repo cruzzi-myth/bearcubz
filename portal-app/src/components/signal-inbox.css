@@ -1,0 +1,261 @@
+.sp-inbox__trigger {
+  position: fixed;
+  top: clamp(12px, 2.5vw, 24px);
+  right: clamp(12px, 2.5vw, 24px);
+  z-index: 100;
+  width: clamp(38px, 6vw, 46px);
+  height: clamp(38px, 6vw, 46px);
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  background: rgba(6, 6, 10, 0.6);
+  color: var(--cyan, #00e5ff);
+  font-size: clamp(16px, 2.6vw, 20px);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
+}
+
+.sp-inbox__trigger:hover,
+.sp-inbox__trigger:focus-visible {
+  background: rgba(0, 229, 255, 0.18);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.7), 0 0 20px rgba(0, 229, 255, 0.5);
+}
+
+.sp-inbox__trigger:focus-visible {
+  outline: 2px solid var(--cyan, #00e5ff);
+  outline-offset: 3px;
+}
+
+/* The entrance page may ALSO show the administrator Command Center
+   entrance (Stage K1.1, EntrancePage.tsx) in the same corner -- push
+   this one down below it rather than overlapping, only on that one
+   route. Every other authenticated page has nothing else up there. */
+.sp-inbox__trigger--entrance {
+  top: clamp(78px, 12vw, 100px);
+}
+
+.sp-inbox__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  /* Not the shared --pink token here on purpose: white text on
+     --pink (#ff2d78) measures 3.56:1 at this size, below WCAG AA's
+     4.5:1 for small text (axe-core caught this directly). This
+     darker shade measures ~5.5:1 -- same hue family, still reads as
+     the established pink accent, just dark enough to pass at 10px. */
+  background: #c91f5c;
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 8px rgba(255, 45, 120, 0.7);
+}
+
+.sp-inbox__panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+  width: min(380px, 100vw);
+  background: rgba(8, 8, 14, 0.92);
+  border-left: 1px solid rgba(0, 229, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sp-inbox__panel {
+    animation: sp-inbox-slide-in 0.28s ease-out both;
+  }
+}
+
+@keyframes sp-inbox-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sp-inbox__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(14px, 3vw, 20px);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.sp-inbox__panel-title {
+  margin: 0;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--cyan, #00e5ff);
+  letter-spacing: 0.04em;
+}
+
+.sp-inbox__close {
+  background: transparent;
+  border: none;
+  color: var(--sp-ink-soft, rgba(231, 228, 239, 0.64));
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.sp-inbox__close:hover,
+.sp-inbox__close:focus-visible {
+  color: var(--cyan, #00e5ff);
+  outline: none;
+}
+
+.sp-inbox__status {
+  padding: clamp(14px, 3vw, 20px);
+  color: var(--sp-ink-soft, rgba(231, 228, 239, 0.64));
+  font-size: 13px;
+}
+
+.sp-inbox__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sp-inbox__item {
+  padding: clamp(10px, 2vw, 14px) clamp(14px, 3vw, 20px);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+}
+
+.sp-inbox__item--unread {
+  background: rgba(0, 229, 255, 0.05);
+}
+
+.sp-inbox__item-main {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.sp-inbox__unread-dot {
+  color: var(--pink, #ff2d78);
+  font-size: 8px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.sp-inbox__item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint, rgba(231, 228, 239, 0.4));
+  margin-bottom: 4px;
+}
+
+.sp-inbox__item-sender {
+  color: var(--cyan, #00e5ff);
+}
+
+.sp-inbox__item-preview {
+  display: block;
+  font-size: 13px;
+  color: var(--sp-ink, #e7e4ef);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.sp-inbox__audio {
+  width: 100%;
+  margin-top: 8px;
+  height: 32px;
+}
+
+.sp-inbox__quick-reply {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sp-inbox__quick-reply input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.sp-inbox__quick-reply input:focus-visible {
+  outline: none;
+  border-color: var(--cyan, #00e5ff);
+}
+
+.sp-inbox__quick-reply button {
+  flex: none;
+  background: rgba(0, 229, 255, 0.14);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  border-radius: 6px;
+  color: var(--cyan, #00e5ff);
+  font-size: 11px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.sp-inbox__quick-reply button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sp-inbox__open-transmissions {
+  display: block;
+  margin-top: 8px;
+  background: transparent;
+  border: none;
+  color: var(--sp-ink-faint, rgba(231, 228, 239, 0.4));
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sp-inbox__open-transmissions:hover,
+.sp-inbox__open-transmissions:focus-visible {
+  color: var(--cyan, #00e5ff);
+  outline: none;
+}
+
+@media (max-width: 480px) {
+  .sp-inbox__panel {
+    width: 100vw;
+  }
+}

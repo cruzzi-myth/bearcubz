@@ -3,8 +3,10 @@
 # production. Deliberately separate from with-readonly-prod-guard.sh
 # (which refuses every write, no exceptions) and with-dev-guard.sh
 # (which only ever targets the dev project) -- this exists to make the
-# one necessary production write (applying the 5 approved SIGNAL
-# PORTAL migrations) as narrow, verified, and fail-closed as possible.
+# one necessary production write (applying the approved SIGNAL
+# PORTAL migrations, incrementally reviewed and added to
+# approved-migrations.manifest over time) as narrow, verified, and
+# fail-closed as possible.
 #
 # No database password or API key appears anywhere in this file. Every
 # read-only pre-check below uses the Supabase CLI's own already-
@@ -73,28 +75,55 @@ if [ "$proj_name" != "$EXPECTED_PROJECT_NAME" ]; then
   refuse "ref $PRODUCTION_REF resolved to project name '$proj_name', not the expected '$EXPECTED_PROJECT_NAME' -- failing closed."
 fi
 
-# ---------- 3 & 4 & 6. the 5 approved migration files, byte-for-byte, by hash ----------
+# ---------- 3 & 4 & 6. the approved migration files, byte-for-byte, by hash ----------
+# Stage K1.1: raised from 5 to 6 -- a deliberate, reviewed extension to
+# cover the newly-approved read-receipts migration
+# (20261107220000_signal_portal_feedback_read_receipts.sql), not a
+# loosening of the check itself. It still fails closed on any count
+# other than exactly what's been reviewed.
 [ -f "$MANIFEST" ] || refuse "approved-migrations.manifest is missing -- cannot verify migration integrity without it."
 manifest_count="$(wc -l < "$MANIFEST" | tr -d ' ')"
-[ "$manifest_count" -eq 5 ] || refuse "manifest does not list exactly 5 migrations (found $manifest_count) -- failing closed."
+[ "$manifest_count" -eq 6 ] || refuse "manifest does not list exactly 6 migrations (found $manifest_count) -- failing closed."
 if ! ( cd "$REPO_ROOT" && shasum -a 256 -c "$MANIFEST" --status ); then
   refuse "one or more approved migration files does not match its reviewed SHA-256 hash in $MANIFEST -- a changed migration file is never auto-approved, regardless of how small the change."
 fi
 
-# ---------- 5 & 8. migration history: exactly these 5 pending, nothing else ----------
-# A 6th, unaccounted-for file sitting in supabase/migrations/ would be
+# ---------- 5 & 8. migration history: exactly the still-pending approved version(s), nothing else ----------
+# An unaccounted-for file sitting in supabase/migrations/ would be
 # caught here too: db push applies every local-not-remote migration,
-# not just the 5 named in the manifest, so this comparison is against
-# the complete pending SET, not just "do the 5 approved files exist."
+# not just the ones named in the manifest, so this comparison is
+# against the complete pending SET, not just "do the approved files
+# exist."
+#
+# Stage K1.1 correction: the original 5-migration version of this
+# check hardcoded ALL 5 as "expected," which was only ever correct
+# because, at Checkpoint A, none of them had been applied yet -- they
+# were all simultaneously pending. That is NOT the general case: the
+# read-receipts migration is being added on top of 5 ALREADY-APPLIED
+# ones, so demanding all 6 be pending would refuse a perfectly correct
+# state (5 matched, 1 pending) as if it were drift. The right
+# invariant is "the pending set is a non-empty subset of the approved
+# manifest, and nothing outside it" -- not "pending == the full
+# manifest." Caught by the guard's own self-test immediately after
+# this was first written with the wrong invariant; fixed before any
+# real execution, never weakened to get a false pass.
 history_json="$(npx supabase migration list --remote="$PRODUCTION_REF" --output-format json 2>/dev/null)" \
   || refuse "could not read production migration history -- failing closed rather than assuming it is safe to proceed."
 pending="$(printf '%s' "$history_json" | jq -r '.migrations[]? | select(.local != "" and .remote == "") | .local' | sort)"
-expected="$(printf '%s\n' 20261106140000 20261106140100 20261106150000 20261106160000 20261106170000 | sort)"
-if [ "$pending" != "$expected" ]; then
-  refuse "pending migration set does not exactly match the 5 approved versions.
-Expected: $(echo "$expected" | tr '\n' ' ')
-Found:    $(echo "$pending" | tr '\n' ' ')
-This could mean an unexpected migration is pending, one of the 5 was already applied out of band, or production has drifted since this guard was last reviewed -- failing closed rather than guessing which."
+approved_versions="20261106140000 20261106140100 20261106150000 20261106160000 20261106170000 20261107220000"
+if [ -z "$pending" ]; then
+  refuse "no migration is pending at all -- nothing for this guarded db push to apply. Failing closed rather than running a no-op push."
+fi
+unapproved_pending=""
+for v in $pending; do
+  case " $approved_versions " in
+    *" $v "*) ;;
+    *) unapproved_pending="$unapproved_pending $v" ;;
+  esac
+done
+if [ -n "$unapproved_pending" ]; then
+  refuse "pending migration(s) outside the approved manifest: $unapproved_pending.
+This could mean an unexpected migration is pending, or production has drifted since this guard was last reviewed -- failing closed rather than guessing which."
 fi
 
 # ---------- fresh backup verification gate ----------
@@ -116,7 +145,7 @@ if [ "$age_seconds" -gt "$max_age_seconds" ]; then
   refuse "backup verification report is $(( age_seconds / 3600 ))h old (max allowed: 6h) -- the backup must be taken immediately before deployment, not reused from an earlier run."
 fi
 
-echo "[approved-prod-migration-guard] ALL CHECKS PASSED: ref=$PRODUCTION_REF ($proj_name); manifest verified 5/5 by hash; pending migrations exactly match the 5 approved versions, nothing else; backup verification report is PASS and $(( age_seconds / 60 ))min old." >&2
+echo "[approved-prod-migration-guard] ALL CHECKS PASSED: ref=$PRODUCTION_REF ($proj_name); manifest verified $manifest_count/$manifest_count by hash; pending migration(s) [$(echo "$pending" | tr '\n' ' ')] all within the approved manifest, nothing else; backup verification report is PASS and $(( age_seconds / 60 ))min old." >&2
 
 # ---------- self-test escape hatch -- never a real execution ----------
 if [ "${SIGNAL_PORTAL_GUARD_SELFTEST:-}" = "1" ]; then

@@ -2,6 +2,7 @@ import { BrowserRouter, useRoutes } from 'react-router-dom';
 import { portalRoutes } from './routes';
 import { PortalAuthProvider } from './features/auth/PortalAuthContext';
 import { PortalHostProvider } from './features/portal-host/PortalHostProvider';
+import { SignalInbox } from './components/SignalInbox';
 
 // Vite's BASE_URL is "/portal/" in production (see vite.config.ts)
 // and "/" in local dev — either way, strip the trailing slash for
@@ -21,6 +22,11 @@ export default function App() {
       <PortalHostProvider>
         <BrowserRouter basename={basename}>
           <AppRoutes />
+          {/* Stage K1.1: mounted once, globally, so every authenticated
+              route gets it automatically with no per-page wiring --
+              renders nothing itself for a signed-out visitor or during
+              the initial authorization check (see SignalInbox.tsx). */}
+          <SignalInbox />
         </BrowserRouter>
       </PortalHostProvider>
     </PortalAuthProvider>
