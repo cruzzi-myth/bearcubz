@@ -213,6 +213,72 @@ button.sp-entrance-v2__nav-link {
   outline: none;
 }
 
+/* ---------- Stage K1.1: administrator Command Center entrance ---------- */
+.sp-entrance-v2__admin-entrance {
+  position: fixed;
+  top: clamp(12px, 2.5vw, 24px);
+  right: clamp(12px, 2.5vw, 24px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: clamp(8px, 1.6vw, 14px) clamp(12px, 2.2vw, 18px);
+  background: rgba(6, 6, 10, 0.55);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: clamp(8px, 1.4vw, 12px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+}
+
+.sp-entrance-v2__admin-badge {
+  margin: 0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(9px, 1.6vw, 11px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan, #00e5ff);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+}
+
+.sp-entrance-v2__admin-link {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  font-size: clamp(11px, 1.9vw, 14px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(0, 229, 255, 0.1);
+  white-space: nowrap;
+}
+
+.sp-entrance-v2__admin-link:hover,
+.sp-entrance-v2__admin-link:focus-visible {
+  background: rgba(0, 229, 255, 0.22);
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.7), 0 0 18px rgba(0, 229, 255, 0.5);
+}
+
+.sp-entrance-v2__admin-link:focus-visible {
+  outline: 2px solid var(--cyan, #00e5ff);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .sp-entrance-v2__admin-entrance {
+    align-items: stretch;
+    width: calc(100vw - 2 * clamp(12px, 2.5vw, 24px));
+  }
+
+  .sp-entrance-v2__admin-link {
+    text-align: center;
+  }
+}
+
 /* ---------- Status dock — the only persistent UI below the artwork itself ---------- */
 .sp-entrance-v2__status-dock {
   position: relative;

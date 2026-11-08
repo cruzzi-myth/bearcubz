@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { portalAsset } from '../lib/assetPath';
 import { supabase } from '../services/supabaseClient';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
@@ -82,13 +82,37 @@ export function EntrancePage() {
   const [choicePrompt, setChoicePrompt] = useState<{ action: QuickActionId; choices: ProjectChoice[]; text: string } | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const { status: authStatus } = usePortalAuth();
+  const { status: authStatus, isAdmin } = usePortalAuth();
   const dashboard = useDashboardData();
   const navigate = useNavigate();
   const variant = useEntranceVariant();
 
   const collaborations: HostCollaboration[] =
     dashboard.kind === 'ready' ? dashboard.collaborations.map((c) => ({ id: c.id, title: c.title, availableAssetTypes: c.availableAssetTypes })) : [];
+
+  // Stage K1: Supabase's own auth redirect can land back here with
+  // #error=...&error_description=... instead of a session -- most
+  // commonly an already-superseded or expired magic-link token (e.g.
+  // a stale link clicked after a later "Access Portal" click issued a
+  // newer one, which invalidates the previous token). Before this,
+  // nothing here ever looked at these params: the page just rendered
+  // its normal signed-out entrance with no indication anything had
+  // gone wrong, which is indistinguishable from "never clicked
+  // anything" -- confirmed by reproducing it directly. supabase-js's
+  // own session-detection logic reads and consumes the token/error
+  // hash separately from this; this only ever reads it for display,
+  // and clears it from the URL afterward so a refresh doesn't
+  // re-trigger the same message.
+  useEffect(() => {
+    const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+    if (!hash) return;
+    const params = new URLSearchParams(hash);
+    const errorDescription = params.get('error_description');
+    if (errorDescription) {
+      setState({ kind: 'invalid', message: `${errorDescription} Please request a new sign-in link below.` });
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -146,6 +170,26 @@ export function EntrancePage() {
           that's visible — it only restores the accessible structure a
           screen reader needs around it. */}
       <h1 className="sp-entrance-v2__sr-label">Signal Portal — BEλR CUBZ // THE COLLECTIVE, Private Collaboration Network</h1>
+
+      {/* Stage K1.1: new chrome, independent of the illustrated
+          artwork's own coordinate system (unlike every other control
+          on this page) -- shown only once authorization has actually
+          resolved to true, never during 'checking'/'loading' and
+          never from the session's email alone. isAdmin starts false
+          and is only ever flipped by PortalAuthContext after a real,
+          server-verified is_portal_admin() check succeeds; it's reset
+          to false immediately on sign-out/session loss, so this
+          disappears automatically in every one of those cases without
+          any extra logic here. */}
+      {authStatus === 'signed-in' && isAdmin && (
+        <div className="sp-entrance-v2__admin-entrance">
+          <p className="sp-entrance-v2__admin-badge">◈ ADMINISTRATOR ONLINE</p>
+          <Link to="/admin" className="sp-entrance-v2__admin-link">
+            ENTER COMMAND CENTER <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+      )}
+
       <div className="sp-entrance-v2__stage" style={{ aspectRatio: `${variant.width} / ${variant.height}`, ['--sp-stage-ratio' as string]: variant.width / variant.height }}>
         <img className="sp-entrance-v2__art" src={variant.src} alt={variant.alt} />
 
