@@ -15,7 +15,24 @@
   min-height: 100vh;
   width: 100%;
   overflow: hidden;
-  background: #060608;
+  /* Stage K1.2: the artwork's own stage box is sized to its real
+     aspect ratio (min(100vw, 100vh * ratio)) so it's never cropped or
+     distorted -- on a viewport proportionally wider than the artwork,
+     that correctly leaves bare space on either side. Rather than
+     stretch or duplicate the artwork into that space (ruled out --
+     Stage I2E deliberately moved away from a blurred-copy treatment),
+     this fills it with an atmospheric, CSS-only cyberpunk backdrop in
+     the same magenta/cyan/black palette as the artwork itself, so the
+     margin reads as "the environment continues past the frame," not
+     as blank background. Sized to the viewport, not the stage box, so
+     it always reaches every edge regardless of aspect ratio.
+     Reduced-motion is irrelevant here -- this is a static gradient,
+     nothing animates. */
+  background:
+    radial-gradient(ellipse 55% 60% at 0% 45%, rgba(0, 229, 255, 0.1), transparent 70%),
+    radial-gradient(ellipse 55% 60% at 100% 55%, rgba(255, 45, 120, 0.1), transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(191, 95, 255, 0.06), transparent 70%),
+    linear-gradient(180deg, #0a0a14 0%, #060608 55%, #040405 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -53,6 +70,37 @@
   width: min(100vw, calc(100vh * var(--sp-stage-ratio)));
   max-height: 100vh;
   margin: 0 auto;
+}
+
+/* Stage K1.2: on a viewport proportionally wider than the artwork, the
+   stage box above stops short of the viewport edge, leaving the
+   gradient backdrop to show through -- but a flat gradient butting
+   straight against the image's own edge reads as a visible seam, not
+   "the environment continuing past the frame." These two glows sit
+   immediately outside the stage box (never over the artwork itself —
+   translateX pushes each one fully past its own edge) and fade out
+   into the backdrop, so the transition from image to ambient gradient
+   is soft rather than a hard cut. They render at 0×0 effective size
+   (and are invisible) whenever the stage already spans the full
+   viewport width, which is the common case at typical aspect ratios. */
+.sp-entrance-v2__stage::before,
+.sp-entrance-v2__stage::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: min(18vw, 240px);
+  pointer-events: none;
+}
+
+.sp-entrance-v2__stage::before {
+  right: 100%;
+  background: radial-gradient(ellipse 100% 70% at 100% 50%, rgba(255, 45, 120, 0.22), transparent 75%);
+}
+
+.sp-entrance-v2__stage::after {
+  left: 100%;
+  background: radial-gradient(ellipse 100% 70% at 0% 50%, rgba(0, 229, 255, 0.2), transparent 75%);
 }
 
 .sp-entrance-v2__art {

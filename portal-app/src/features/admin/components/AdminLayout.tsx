@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { usePortalAuth } from '../../auth/PortalAuthContext';
 import { portalAsset } from '../../../lib/assetPath';
 import '../admin.css';
@@ -40,15 +41,28 @@ export function AdminLayout({ activeTab, onTabChange, children }: Props) {
       <div className="sp-admin__scrim" aria-hidden="true" />
 
       <header className="sp-admin__head">
-        <div className="sp-admin__brand">
+        {/* Stage K1.2: an absolute, cross-site link, deliberately a
+            plain <a> rather than a React Router Link -- this leaves
+            the Signal Portal app entirely for the main BEλR CUBZ
+            site, a different top-level section outside the portal's
+            own basename/router. */}
+        <a className="sp-admin__brand" href="https://bearcubz.com/">
           <span className="sp-admin__brand-main">
             BE<span>λ</span>R CUBZ
           </span>
           <span className="sp-admin__brand-sub">Signal Portal — Command Center</span>
-        </div>
+        </a>
         {session?.user?.email && <span className="sp-admin__identity">{session.user.email}</span>}
         <div className="sp-admin__head-actions">
-          <a href="/">← Return to Artist Portal</a>
+          {/* Stage K1.2 fix: the previous plain <a href="/"> resolved
+              against the site root, not the portal's own "/portal"
+              basename -- it actually left the Signal Portal app
+              entirely and landed on the main BEλR CUBZ homepage. A
+              router Link, relative to the basename already configured
+              in App.tsx, correctly lands back on the Signal Portal
+              welcome page instead -- a client-side navigation, so the
+              persisted session is never touched either way. */}
+          <Link to="/">← Return to Signal Portal</Link>
           <button type="button" onClick={() => void signOut()}>
             Sign Out
           </button>

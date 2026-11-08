@@ -49,6 +49,21 @@
   display: flex;
   flex-direction: column;
   line-height: 1.15;
+  /* Stage K1.2: now a real link to the main site -- the child spans
+     already set their own explicit colors, so only the browser's
+     default underline needs overriding here. */
+  text-decoration: none;
+}
+
+.sp-admin__brand:hover .sp-admin__brand-main,
+.sp-admin__brand:focus-visible .sp-admin__brand-main {
+  color: var(--cyan);
+}
+
+.sp-admin__brand:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .sp-admin__brand-main {
