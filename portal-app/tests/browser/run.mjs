@@ -598,6 +598,373 @@ await check('NYX ARDENT companion: mobile viewport sizes her down and never cove
   return companionBox.height <= 150 && noOverlap;
 });
 
+// ---------- Stage K1.6A.2: reactive character + chat window redesign ----------
+await check('NYX ARDENT reactive: the old circular chat portrait is gone from the open panel', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(400);
+  const oldPortraitCount = await page.locator('.sp-host__portrait').count();
+  await context.close();
+  return oldPortraitCount === 0;
+});
+
+await check('NYX ARDENT reactive: the real transparent standalone artwork appears inside the open chat panel', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(400);
+  const img = page.locator('.sp-host__character-img');
+  const count = await img.count();
+  const src = await img.getAttribute('src');
+  const borderRadius = await img.evaluate((el) => getComputedStyle(el).borderRadius);
+  await context.close();
+  return count === 1 && src.includes('nyx-ardent-standalone.webp') && borderRadius === '0px';
+});
+
+await check('NYX ARDENT reactive: opening the chat triggers her greeting state', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(150);
+  const stateAttr = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  const status = await page.locator('.sp-host__status').textContent();
+  await context.close();
+  return stateAttr === 'greeting' && status.includes('Signal established');
+});
+
+await check('NYX ARDENT reactive: submitting a message moves her through listening, then thinking', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(2700); // let the greeting settle to idle first
+  await page.locator('#sp-host-input').fill('What is THE COLLECTIVE?');
+  await page.locator('.sp-host__ask button[type="submit"]').click();
+  await page.waitForTimeout(80);
+  const listeningState = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  await page.waitForTimeout(400);
+  const thinkingState = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  await context.close();
+  return listeningState === 'listening' && thinkingState === 'thinking';
+});
+
+await check('NYX ARDENT reactive: the real response arriving moves her to speaking', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(2700);
+  await page.locator('#sp-host-input').fill('What is THE COLLECTIVE?');
+  await page.locator('.sp-host__ask button[type="submit"]').click();
+  await page.waitForTimeout(650);
+  const stateAttr = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  const status = await page.locator('.sp-host__status').textContent();
+  await context.close();
+  return stateAttr === 'speaking' && status.includes('Responding');
+});
+
+await check('NYX ARDENT reactive: selecting a quick action triggers her presenting state', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(2700);
+  await page.getByRole('button', { name: 'About The Collective' }).click();
+  await page.waitForTimeout(80);
+  const stateAttr = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  const status = await page.locator('.sp-host__status').textContent();
+  await context.close();
+  return stateAttr === 'presenting' && status.includes('Opening destination');
+});
+
+await check('NYX ARDENT reactive: a genuine backend failure (not fabricated) triggers her error state on a quick action', async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const session = await sessionFor('artistA');
+  const key = authStorageKey(supabaseUrl);
+  await page.goto(`${BASE}/dashboard`);
+  await page.evaluate(([k, v]) => localStorage.setItem(k, v), [key, JSON.stringify(session)]);
+  // The SAME real dashboard-connectivity check useDashboardData already
+  // performs -- a genuine HTTP 500 on its membership query is what
+  // makes dashboard.kind genuinely 'error' (useDashboardData sets
+  // kind:'error' for ANY error on this specific query, unlike the
+  // artist_profiles query which only special-cases its own
+  // backend-unavailable shape and otherwise falls through to 'ready').
+  // fulfill(), not abort(): aborting makes fetch() reject, which
+  // useDashboardData's load() has no try/catch around, so the
+  // rejection is silently uncaught and dashboard.kind is left stuck at
+  // 'loading' forever rather than ever reaching 'error' -- confirmed
+  // directly while building this test. A real error-status response is
+  // what postgrest-js actually resolves into `{error}`, matching how a
+  // real backend failure behaves. Matched narrowly by predicate on
+  // `select=collaboration_id` -- PortalAuthContext queries this same
+  // table during session bootstrap with a different select shape
+  // (`select=status`, no status filter), and must be left untouched or
+  // the whole app gets stuck at "Establishing signal…" before ever
+  // reaching the dashboard.
+  await page.route(
+    (url) => url.href.includes('/rest/v1/collaboration_members') && url.href.includes('select=collaboration_id'),
+    (route) => route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ message: 'internal error', code: 'XX000' }) }),
+  );
+  await page.reload();
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(200);
+  await page.getByRole('button', { name: 'About The Collective' }).click();
+  await page.waitForTimeout(80);
+  const stateAttr = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  const status = await page.locator('.sp-host__status').textContent();
+  await context.close();
+  return stateAttr === 'error' && status.includes('Connection issue');
+});
+
+await check('NYX ARDENT reactive: she returns to idle on her own after a completed interaction', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(2900); // past greet()'s own 2600ms idle-return
+  const stateAttr = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  const status = await page.locator('.sp-host__status').textContent();
+  await context.close();
+  return stateAttr === 'idle' && status.includes('Signal Portal Host & Creative Liaison');
+});
+
+await check('NYX ARDENT reactive: prefers-reduced-motion disables her state-change animations entirely', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(2700);
+  await page.getByRole('button', { name: 'About The Collective' }).click();
+  await page.waitForTimeout(80);
+  const animationName = await page.locator('.sp-host__character-img').evaluate((el) => getComputedStyle(el).animationName);
+  const visible = await page.locator('.sp-host__character-img').isVisible();
+  await context.close();
+  return animationName === 'none' && visible;
+});
+
+await check('NYX ARDENT reactive: existing chat behavior (message history, auth-scoped quick actions) still works unchanged', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(400);
+  await page.locator('#sp-host-input').fill('Will I get royalties?');
+  await page.locator('.sp-host__ask button[type="submit"]').click();
+  await page.waitForTimeout(600);
+  const text = await page.textContent('.sp-host__messages');
+  await context.close();
+  return text.includes('Will I get royalties?');
+});
+
+await check('NYX ARDENT reactive: a second, newer quick action is never overwritten by the first one\'s stale idle timer', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(2700);
+  await page.getByRole('button', { name: 'Listen to Demo' }).click(); // t=0, 2 projects -> select-project, no navigation
+  await page.waitForTimeout(200);
+  await page.getByRole('button', { name: 'View Proposal' }).click(); // t=200, same -- also select-project
+  await page.waitForTimeout(2450); // ~2650ms after the first click, past its own stale idle point, before the second's
+  const midState = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  await page.waitForTimeout(350); // now past the second click's own real idle point
+  const finalState = await page.locator('.sp-host__character').getAttribute('data-nyx-state');
+  await context.close();
+  return midState === 'presenting' && finalState === 'idle';
+});
+
+await check('NYX ARDENT reactive: the chat remains fully usable on a mobile viewport', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const session = await sessionFor('artistA');
+  await seedSessionAndReload(page, supabaseUrl, session, '/dashboard');
+  await page.waitForTimeout(1500);
+  await page.locator('.sp-host__companion').click();
+  await page.waitForTimeout(400);
+  const characterVisible = await page.locator('.sp-host__character-img').isVisible();
+  const characterHeight = (await page.locator('.sp-host__character-img').boundingBox()).height;
+  const inputVisible = await page.locator('#sp-host-input').isVisible();
+  const closeVisible = await page.getByRole('button', { name: 'Close' }).isVisible();
+  const actionVisible = await page.getByRole('button', { name: 'Listen to Demo' }).isVisible();
+  await context.close();
+  return characterVisible && characterHeight <= 100 && inputVisible && closeVisible && actionVisible;
+});
+
+// ---------- Stage K1.6A.3: global chamber navigation correction ----------
+// A genuinely authorized account (real admin status, or a real artist
+// with real memberships) whose DASHBOARD data is forced to zero
+// collaborations via a network-level mock of the exact query
+// useDashboardData makes -- never by creating or deleting any real
+// row. For a non-admin artist, "authorized" literally requires >=1
+// active membership row (see classifyAuthorization), so this is the
+// only way to reach a real "authorized, zero projects" state at all.
+async function zeroProjectPage(role, path, viewport) {
+  const context = await browser.newContext(viewport ? { viewport } : {});
+  const page = await context.newPage();
+  if (role === 'admin') {
+    await page.route('**/rest/v1/collaborations*', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+  } else {
+    await page.route(
+      (url) => url.href.includes('/rest/v1/collaboration_members') && url.href.includes('select=collaboration_id'),
+      (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+    );
+  }
+  const session = await sessionFor(role);
+  const key = authStorageKey(supabaseUrl);
+  await page.goto(`${BASE}${path}`);
+  await page.evaluate(([k, v]) => localStorage.setItem(k, v), [key, JSON.stringify(session)]);
+  await page.reload();
+  await page.waitForTimeout(1800);
+  return { context, page };
+}
+
+await check('K1.6A.3: administrator with zero projects can open all five destinations from the nav', async () => {
+  const { context, page } = await zeroProjectPage('admin', '/dashboard');
+  const titles = [];
+  for (const label of ['Listening Chamber', 'Transmission Chamber', 'Visual Concept Chamber', 'Proposal Chamber']) {
+    await page.getByRole('button', { name: label }).click();
+    await page.waitForTimeout(500);
+    titles.push(await page.locator('.sp-chamber__title').textContent());
+    // exact: true -- ChamberNoProjectState's own "Return to Dashboard"
+    // link also contains the substring "Dashboard", so a non-exact
+    // name match here would ambiguously resolve to two links.
+    await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
+    await page.waitForTimeout(500);
+  }
+  await context.close();
+  return (
+    titles.includes('Private Listening Chamber') &&
+    titles.includes('Transmission Chamber') &&
+    titles.includes('Visual Concept Gallery') &&
+    titles.includes('Proposal Archive')
+  );
+});
+
+await check('K1.6A.3: artist with zero projects can open all five destinations from the nav', async () => {
+  const { context, page } = await zeroProjectPage('artistA', '/dashboard');
+  const titles = [];
+  for (const label of ['Listening Chamber', 'Transmission Chamber', 'Visual Concept Chamber', 'Proposal Chamber']) {
+    await page.getByRole('button', { name: label }).click();
+    await page.waitForTimeout(500);
+    titles.push(await page.locator('.sp-chamber__title').textContent());
+    await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
+    await page.waitForTimeout(500);
+  }
+  await context.close();
+  return (
+    titles.includes('Private Listening Chamber') &&
+    titles.includes('Transmission Chamber') &&
+    titles.includes('Visual Concept Gallery') &&
+    titles.includes('Proposal Archive')
+  );
+});
+
+await check('K1.6A.3: each chamber\'s no-project empty state shows its own exact specified message', async () => {
+  const { context, page } = await zeroProjectPage('artistA', '/chambers/listening');
+  const listenText = await page.textContent('.sp-chamber-empty__message');
+  await page.goto(`${BASE}/chambers/transmission`);
+  await page.waitForTimeout(1200);
+  const respondText = await page.textContent('.sp-chamber-empty__message');
+  await page.goto(`${BASE}/chambers/visuals`);
+  await page.waitForTimeout(1200);
+  const visualsText = await page.textContent('.sp-chamber-empty__message');
+  await page.goto(`${BASE}/chambers/proposals`);
+  await page.waitForTimeout(1200);
+  const proposalText = await page.textContent('.sp-chamber-empty__message');
+  await context.close();
+  return (
+    listenText === 'No listening sessions are available yet. Your authorized demos will appear here.' &&
+    respondText === 'No transmissions are available yet. Messages and collaboration feedback will appear here when a project is activated.' &&
+    visualsText === 'No visual concepts are available yet. Approved collaboration artwork will appear here.' &&
+    proposalText === 'No proposals are available yet. Collaboration proposals will appear here once assigned.'
+  );
+});
+
+await check('K1.6A.3: the no-project empty state never constructs an invalid or fabricated project id anywhere in the DOM', async () => {
+  const { context, page } = await zeroProjectPage('artistA', '/chambers/listening');
+  const html = await page.content();
+  const hrefs = await page.locator('a[href]').evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+  await context.close();
+  return (
+    !html.includes('/collaboration/undefined') &&
+    !html.includes('/collaboration/null') &&
+    hrefs.every((h) => !h.includes('undefined') && !h.includes('null'))
+  );
+});
+
+await check('K1.6A.3: the project-independent route makes zero requests for any collaboration\'s private data', async () => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const requests = [];
+  page.on('request', (r) => {
+    const u = r.url();
+    // Scoped to the exact query SHAPES useAuthorizedCollaboration and
+    // useFeedbackThread make for one specific id (`...=eq.<id>`), not
+    // useDashboardData's own legitimate bulk `...=in.(...)` summary
+    // fetch for this artist's OWN real collaborations -- that one is
+    // expected here (same data the nav bar and NYX already use on
+    // every other page) and is not a leak of any particular chamber's
+    // content.
+    const authorizedCollaborationLookup = u.includes('/rest/v1/collaborations?') && /[?&]id=eq\./.test(u);
+    const assetsForOneCollaboration = u.includes('/rest/v1/collaboration_assets?') && u.includes('collaboration_id=eq.');
+    const feedbackForOneCollaboration = u.includes('/rest/v1/collaboration_feedback?') && u.includes('collaboration_id=eq.');
+    if (authorizedCollaborationLookup || assetsForOneCollaboration || feedbackForOneCollaboration) {
+      requests.push(u);
+    }
+  });
+  const session = await sessionFor('artistA');
+  await seedSessionAndReload(page, supabaseUrl, session, '/chambers/listening');
+  await page.waitForTimeout(1500);
+  await context.close();
+  return requests.length === 0;
+});
+
+await check('K1.6A.3: Artist A (real, 2 projects) retains project context navigating chamber-to-chamber via the nav', async () => {
+  const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/listen`);
+  await page.waitForTimeout(1500);
+  await page.getByRole('button', { name: 'Transmission Chamber' }).click();
+  await page.waitForTimeout(600);
+  const url = page.url();
+  await context.close();
+  return url.includes(`/collaboration/${dataset.collaborations.projectA}/respond`);
+});
+
+await check('K1.6A.3: existing project-specific authorization is unaffected — Artist B still cannot open Artist A\'s real collaboration URL', async () => {
+  const { context, page } = await freshPage('artistB', `/collaboration/${dataset.collaborations.projectA}/listen`);
+  await page.waitForTimeout(1500);
+  const text = await page.textContent('body');
+  await context.close();
+  return text.includes("This collaboration isn't available to your account");
+});
+
+await check('K1.6A.3: zero-project navigation works on a mobile viewport too', async () => {
+  const { context, page } = await zeroProjectPage('artistA', '/dashboard', { width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Visual Concept Chamber' }).click();
+  await page.waitForTimeout(600);
+  const title = await page.locator('.sp-chamber__title').textContent();
+  const noOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
+  await context.close();
+  return title === 'Visual Concept Gallery' && noOverflow;
+});
+
+await check('K1.6A.3: NYX ARDENT remains available on every project-independent chamber route', async () => {
+  const { context, page } = await zeroProjectPage('artistA', '/chambers/proposals');
+  const count = await page.locator('.sp-host__companion').count();
+  await context.close();
+  return count === 1;
+});
+
+await check('K1.6A.3: browser back/forward works correctly across a project-independent chamber visit', async () => {
+  const { context, page } = await zeroProjectPage('artistA', '/dashboard');
+  await page.getByRole('button', { name: 'Proposal Chamber' }).click();
+  await page.waitForTimeout(600);
+  const forwardUrl = page.url();
+  await page.goBack();
+  await page.waitForTimeout(500);
+  const backUrl = page.url();
+  await page.goForward();
+  await page.waitForTimeout(500);
+  const forwardAgainUrl = page.url();
+  await context.close();
+  return forwardUrl.endsWith('/chambers/proposals') && backUrl.endsWith('/dashboard') && forwardAgainUrl.endsWith('/chambers/proposals');
+});
+
 // ---------- 13. Missing artwork ----------
 await check('missing primary cover (Project C has no artwork at all): dashboard card shows a placeholder, not broken/missing image markup', async () => {
   const { context, page } = await freshPage('artistA', '/dashboard');
@@ -1504,46 +1871,41 @@ await check('administrator (mocked zero-collaboration state): a working "Return 
   return href === '/admin' && url.endsWith('/admin');
 });
 
-await check('administrator (mocked zero-collaboration state): all 5 nav destinations remain visible, but the 4 project-dependent ones are inert, not broken links', async () => {
+await check('administrator (mocked zero-collaboration state): all 5 nav destinations remain visible AND navigable — Stage K1.6A.3 replaced the inert/disabled treatment with real project-independent chamber routes', async () => {
   const { context, page } = await freshAdminPageWithZeroCollaborations();
   const nav = page.locator('.sp-chamber-nav');
   const navText = await nav.textContent();
-  const dashboardLink = nav.getByRole('link', { name: 'Dashboard' });
+  const dashboardLink = nav.getByRole('link', { name: 'Dashboard', exact: true });
   const dashboardHref = await dashboardLink.getAttribute('href');
-  const inertSpans = nav.locator('.sp-chamber-nav__link--inert');
-  const inertCount = await inertSpans.count();
-  const inertTexts = await inertSpans.allTextContents();
-  // None of the 4 inert placeholders may carry an href or onClick-style
-  // role -- a <span aria-disabled> cannot construct a route at all,
-  // valid or otherwise, and exposes no project id.
-  const anyInertHasHref = await inertSpans.evaluateAll((els) => els.some((el) => el.hasAttribute('href')));
-  const anyAnchorOrButtonInert = await inertSpans.evaluateAll((els) => els.some((el) => el.tagName !== 'SPAN'));
-  const emptyNote = await nav.locator('.sp-chamber-nav__empty-note').textContent();
+  // No more aria-disabled placeholders at all -- every one of the 4
+  // chamber destinations is a real, clickable <button> now.
+  const inertCount = await nav.locator('[aria-disabled="true"]').count();
+  const chamberButtons = nav.getByRole('button');
+  const buttonTexts = await chamberButtons.allTextContents();
   await context.close();
   return (
     navText.includes('Dashboard') &&
     dashboardHref === '/dashboard' &&
-    inertCount === 4 &&
+    inertCount === 0 &&
     ['Listening Chamber', 'Transmission Chamber', 'Visual Concept Chamber', 'Proposal Chamber'].every((label) =>
-      inertTexts.includes(label),
-    ) &&
-    !anyInertHasHref &&
-    !anyAnchorOrButtonInert &&
-    emptyNote.includes('No authorized projects yet')
+      buttonTexts.includes(label),
+    )
   );
 });
 
-await check('administrator (mocked zero-collaboration state): clicking an inert chamber destination never navigates away from the dashboard', async () => {
+await check('administrator (mocked zero-collaboration state): clicking a chamber destination now genuinely navigates to its project-independent route, with its own honest empty state', async () => {
   const { context, page } = await freshAdminPageWithZeroCollaborations();
-  const before = page.url();
-  // aria-disabled spans have no click handler at all; this forces the
-  // click through anyway to prove nothing happens, rather than only
-  // trusting the DOM shape above.
-  await page.locator('.sp-chamber-nav__link--inert', { hasText: 'Listening Chamber' }).click({ force: true });
-  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Listening Chamber' }).click();
+  await page.waitForTimeout(600);
   const after = page.url();
+  const title = await page.locator('.sp-chamber__title').textContent();
+  const emptyMessage = await page.textContent('.sp-chamber-empty__message');
   await context.close();
-  return before === after;
+  return (
+    after.endsWith('/chambers/listening') &&
+    title === 'Private Listening Chamber' &&
+    emptyMessage === 'No listening sessions are available yet. Your authorized demos will appear here.'
+  );
 });
 
 await browser.close();

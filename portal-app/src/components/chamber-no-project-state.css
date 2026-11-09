@@ -1,0 +1,44 @@
+.sp-chamber-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.sp-chamber-empty__message {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--sp-ink-soft);
+  margin: 0;
+}
+
+.sp-chamber-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.sp-chamber-empty__link {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.sp-chamber-empty__link:hover,
+.sp-chamber-empty__link:focus-visible {
+  color: var(--pink);
+}
+
+.sp-chamber-empty__link--admin {
+  color: var(--pink);
+}
+
+.sp-chamber-empty__link--admin:hover,
+.sp-chamber-empty__link--admin:focus-visible {
+  color: #fff;
+}

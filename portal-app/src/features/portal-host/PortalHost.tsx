@@ -8,6 +8,8 @@ import { NyxCompanion } from './NyxCompanion';
 import { QUICK_ACTIONS, type HostCollaboration } from './portalHostTypes';
 import { WELCOME_MESSAGE, matchFaq } from './portalHostDialogue';
 import { resolveQuickAction, resolveForCollaboration } from './portalHostActions';
+import { useNyxCharacterState } from './useNyxCharacterState';
+import { NYX_STATUS_LABELS, AVAILABLE_NYX_POSES } from './nyxCharacterState';
 import './PortalHost.css';
 
 /**
@@ -24,6 +26,7 @@ export function PortalHost() {
   const host = usePortalHost();
   const dashboard = useDashboardData();
   const navigate = useNavigate();
+  const nyx = useNyxCharacterState();
   const [input, setInput] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -32,11 +35,27 @@ export function PortalHost() {
     dashboard.kind === 'ready'
       ? dashboard.collaborations.map((c) => ({ id: c.id, title: c.title, availableAssetTypes: c.availableAssetTypes }))
       : [];
+  // Real, already-computed connectivity state from useDashboardData —
+  // not a fabricated failure. Reused here only to decide whether a
+  // quick action's attempt should show Nyx's error reaction, never to
+  // invent backend activity that isn't actually happening.
+  const backendUnavailable = dashboard.kind === 'error' || dashboard.kind === 'backend-unavailable';
 
   useEffect(() => {
     if (host.isOpen && host.messages.length === 0) {
       host.addMessage({ speaker: 'nyx', text: WELCOME_MESSAGE });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [host.isOpen]);
+
+  // Stage K1.6A.2: chat opening is a real event -- greet() plays every
+  // time the panel opens, not just on the first-ever open (that part
+  // stays governed by the welcome-message effect above). Closing stops
+  // any pending animation immediately rather than leaving a sequence
+  // to finish behind a panel that's no longer visible.
+  useEffect(() => {
+    if (host.isOpen) nyx.greet();
+    else nyx.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [host.isOpen]);
 
@@ -58,6 +77,12 @@ export function PortalHost() {
     host.addMessage({ speaker: 'artist', text: label });
     host.setPendingSelection(null);
 
+    if (backendUnavailable) {
+      nyx.fail();
+    } else {
+      nyx.present();
+    }
+
     const decision = resolveQuickAction(actionId, collaborations);
     if (decision.kind === 'select-project') {
       host.addMessage({ speaker: 'nyx', text: decision.text, projectChoices: decision.choices });
@@ -75,6 +100,7 @@ export function PortalHost() {
     host.setPendingSelection(null);
     if (!chosen) return;
 
+    nyx.present();
     const decision = resolveForCollaboration(host.pendingSelection.action, chosen);
     host.addMessage({ speaker: 'nyx', text: decision.text });
     if (decision.kind === 'navigate') navigate(decision.path);
@@ -85,6 +111,7 @@ export function PortalHost() {
     const text = input.trim();
     if (!text) return;
     host.addMessage({ speaker: 'artist', text });
+    nyx.listenThenSpeak();
     host.addMessage({ speaker: 'nyx', text: matchFaq(text) });
     setInput('');
   }
@@ -92,6 +119,14 @@ export function PortalHost() {
   if (!host.isOpen) {
     return <NyxCompanion onOpen={host.open} />;
   }
+
+  // AVAILABLE_NYX_POSES is empty today (confirmed: no distinct pose
+  // files exist anywhere in this repo yet) -- this always falls back
+  // to the one real, genuinely-transparent standalone artwork. See
+  // nyxCharacterState.ts for exactly how a future real pose gets
+  // wired in without touching this component again.
+  const poseSrc = AVAILABLE_NYX_POSES[nyx.state] ?? PORTAL_HOST_CONFIG.standaloneArtworkSrc;
+  const statusLabel = NYX_STATUS_LABELS[nyx.state] ?? PORTAL_HOST_CONFIG.role;
 
   return (
     <div
@@ -102,11 +137,14 @@ export function PortalHost() {
       tabIndex={-1}
       onKeyDown={handleKeyDown}
     >
+      <div className="sp-host__character" data-nyx-state={nyx.state}>
+        <img className="sp-host__character-img" src={portalAsset(poseSrc)} alt="" aria-hidden="true" />
+      </div>
+
       <header className="sp-host__head">
-        <img className="sp-host__portrait" src={portalAsset(PORTAL_HOST_CONFIG.artworkSrc)} alt={PORTAL_HOST_CONFIG.artworkAlt} />
         <div className="sp-host__head-text">
           <span className="sp-host__name">{PORTAL_HOST_CONFIG.displayName}</span>
-          <span className="sp-host__role">{PORTAL_HOST_CONFIG.role}</span>
+          <span className="sp-host__status">{statusLabel}</span>
         </div>
         <button type="button" className="sp-host__close" onClick={host.close} aria-label="Close">
           ×

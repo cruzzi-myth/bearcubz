@@ -1,7 +1,7 @@
 import { assert, importCompiled, report } from './runner.mjs';
 
 const mod = await importCompiled(new URL('../../src/lib/navDestination.ts', import.meta.url).pathname);
-const { resolveNavDestination } = mod;
+const { resolveNavDestination, PROJECT_INDEPENDENT_PATH } = mod;
 
 assert('zero collaborations -> none, never fabricates a destination', resolveNavDestination('listen', []).kind === 'none');
 assert(
@@ -27,6 +27,23 @@ assert(
 assert(
   'select-project choices carry the real id/title, not fabricated',
   resolveNavDestination('visuals', [{ id: 'p1', title: 'Ghost Signal' }, { id: 'p2', title: 'Static Bloom' }]).choices[0].title === 'Ghost Signal',
+);
+
+assert(
+  'PROJECT_INDEPENDENT_PATH has exactly one real route per chamber segment, nothing duplicated',
+  ['listen', 'proposal', 'visuals', 'respond'].every((seg) => typeof PROJECT_INDEPENDENT_PATH[seg] === 'string') &&
+    new Set(Object.values(PROJECT_INDEPENDENT_PATH)).size === 4,
+);
+assert(
+  'every project-independent path starts with /chambers/, never /collaboration/ (never carries a fabricated id)',
+  Object.values(PROJECT_INDEPENDENT_PATH).every((p) => p.startsWith('/chambers/') && !p.includes('undefined') && !p.includes('null')),
+);
+assert(
+  'the project-independent paths match the real registered routes exactly',
+  PROJECT_INDEPENDENT_PATH.listen === '/chambers/listening' &&
+    PROJECT_INDEPENDENT_PATH.respond === '/chambers/transmission' &&
+    PROJECT_INDEPENDENT_PATH.visuals === '/chambers/visuals' &&
+    PROJECT_INDEPENDENT_PATH.proposal === '/chambers/proposals',
 );
 
 report('navDestination (Stage K1.6A chamber nav project-selection branching)');

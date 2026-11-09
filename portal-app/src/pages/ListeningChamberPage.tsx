@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { PortalChamberLayout } from '../layouts/PortalChamberLayout';
 import { PortalEmptyState } from '../components/PortalEmptyState';
+import { ChamberNoProjectState } from '../components/ChamberNoProjectState';
 import { PrivateAudioPlayer } from '../components/PrivateAudioPlayer';
 import { PortalHost } from '../features/portal-host/PortalHost';
 import { useAuthorizedCollaboration } from '../hooks/useAuthorizedCollaboration';
@@ -42,7 +43,15 @@ export function ListeningChamberPage() {
         <PortalEmptyState message="The Signal Portal backend isn't configured in this environment yet." showReturnLink={false} />
       )}
       {authz.status === 'error' && <PortalEmptyState message="Couldn't load this collaboration right now. Please try again." />}
-      {authz.status === 'not-authorized' && <PortalEmptyState message="This collaboration isn't available to your account." />}
+      {/* Stage K1.6A.3: id === undefined means this is the
+          project-independent /chambers/listening route, not a real
+          collaboration that was denied -- useAuthorizedCollaboration
+          makes zero requests in that case (see its own guard), so this
+          branch never reflects fetched data, only the route shape. */}
+      {authz.status === 'not-authorized' && !id && (
+        <ChamberNoProjectState message="No listening sessions are available yet. Your authorized demos will appear here." />
+      )}
+      {authz.status === 'not-authorized' && id && <PortalEmptyState message="This collaboration isn't available to your account." />}
 
       {authz.status === 'authorized' && (
         <div className="sp-listen">

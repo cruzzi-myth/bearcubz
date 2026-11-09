@@ -55,19 +55,6 @@ button.sp-chamber-nav__link {
   background: rgba(0, 229, 255, 0.08);
 }
 
-.sp-chamber-nav__link--inert {
-  color: var(--sp-ink-faint);
-  cursor: default;
-  opacity: 0.6;
-}
-
-.sp-chamber-nav__empty-note {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--sp-ink-faint);
-  white-space: nowrap;
-}
 
 .sp-chamber-nav__project-picker select {
   font-family: 'Share Tech Mono', monospace;

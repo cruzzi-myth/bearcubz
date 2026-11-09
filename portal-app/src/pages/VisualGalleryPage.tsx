@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { PortalChamberLayout } from '../layouts/PortalChamberLayout';
 import { PortalEmptyState } from '../components/PortalEmptyState';
+import { ChamberNoProjectState } from '../components/ChamberNoProjectState';
 import { GalleryTile } from '../components/GalleryTile';
 import { GalleryLightbox } from '../components/GalleryLightbox';
 import { PortalHost } from '../features/portal-host/PortalHost';
@@ -27,7 +28,10 @@ export function VisualGalleryPage() {
         <PortalEmptyState message="The Signal Portal backend isn't configured in this environment yet." showReturnLink={false} />
       )}
       {authz.status === 'error' && <PortalEmptyState message="Couldn't load this collaboration right now. Please try again." />}
-      {authz.status === 'not-authorized' && <PortalEmptyState message="This collaboration isn't available to your account." />}
+      {authz.status === 'not-authorized' && !id && (
+        <ChamberNoProjectState message="No visual concepts are available yet. Approved collaboration artwork will appear here." />
+      )}
+      {authz.status === 'not-authorized' && id && <PortalEmptyState message="This collaboration isn't available to your account." />}
 
       {authz.status === 'authorized' &&
         (() => {

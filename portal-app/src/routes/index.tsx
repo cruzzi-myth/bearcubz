@@ -66,5 +66,44 @@ export const portalRoutes: RouteObject[] = [
       </RequirePortalAuth>
     ),
   },
+  // Stage K1.6A.3: project-independent chamber routes -- same page
+  // components as above, just matched with no :id param, so
+  // useParams().id is undefined and useAuthorizedCollaboration(undefined)
+  // makes zero requests (see that hook's own early-return guard). Lets
+  // every authenticated visitor explore each chamber environment even
+  // with zero or no-yet-selected collaborations, without duplicating
+  // any chamber implementation.
+  {
+    path: 'chambers/listening',
+    element: (
+      <RequirePortalAuth>
+        <ListeningChamberPage />
+      </RequirePortalAuth>
+    ),
+  },
+  {
+    path: 'chambers/proposals',
+    element: (
+      <RequirePortalAuth>
+        <ProposalArchivePage />
+      </RequirePortalAuth>
+    ),
+  },
+  {
+    path: 'chambers/visuals',
+    element: (
+      <RequirePortalAuth>
+        <VisualGalleryPage />
+      </RequirePortalAuth>
+    ),
+  },
+  {
+    path: 'chambers/transmission',
+    element: (
+      <RequirePortalAuth>
+        <TransmissionChamberPage />
+      </RequirePortalAuth>
+    ),
+  },
   { path: '*', element: <NotFoundPage /> },
 ];

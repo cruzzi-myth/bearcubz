@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { resolveNavDestination, type ChamberSegment } from '../lib/navDestination';
+import { resolveNavDestination, PROJECT_INDEPENDENT_PATH, type ChamberSegment } from '../lib/navDestination';
 import './chamber-nav.css';
 
 const DESTINATIONS: { segment: ChamberSegment; label: string }[] = [
@@ -36,18 +36,41 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
   const activeProjectId =
     currentCollaborationId ?? pickedProjectId ?? (collaborations.length === 1 ? collaborations[0].id : null);
 
+  const hasAnyProject = collaborations.length > 0;
+  const needsProjectPicker = collaborations.length > 1;
+
+  // Stage K1.6A.3: recognizes BOTH the project-scoped route shape
+  // (.../segment, when currentCollaborationId is set) and the new
+  // project-independent one (/chambers/<name>, when it isn't) as "the
+  // chamber currently open" -- used both for aria-current and for
+  // preserving which chamber the user is looking at across a project
+  // switch, regardless of which route shape they started from.
+  function currentSegmentFromPath(): ChamberSegment | null {
+    if (currentCollaborationId) {
+      return DESTINATIONS.find((d) => location.pathname.endsWith(`/${d.segment}`))?.segment ?? null;
+    }
+    const entry = (Object.entries(PROJECT_INDEPENDENT_PATH) as [ChamberSegment, string][]).find(
+      ([, path]) => path === location.pathname,
+    );
+    return entry ? entry[0] : null;
+  }
+
   function handleChamberClick(segment: ChamberSegment) {
     if (activeProjectId) {
       navigate(`/collaboration/${activeProjectId}/${segment}`);
+      return;
+    }
+    if (!hasAnyProject) {
+      // Stage K1.6A.3: no disabled destinations anymore -- every
+      // chamber is reachable without a project, via its own honest
+      // no-project empty state (ChamberNoProjectState).
+      navigate(PROJECT_INDEPENDENT_PATH[segment]);
       return;
     }
     const decision = resolveNavDestination(segment, collaborations);
     if (decision.kind === 'select-project') {
       setPendingSegment(segment);
     }
-    // kind === 'none' -- nothing authorized yet; the link itself is
-    // already rendered inert in that case (see below), so this is
-    // unreachable in practice, not silently swallowed.
   }
 
   function handleProjectPick(id: string) {
@@ -60,13 +83,11 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
     setPickedProjectId(id);
     // Preserve the CURRENT chamber across a project switch, same
     // requirement as preserving it across a chamber-to-chamber move —
-    // only when we're already looking at a specific chamber route.
-    const currentSegment = DESTINATIONS.find((d) => location.pathname.endsWith(`/${d.segment}`))?.segment;
+    // works from a project-independent chamber route too, not just a
+    // project-scoped one.
+    const currentSegment = currentSegmentFromPath();
     if (currentSegment) navigate(`/collaboration/${id}/${currentSegment}`);
   }
-
-  const hasAnyProject = collaborations.length > 0;
-  const needsProjectPicker = collaborations.length > 1;
 
   return (
     <nav className="sp-chamber-nav" aria-label="Signal Portal navigation">
@@ -75,14 +96,7 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
       </Link>
 
       {DESTINATIONS.map((d) => {
-        const isCurrent = currentCollaborationId != null && location.pathname.endsWith(`/${d.segment}`);
-        if (!hasAnyProject) {
-          return (
-            <span key={d.segment} className="sp-chamber-nav__link sp-chamber-nav__link--inert" aria-disabled="true">
-              {d.label}
-            </span>
-          );
-        }
+        const isCurrent = currentSegmentFromPath() === d.segment;
         return (
           <button
             key={d.segment}
@@ -96,14 +110,12 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
         );
       })}
 
-      {!hasAnyProject && <span className="sp-chamber-nav__empty-note">No authorized projects yet</span>}
-
       {needsProjectPicker && (
         <label className="sp-chamber-nav__project-picker">
           <span className="sp-sr-only">Active project</span>
           <select
             value={activeProjectId ?? ''}
-            onChange={(e) => (currentCollaborationId ? handleSwitchProject(e.target.value) : handleProjectPick(e.target.value))}
+            onChange={(e) => (currentSegmentFromPath() ? handleSwitchProject(e.target.value) : handleProjectPick(e.target.value))}
           >
             <option value="" disabled>
               Select a project…

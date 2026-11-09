@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { PortalChamberLayout } from '../layouts/PortalChamberLayout';
 import { PortalEmptyState } from '../components/PortalEmptyState';
+import { ChamberNoProjectState } from '../components/ChamberNoProjectState';
 import { PrivateProposalViewer } from '../components/PrivateProposalViewer';
 import { PortalHost } from '../features/portal-host/PortalHost';
 import { useAuthorizedCollaboration } from '../hooks/useAuthorizedCollaboration';
@@ -25,7 +26,10 @@ export function ProposalArchivePage() {
         <PortalEmptyState message="The Signal Portal backend isn't configured in this environment yet." showReturnLink={false} />
       )}
       {authz.status === 'error' && <PortalEmptyState message="Couldn't load this collaboration right now. Please try again." />}
-      {authz.status === 'not-authorized' && <PortalEmptyState message="This collaboration isn't available to your account." />}
+      {authz.status === 'not-authorized' && !id && (
+        <ChamberNoProjectState message="No proposals are available yet. Collaboration proposals will appear here once assigned." />
+      )}
+      {authz.status === 'not-authorized' && id && <PortalEmptyState message="This collaboration isn't available to your account." />}
 
       {authz.status === 'authorized' && (
         <div className="sp-proposal">

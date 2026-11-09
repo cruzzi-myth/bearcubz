@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useState, type FormEvent } from 'react';
 import { PortalChamberLayout } from '../layouts/PortalChamberLayout';
 import { PortalEmptyState } from '../components/PortalEmptyState';
+import { ChamberNoProjectState } from '../components/ChamberNoProjectState';
 import { useAuthorizedCollaboration } from '../hooks/useAuthorizedCollaboration';
 import { useFeedbackThread } from '../hooks/useFeedbackThread';
 import { PortalHost } from '../features/portal-host/PortalHost';
@@ -59,7 +60,10 @@ export function TransmissionChamberPage() {
         <PortalEmptyState message="The Signal Portal backend isn't configured in this environment yet." showReturnLink={false} />
       )}
       {authz.status === 'error' && <PortalEmptyState message="Couldn't load this collaboration right now. Please try again." />}
-      {authz.status === 'not-authorized' && <PortalEmptyState message="This collaboration isn't available to your account." />}
+      {authz.status === 'not-authorized' && !id && (
+        <ChamberNoProjectState message="No transmissions are available yet. Messages and collaboration feedback will appear here when a project is activated." />
+      )}
+      {authz.status === 'not-authorized' && id && <PortalEmptyState message="This collaboration isn't available to your account." />}
 
       {authz.status === 'authorized' && (
         <div className="sp-transmission">
