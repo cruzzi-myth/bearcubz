@@ -1,0 +1,170 @@
+[
+  {
+    "file": ".dockerignore",
+    "sha256": "0e1abb33592d97d9c9392da9f3a43c255b2a4349f5195b55e3975511ce566566"
+  },
+  {
+    "file": "infra/clamav/.env.worker.example",
+    "sha256": "f0e47d59224e7faffbe55bdf12a0e7c50a6107a1752444e73cfecec4988b2851"
+  },
+  {
+    "file": "infra/clamav/.gitignore",
+    "sha256": "d2a8b9d4e4fc463a2394cc9cb4ecb1100cb1521b9d47d6638946cf0b4a0fb0cb"
+  },
+  {
+    "file": "infra/clamav/README.md",
+    "sha256": "0e0a2bf40a76a9193663498f1ca8441c1f8d4d54e78b2fb4ec62f4cc1ce5bc66"
+  },
+  {
+    "file": "infra/clamav/clamd.conf",
+    "sha256": "8b9d10f4a33342404d4a76654ba0d65456e8f9b6cab492acd7acd96b074222de"
+  },
+  {
+    "file": "infra/clamav/compose.yaml",
+    "sha256": "e5115e4e4c2adef54c0a09c7047751c44a47fbe9480b6a3a263e2214c77780e2"
+  },
+  {
+    "file": "infra/clamav/freshclam.conf",
+    "sha256": "0ad4462b193ba80e146ac7f44e36e43612fb2a579479e7c2402afd410666663e"
+  },
+  {
+    "file": "infra/clamav/healthcheck.mjs",
+    "sha256": "8f1c03c1a5b364d9460a43763feb6b1e4f1a10b17d35a6ed9f811f8a01abd747"
+  },
+  {
+    "file": "infra/clamav/tests/audio-metadata.mjs",
+    "sha256": "06ecf6b6e0099d52124a7f4d4eb9073b2159363b93d5a0e3020e014a81844154"
+  },
+  {
+    "file": "infra/clamav/tests/genuine.test.mjs",
+    "sha256": "8d573a5b48404e4fd03018d4aa187368ee1a23422254672aeaa01164e6ed0d8e"
+  },
+  {
+    "file": "infra/clamav/tests/security.test.mjs",
+    "sha256": "9f58aa7cf19a0220f73bf0bcb5423d158b0aa163be5fa2477eda56799320cd9b"
+  },
+  {
+    "file": "infra/clamav/worker/Dockerfile",
+    "sha256": "d5b43221b34660934e3413d641949e9e72f78c61f34b568b35fb236956d87034"
+  },
+  {
+    "file": "infra/clamav/worker/clamd.mjs",
+    "sha256": "ecdd4f31a52ffb798945449ae040778544bb568538ac58c36f2ec132fb1de845"
+  },
+  {
+    "file": "infra/clamav/worker/daemon-policy.mjs",
+    "sha256": "4083e7cf855c288ceda14e055a0d730be3b78dd60b0dec5d11ad1f29f619da8c"
+  },
+  {
+    "file": "infra/clamav/worker/server.mjs",
+    "sha256": "3013c7b84681a126204e719542a8a8ae4cf31ed81f0ef896b7c3fffacf0ef6b7"
+  },
+  {
+    "file": "infra/clamav/worker/verify_zip.py",
+    "sha256": "29de07ca0c8a5eb9e1ba14a96ac9ff80f9a49b099f55309ec1363f30286cc8dd"
+  },
+  {
+    "file": "portal-app/src/features/admin/components/AssetUploadForm.tsx",
+    "sha256": "9ef1a38c07aec62c43ec08ced839e464c4a63deb81164e88c1b9c4c42781bf1c"
+  },
+  {
+    "file": "portal-app/src/features/admin/components/AssetsTab.tsx",
+    "sha256": "16bef8ec2509ca587a901ed2190f2e4665210380d214bc7126396b361b31bdc2"
+  },
+  {
+    "file": "portal-app/src/features/admin/components/SettingsTab.tsx",
+    "sha256": "0cfe4d0e875c307252f2f067274d8e89626519fb2aba82ec970d4ab700ed808a"
+  },
+  {
+    "file": "portal-app/src/features/admin/services/adminApi.ts",
+    "sha256": "d78180bf6fc1d64f600001021c95b506f91d2e5118a7507433443a7cebe25acc"
+  },
+  {
+    "file": "portal-app/src/features/admin/types/adminTypes.ts",
+    "sha256": "cdbf264a41dd9b01ea66934051f9e10c19a37d79745e5a4cb6fe7f7f7a7039a5"
+  },
+  {
+    "file": "supabase/config.toml",
+    "sha256": "978ca9ddbf6d2ce6794ccabd4bf4124490fdaa070bbd6aaebf97d56883ef866f"
+  },
+  {
+    "file": "supabase/functions/_shared/assetScanner.ts",
+    "sha256": "97c450dedb343a89a789d69a1f7853387abbb376ff3cda0e1aea23b9e608ef6f"
+  },
+  {
+    "file": "supabase/functions/_shared/malwareScan.ts",
+    "sha256": "b0e676c6bb08a254d8de1bcbb22aba06f15e9e3cf56ae9c980eadf7e1c5461b9"
+  },
+  {
+    "file": "supabase/functions/_shared/objectScanner.ts",
+    "sha256": "ad7847fb793279e6b8a156574a092095e4b8ff48f67a4465c04b559b4c232083"
+  },
+  {
+    "file": "supabase/functions/_shared/scanOrchestrator.ts",
+    "sha256": "1b2b74fb90458c12418f7d51046ff0b6723a0f2cbbfdb6824454a9473398b153"
+  },
+  {
+    "file": "supabase/functions/_shared/scannerPolicy.ts",
+    "sha256": "9d294aa507fb980b82f53cac60f67b3f9d28971ed40691b74da6b4d259beb56d"
+  },
+  {
+    "file": "supabase/functions/_shared/scannerProvider.ts",
+    "sha256": "51df408e66b1d0fc51f11e5560667f34c326cb78be213d5c9cd4ddc42701613c"
+  },
+  {
+    "file": "supabase/functions/_shared/uploadPolicy.ts",
+    "sha256": "b9eb6ce48c29ef871c4cc0683041a651d16407ad27ff5f126ce2d8addcee804a"
+  },
+  {
+    "file": "supabase/functions/portal-admin-confirm-upload/index.ts",
+    "sha256": "e1e95ca73c6e0abb2fb28f01c756661e57e190b1b4da94336ec0524e796ae656"
+  },
+  {
+    "file": "supabase/functions/portal-admin-request-upload-url/index.ts",
+    "sha256": "29fd076d24419e9bee44523feecebc50f5f3269c0cd0073d12d42d79d812ca28"
+  },
+  {
+    "file": "supabase/functions/portal-admin-retry-attachment-scan/index.ts",
+    "sha256": "fa88683a66e1bf6d008f6011d023d943c5e36b179dc59a843c6debddc72f94d5"
+  },
+  {
+    "file": "supabase/functions/portal-admin-review-asset/index.ts",
+    "sha256": "ce06c3f32a2e05bd74dafb7d39c2519e6657b5452eed4a43bbcb4799d57fabd0"
+  },
+  {
+    "file": "supabase/functions/portal-admin-scanner-status/index.ts",
+    "sha256": "314a7314e8bc731b4821bff60b1eb20a748063829fbfa4215663bb49101ed80b"
+  },
+  {
+    "file": "supabase/functions/portal-confirm-attachment-upload/index.ts",
+    "sha256": "6970fbcf5c9491a241156a7ec33aba6190677dea7408764a26429b55f80b575a"
+  },
+  {
+    "file": "supabase/functions/portal-request-attachment-upload-url/index.ts",
+    "sha256": "5a357544279674213183de446904f8fea9a4beacf1c0cc3710bfd7d6a5fd7656"
+  },
+  {
+    "file": "supabase/functions/portal-scan-recovery/index.ts",
+    "sha256": "fe55fbf9143da7655867b6df95e9055a67c46b33a37a98af62deabacdaba4ad6"
+  },
+  {
+    "file": "supabase/functions/portal-scanner-worker-access/index.ts",
+    "sha256": "4739448606922ea52df650c85cbfab0b0d3f674b35264f51bf85758ac3579d1e"
+  },
+  {
+    "file": "supabase/functions/portal-signed-url/index.ts",
+    "sha256": "77f8c2d80bef424568f0850dda5d82eaef1555500d8714c121d08ec51adef52e"
+  },
+  {
+    "file": "supabase/migrations/20261110020000_signal_portal_dual_scanner_evidence.sql",
+    "sha256": "8f43dcf09d42a032c005ee3d0c8bffa8af5c060e0c2139a332043d3eb487de5e"
+  },
+  {
+    "file": "supabase/scripts/k16h1-production-schedulers.sql",
+    "sha256": "ed368d1c08ff54fe09c877d3ec4abb35008b4bedca7bf825a63a2afe03e5cb8a"
+  },
+  {
+    "file": "supabase/scripts/prepare-k16h1-release.mjs",
+    "sha256": "402a572366863e2dfc87b6eb99b2d0a84daa21432d3f23ffc1925fd8701b242b"
+  }
+]

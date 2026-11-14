@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-09",
+  "before": {
+    "selector": "AssetsTab.tsx inactive .sp-admin__table tr inline opacity:0.45",
+    "bodyText": {
+      "foreground": "#6d6b73",
+      "background": "#07070d",
+      "axeRatio": 3.82
+    },
+    "statusPill": {
+      "foreground": "#046b7b",
+      "background": "#07070d",
+      "axeRatio": 3.24
+    },
+    "required": 4.5
+  },
+  "after": {
+    "rowOpacity": 1,
+    "bodyText": {
+      "foreground": "#e7e4ef",
+      "background": "#07070d",
+      "ratio": 16.02
+    },
+    "statusPill": {
+      "foreground": "#00e5ff",
+      "background": "#07070d",
+      "ratio": 13.06
+    },
+    "focusedAxeViolations": 0,
+    "inactiveLabelVisible": true
+  }
+}

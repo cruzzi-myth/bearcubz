@@ -109,7 +109,7 @@ export async function listAssets(collaborationId?: string): Promise<ApiResult<Ad
   let query = supabase
     .from('collaboration_assets')
     .select(
-      'id, collaboration_id, asset_type, display_label, description, version, approval_status, is_primary_cover, is_active, upload_status, mime_type, byte_size, uploaded_by, uploaded_at, verified_at',
+      'id, collaboration_id, asset_type, display_label, description, version, approval_status, is_primary_cover, is_active, upload_status, mime_type, byte_size, uploaded_by, uploaded_at, verified_at, scan_lease_expires_at, security_required, security_status, security_review_status, scan_evidence',
     );
   if (collaborationId) query = query.eq('collaboration_id', collaborationId);
   const { data, error } = await query.order('uploaded_at', { ascending: false });
@@ -132,6 +132,11 @@ export async function listAssets(collaborationId?: string): Promise<ApiResult<Ad
       uploadedBy: r.uploaded_by,
       uploadedAt: r.uploaded_at,
       verifiedAt: r.verified_at,
+      scanLeaseExpiresAt: r.scan_lease_expires_at,
+      securityRequired: r.security_required,
+      securityStatus: r.security_status,
+      securityReviewStatus: r.security_review_status,
+      scanEvidence: r.scan_evidence,
     })),
   };
 }
@@ -235,8 +240,8 @@ export async function requestUploadUrl(input: {
   return { ok: true, data };
 }
 
-export async function confirmUpload(assetId: string, promoteToPrimaryCover?: boolean): Promise<ApiResult<{ uploadStatus: string; primaryCoverResult?: string }>> {
-  const { data, error } = await supabase.functions.invoke('portal-admin-confirm-upload', { body: { assetId, promoteToPrimaryCover } });
+export async function confirmUpload(assetId: string, promoteToPrimaryCover?: boolean, revalidate?: boolean): Promise<ApiResult<{ uploadStatus: string; primaryCoverResult?: string; reviewRequired?: boolean }>> {
+  const { data, error } = await supabase.functions.invoke('portal-admin-confirm-upload', { body: { assetId, promoteToPrimaryCover, revalidate } });
   if (error) return { ok: false, error: mapError(error) };
   if (data?.error) return { ok: false, error: data.error };
   return { ok: true, data };
@@ -247,4 +252,100 @@ export async function replyToFeedback(collaborationId: string, body: string, ass
   if (error) return { ok: false, error: mapError(error) };
   if (data?.error) return { ok: false, error: data.error };
   return { ok: true, data };
+}
+
+// Stage K1.6D — flat read, same "admin select all" RLS pattern as
+// every other admin list function here; the hook joins this against
+// listCollaborations()'s own already-real project list (never a
+// hardcoded project/artist identity) to attach a title/author.
+export async function listAttachmentFeedbackRows(): Promise<
+  ApiResult<{ id: string; collaborationId: string; authorId: string; isAdminReply: boolean; body: string }[]>
+> {
+  const { data, error } = await supabase.from('collaboration_feedback').select('id, collaboration_id, author_id, is_admin_reply, body');
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: (data ?? []).map((r) => ({ id: r.id, collaborationId: r.collaboration_id, authorId: r.author_id, isAdminReply: r.is_admin_reply, body: r.body })) };
+}
+
+export async function listRawAttachments(): Promise<
+  ApiResult<
+    {
+      id: string;
+      feedbackId: string;
+      originalFilename: string;
+      mimeType: string;
+      byteSize: number;
+      status: string;
+      securityStatus: string;
+      securityScanDetail: string | null;
+      scanProvider: string | null;
+      reviewStatus: string;
+      rejectionReason: string | null;
+      uploadedAt: string;
+      promotionError: string | null;
+      scanAttemptCount: number;
+      scanStartedAt: string | null;
+      scanCompletedAt: string | null;
+      scanLastError: string | null;
+      scanNextRetryAt: string | null;
+      awaitingScannerCapacity: boolean;
+      scanWaitingSince: string | null;
+      scanRetentionExpiresAt: string | null;
+      isActive: boolean;
+    }[]
+  >
+> {
+  const { data, error } = await supabase
+    .from('collaboration_feedback_attachments')
+    .select(
+      'id, feedback_id, original_filename, mime_type, byte_size, status, security_status, security_scan_detail, scan_provider, review_status, rejection_reason, uploaded_at, promotion_error, scan_attempt_count, scan_started_at, scan_completed_at, scan_last_error, scan_next_retry_at, awaiting_scanner_capacity, scan_waiting_since, scan_retention_expires_at, is_active',
+    )
+    .order('uploaded_at', { ascending: false });
+  if (error) return { ok: false, error: error.message };
+  return {
+    ok: true,
+    data: (data ?? []).map((r) => ({
+      id: r.id,
+      feedbackId: r.feedback_id,
+      originalFilename: r.original_filename,
+      mimeType: r.mime_type,
+      byteSize: r.byte_size,
+      status: r.status,
+      securityStatus: r.security_status,
+      securityScanDetail: r.security_scan_detail,
+      scanProvider: r.scan_provider,
+      reviewStatus: r.review_status,
+      rejectionReason: r.rejection_reason,
+      uploadedAt: r.uploaded_at,
+      promotionError: r.promotion_error,
+      scanAttemptCount: r.scan_attempt_count,
+      scanStartedAt: r.scan_started_at,
+      scanCompletedAt: r.scan_completed_at,
+      scanLastError: r.scan_last_error,
+      scanNextRetryAt: r.scan_next_retry_at,
+      awaitingScannerCapacity: r.awaiting_scanner_capacity,
+      scanWaitingSince: r.scan_waiting_since,
+      scanRetentionExpiresAt: r.scan_retention_expires_at,
+      isActive: r.is_active,
+    })),
+  };
+}
+
+export async function reviewAttachment(attachmentId: string, decision: 'clean' | 'rejected', reason?: string): Promise<ApiResult<{ status: string; rejectionReason?: string }>> {
+  const { data, error } = await supabase.functions.invoke('portal-admin-review-attachment', { body: { attachmentId, decision, reason } });
+  if (error) return { ok: false, error: mapError(error) };
+  if (data?.error) return { ok: false, error: data.error };
+  return { ok: true, data };
+}
+
+export async function retryAttachmentScan(attachmentId: string): Promise<ApiResult<{ retried: boolean; securityStatus?: string; status?: string }>> {
+  const { data, error } = await supabase.functions.invoke('portal-admin-retry-attachment-scan', { body: { attachmentId } });
+  if (error) return { ok: false, error: mapError(error) };
+  if (data?.error) return { ok: false, error: data.error };
+  return { ok: true, data };
+}
+
+export async function approveAssetSecurity(assetId: string): Promise<ApiResult<{ ok: true }>> {
+ const {data,error}=await supabase.functions.invoke('portal-admin-review-asset',{body:{assetId,decision:'approve'}});
+ if(error||data?.error)return {ok:false,error:error?mapError(error):data.error};
+ return {ok:true,data};
 }

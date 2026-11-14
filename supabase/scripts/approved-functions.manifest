@@ -1,7 +1,7 @@
 # SIGNAL PORTAL approved Edge Function deployment manifest (Stage I3M)
 # format: <combined-sha256>  <function-name>  <own-file-sha256>  <shared-deps>
 # combined hash = sha256(index.ts || each shared dep, in the order listed)
-a6c430479b0f00cff7a0bc5ed9049748898609c6ce5127a96f77b1e9f6dcf46a  portal-request-access  cddc7c7bf3d50752b7ecf07fe7938d82f5e225f1befcb973fccf8858efd6fd0d  clients.ts,cors.ts
+25b31d22e86ad91d41bffb863da485e38f80dcb1a31ccdaf53770d65f714776f  portal-request-access  ea085865dca8a259c0ea680c5d4d91f2c68f135ca898c7f17dc8a59afc44a49e  clients.ts,cors.ts
 e57c09bae7f7074b8bc2d0c5a9571e0ed1ad9f04ceb4459f075ca04cb19d0ba7  portal-signed-url  d889a073546d1909ec5fc76bd2d3d88d657f843880a61b21cc909cf7d7af5c99  clients.ts,cors.ts,signedUrlRequest.ts
 5599ce9ff71dc039d901f3ee86403ddd4dc299ce14fd1c32fad14c915ca3335d  portal-submit-feedback  690eeb355c94f801d282761c1d07d94151289601a58adbef9fe55c7038b48e92  clients.ts,cors.ts
 90b8cef7bf5b585c448fe62d4e48e89b19944339b66e89be94d26b3cb8ceb283  portal-admin-create-invitation  2ad459ffd4ca5cf7547443751661dbb5a355eb3d51489ef50d6e3a9693540c9b  clients.ts,cors.ts,invitationValidation.ts,requireAdmin.ts

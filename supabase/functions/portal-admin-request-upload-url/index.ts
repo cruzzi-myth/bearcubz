@@ -85,6 +85,10 @@ Deno.serve(async (request) => {
     return json({ error: 'FILE_TOO_LARGE' }, 400);
   }
 
+  const effectiveMax = Number(Deno.env.get('PORTAL_ADMIN_UPLOAD_MAX_BYTES') ?? 50 * 1024 * 1024);
+  if (!Number.isSafeInteger(effectiveMax) || effectiveMax < 1 || effectiveMax > 50 * 1024 * 1024) return json({ error: 'INVALID_ADMIN_UPLOAD_POLICY' }, 500);
+  if (body.fileSizeBytes! > effectiveMax) return json({ error: 'EXCEEDS_ADMIN_TRANSFER_LIMIT', maxBytes: effectiveMax }, 400);
+
   if (!body.collaborationId || !body.displayLabel) return json({ error: 'INVALID_INPUT' }, 400);
 
   const adminClient = createAdminClient(env.supabaseUrl, env.serviceKey);

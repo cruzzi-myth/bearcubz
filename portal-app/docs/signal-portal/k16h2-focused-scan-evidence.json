@@ -1,0 +1,27 @@
+{
+  "project": "gcbonlvbgyhsgfayvlvz",
+  "fixturePrivacy": "Generated, non-private fixtures only; no existing artist bytes transmitted",
+  "verifiedAt": "2026-11-09T23:38:12.468Z",
+  "evidence": [
+    {
+      "kind": "scanner-status",
+      "status": 200,
+      "result": {
+        "ok": true,
+        "configuration": "valid",
+        "mode": "cloudmersive",
+        "cloudmersiveConfigured": true,
+        "workerHealthy": false,
+        "artistMaxBytes": 2900000,
+        "observedMonthlyOutcomes": {
+          "cloudmersive": 4,
+          "none": 2,
+          "cloudmersive-advanced": 2
+        },
+        "usageScope": "application-observed scan outcomes only; not provider account usage",
+        "truncated": false,
+        "actualProviderUsage": null
+      }
+    }
+  ]
+}

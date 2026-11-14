@@ -1,0 +1,150 @@
+/* Stage K1.6C — attachment display, inside a feedback message. */
+.sp-attach-display__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sp-attach-display__audio,
+.sp-attach-display__doc,
+.sp-attach-display__doc-open {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--sp-glass-border);
+}
+
+.sp-attach-display__audio {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.sp-attach-display__name {
+  font-size: 12px;
+  color: var(--sp-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-attach-display__size {
+  font-size: 11px;
+  color: var(--sp-ink-faint);
+}
+
+.sp-attach-display__loading {
+  font-size: 11px;
+  color: var(--sp-ink-faint);
+}
+
+.sp-attach-display__open-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 999px;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sp-attach-display__open-btn:hover,
+.sp-attach-display__open-btn:focus-visible {
+  background: rgba(0, 229, 255, 0.22);
+}
+
+.sp-attach-display__thumb-btn {
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  width: 96px;
+  height: 96px;
+}
+
+.sp-attach-display__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-attach-display__doc-open {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* Stage K1.6D — status-only (not yet available / rejected). */
+.sp-attach-display__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed var(--sp-glass-border);
+}
+
+.sp-attach-display__status--rejected {
+  flex-direction: column;
+  align-items: flex-start;
+  border-color: rgba(255, 90, 90, 0.4);
+}
+
+.sp-attach-display__status-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sp-ink-faint);
+}
+
+.sp-attach-display__status--rejected .sp-attach-display__status-label {
+  color: rgb(255, 120, 120);
+}
+
+/* Stage K1.6G section 6 — distinct emphasis for a scan failure that is
+   still retryable / awaiting capacity (warn) vs. terminal/unavailable
+   (bad), without reusing the rejected-specific layout above. */
+.sp-attach-display__status--warn {
+  border-color: rgba(255, 200, 90, 0.4);
+}
+
+.sp-attach-display__status--warn .sp-attach-display__status-label {
+  color: rgb(255, 200, 90);
+}
+
+.sp-attach-display__status--bad:not(.sp-attach-display__status--rejected) {
+  border-color: rgba(255, 90, 90, 0.4);
+}
+
+.sp-attach-display__status--bad:not(.sp-attach-display__status--rejected) .sp-attach-display__status-label {
+  color: rgb(255, 120, 120);
+}
+
+/* Stage K1.6G section 6 — the required "available" caption, kept as a
+   quiet, muted line rather than a loud banner. */
+.sp-attach-display__available-caption {
+  font-size: 10px;
+  color: var(--sp-ink-faint);
+  display: block;
+}
+
+.sp-attach-display__reason {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--sp-ink-soft);
+}

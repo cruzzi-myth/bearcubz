@@ -1,0 +1,149 @@
+{
+  "verifiedAt": "2026-11-09T23:38:25.231Z",
+  "project": "gcbonlvbgyhsgfayvlvz",
+  "evidence": [
+    {
+      "artist": "xylo",
+      "collaboration": {
+        "id": "e94ff20c-c332-4dcc-bffb-596a0df265cc",
+        "title": "THE GHOST IN THE SIGNAL",
+        "bpm": 96,
+        "musical_key": "A\u266d minor",
+        "classification": "track"
+      },
+      "assets": [
+        {
+          "id": "023a0392-3f2f-4f4d-8d5c-27d290821e7c",
+          "type": "audio_full",
+          "label": "The Ghost in the Signal \u2014 Full Demo",
+          "bucket": "collaboration-audio",
+          "path": "e94ff20c-c332-4dcc-bffb-596a0df265cc/023a0392-3f2f-4f4d-8d5c-27d290821e7c.m4a",
+          "bytes": 10890370,
+          "sha256": "8d45ca41dc80b37c56209bf9846ef21b55066a9843fbee3409983021f6db6529",
+          "active": false,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        },
+        {
+          "id": "2e245368-f81b-4141-b883-132f2aa22771",
+          "type": "proposal_pdf",
+          "label": "The Ghost in the Signal \u2014 Collaboration Proposal",
+          "bucket": "collaboration-proposals",
+          "path": "e94ff20c-c332-4dcc-bffb-596a0df265cc/2e245368-f81b-4141-b883-132f2aa22771.pdf",
+          "bytes": 4667217,
+          "sha256": "2dc6916df29ef0dfaa70a6c34768bb1351c3e192ce9610db4816f8a79babd975",
+          "active": false,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        },
+        {
+          "id": "8fc21191-88ff-4e97-a10e-e932118c905f",
+          "type": "track_cover",
+          "label": "The Ghost in the Signal \u2014 Cover Art",
+          "bucket": "collaboration-visuals",
+          "path": "e94ff20c-c332-4dcc-bffb-596a0df265cc/8fc21191-88ff-4e97-a10e-e932118c905f.png",
+          "bytes": 3185659,
+          "sha256": "e61bb751f660fe4d0f4c23e1630016266df1ab3e732b9f8a9c6e3daf6a685fb3",
+          "active": true,
+          "approval": "pending",
+          "upload": "ready",
+          "primaryCover": true
+        },
+        {
+          "id": "89d65b23-4486-4a11-bc01-927f40e2eff1",
+          "type": "audio_full",
+          "label": "The Ghost in the Signal \u2014 Optimized Demo (128kbps)",
+          "bucket": "collaboration-audio",
+          "path": "e94ff20c-c332-4dcc-bffb-596a0df265cc/89d65b23-4486-4a11-bc01-927f40e2eff1.mp3",
+          "bytes": 2388252,
+          "sha256": "3128e7414fa7767bda89e3913ee9eb6a73622d522c2e592dbd44103ab542a8b3",
+          "active": true,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        },
+        {
+          "id": "9c446d3c-dad2-4135-9ee2-3c0fa09e8f4b",
+          "type": "proposal_pdf",
+          "label": "The Ghost in the Signal \u2014 Collaboration Proposal (Optimized)",
+          "bucket": "collaboration-proposals",
+          "path": "e94ff20c-c332-4dcc-bffb-596a0df265cc/9c446d3c-dad2-4135-9ee2-3c0fa09e8f4b.pdf",
+          "bytes": 210264,
+          "sha256": "87bf93a6b14bec8822ab25e31bcb6c8d2db86f5765ec8868d45827d4a08de017",
+          "active": true,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        }
+      ],
+      "scans": []
+    },
+    {
+      "artist": "issey",
+      "collaboration": {
+        "id": "8911f932-0501-49e5-9cff-e0e5ccbc756f",
+        "title": "LOST TRANSITION",
+        "bpm": 145,
+        "musical_key": "A\u266d",
+        "classification": "track"
+      },
+      "assets": [
+        {
+          "id": "128379e9-419d-4c31-a991-fdf5101710e7",
+          "type": "audio_full",
+          "label": "Lost Transition \u2014 Demo",
+          "bucket": "collaboration-audio",
+          "path": "8911f932-0501-49e5-9cff-e0e5ccbc756f/128379e9-419d-4c31-a991-fdf5101710e7.m4a",
+          "bytes": 15992131,
+          "sha256": "b9a73872197ad2d5cda66680ab36c3a388f64599d2389d33f9a8227be94902f9",
+          "active": false,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        },
+        {
+          "id": "f7bf9ae9-f0d7-40e1-922d-789ea09e6b5d",
+          "type": "proposal_pdf",
+          "label": "Lost Transition \u2014 Collaboration Proposal",
+          "bucket": "collaboration-proposals",
+          "path": "8911f932-0501-49e5-9cff-e0e5ccbc756f/f7bf9ae9-f0d7-40e1-922d-789ea09e6b5d.pdf",
+          "bytes": 1706658,
+          "sha256": "288509bd2205d410d9fc8203e9b257d52965061bb9404362e92f4b9710038974",
+          "active": true,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        },
+        {
+          "id": "885432d3-e5a4-47c3-b8ff-8ac2383f082e",
+          "type": "track_cover",
+          "label": "Lost Transition \u2014 Cover Art",
+          "bucket": "collaboration-visuals",
+          "path": "8911f932-0501-49e5-9cff-e0e5ccbc756f/885432d3-e5a4-47c3-b8ff-8ac2383f082e.png",
+          "bytes": 3205745,
+          "sha256": "cc7b02364430d9090c5b3cdf3c287467e857ab76940656bd506295bdf63a79d2",
+          "active": true,
+          "approval": "pending",
+          "upload": "ready",
+          "primaryCover": true
+        },
+        {
+          "id": "94529e1d-f460-40ed-8300-0685ebebf8c0",
+          "type": "audio_full",
+          "label": "Lost Transition \u2014 Optimized Demo (128kbps)",
+          "bucket": "collaboration-audio",
+          "path": "8911f932-0501-49e5-9cff-e0e5ccbc756f/94529e1d-f460-40ed-8300-0685ebebf8c0.mp3",
+          "bytes": 2113685,
+          "sha256": "703c7e185a1b28cacb8aaedb5903377d9dd3ebc25c474c5cb6e8ee3681cc1255",
+          "active": true,
+          "approval": null,
+          "upload": "ready",
+          "primaryCover": false
+        }
+      ],
+      "scans": []
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "fixture": "generated silence MP3",
+  "fileSize": 2387844,
+  "sha256": "e9dad0c65af66f2c9c25fc21b86396391e33c97bfd86d68685c200609b56bf78",
+  "actualDetectedFormat": "mp3",
+  "actualDurationSeconds": 149.2375,
+  "streams": [
+    {
+      "codec_name": "mp3",
+      "sample_rate": "44100",
+      "bit_rate": "128000"
+    }
+  ],
+  "matchesGenuineCloudmersiveFixture": true
+}

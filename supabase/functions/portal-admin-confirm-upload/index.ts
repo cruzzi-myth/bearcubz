@@ -1,6 +1,7 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { requiredEnv, createAdminClient } from '../_shared/clients.ts';
 import { requireAdmin } from '../_shared/requireAdmin.ts';
+import { scanAsset } from '../_shared/assetScanner.ts';
 import { evaluateUploadVerification, guardConfirmUpload } from '../_shared/uploadLifecycle.ts';
 
 // Stage I1 hardening: Supabase Storage's reported object size is an
@@ -33,7 +34,7 @@ Deno.serve(async (request) => {
   const admin = await requireAdmin(env.supabaseUrl, request.headers.get('Authorization'));
   if (!admin) return json({ error: 'NOT_AUTHORIZED' }, 403);
 
-  let body: { assetId?: string; promoteToPrimaryCover?: boolean };
+  let body: { assetId?: string; promoteToPrimaryCover?: boolean; revalidate?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -50,16 +51,18 @@ Deno.serve(async (request) => {
   // nothing here for a client to substitute.
   const asset = await adminClient
     .from('collaboration_assets')
-    .select('collaboration_id, storage_bucket, storage_path, thumbnail_storage_path, byte_size, asset_type, upload_status')
+    .select('collaboration_id, storage_bucket, storage_path, thumbnail_storage_path, byte_size, asset_type, upload_status, security_required, security_status')
     .eq('id', body.assetId)
     .maybeSingle();
 
   if (!asset.data) return json({ error: 'ASSET_NOT_FOUND' }, 404);
   const guard = guardConfirmUpload(asset.data.upload_status);
-  if (guard.action === 'already-ready') return json({ ok: true, uploadStatus: 'ready' });
-  if (guard.action === 'reject') return json({ error: guard.error }, 409);
+  if (guard.action === 'already-ready' && !body.revalidate) return json({ ok: true, uploadStatus: 'ready' });
+  if (guard.action === 'reject' && !body.revalidate && asset.data.security_status !== 'error') return json({ error: guard.error }, 409);
 
-  await adminClient.from('collaboration_assets').update({ upload_status: 'verifying' }).eq('id', body.assetId);
+  const legacy = !asset.data.security_required;
+  if (!legacy) await adminClient.from('collaboration_assets').update({ upload_status: 'verifying' }).eq('id', body.assetId);
+  if (asset.data.security_status === 'clean') return json({ ok: true, uploadStatus: legacy ? asset.data.upload_status : 'verifying', reviewRequired: true });
 
   async function objectExists(bucket: string, path: string): Promise<{ exists: boolean; size?: number }> {
     const slash = path.lastIndexOf('/');
@@ -86,7 +89,7 @@ Deno.serve(async (request) => {
   });
 
   if (!verification.ok) {
-    await adminClient.from('collaboration_assets').update({ upload_status: 'failed' }).eq('id', body.assetId);
+    if (!legacy) await adminClient.from('collaboration_assets').update({ upload_status: 'failed' }).eq('id', body.assetId);
     await adminClient.from('portal_admin_audit_log').insert({
       admin_id: admin.uid,
       action: 'confirm_upload_failed',
@@ -97,29 +100,7 @@ Deno.serve(async (request) => {
     return json({ error: 'VERIFICATION_FAILED' }, 422);
   }
 
-  await adminClient
-    .from('collaboration_assets')
-    .update({ upload_status: 'ready', verified_at: new Date().toISOString() })
-    .eq('id', body.assetId);
-
-  const isVisual = ['visual_image', 'track_cover', 'alternate_cover', 'visual_concept'].includes(asset.data.asset_type);
-  let primaryCoverResult: 'promoted' | 'skipped' | 'failed' = 'skipped';
-  if (body.promoteToPrimaryCover && isVisual) {
-    // acting_admin_id is this function's own already-verified admin
-    // uid — the SQL function independently re-checks is_portal_admin()
-    // against it rather than trusting that only admin-checked code
-    // calls it (Stage I1 hardening).
-    const promoted = await adminClient.rpc('promote_primary_cover', { target_asset_id: body.assetId, acting_admin_id: admin.uid });
-    primaryCoverResult = promoted.error ? 'failed' : 'promoted';
-  }
-
-  await adminClient.from('portal_admin_audit_log').insert({
-    admin_id: admin.uid,
-    action: 'confirm_upload',
-    target_table: 'collaboration_assets',
-    target_id: body.assetId,
-    details: { asset_type: asset.data.asset_type, primaryCoverResult },
-  });
-
-  return json({ ok: true, uploadStatus: 'ready', primaryCoverResult });
+  const scanned = await scanAsset(adminClient, body.assetId, admin.uid);
+  if (!scanned.ok) return json({ error: scanned.error ?? 'SCAN_NOT_RECORDED' },409);
+  return json({ ...scanned, uploadStatus: legacy ? asset.data.upload_status : 'verifying', primaryCoverResult: 'skipped' });
 });

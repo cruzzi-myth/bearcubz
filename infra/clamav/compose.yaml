@@ -1,0 +1,81 @@
+name: signal-portal-clamav-dev
+services:
+  clamav:
+    image: clamav/clamav:1.4.6
+    restart: unless-stopped
+    mem_limit: 4g
+    cpus: 2
+    pids_limit: 128
+    environment:
+      TZ: UTC
+      FRESHCLAM_CHECKS: '12'
+      CLAMAV_NO_MILTERD: 'true'
+    volumes:
+      - signatures:/var/lib/clamav
+      - ./clamd.conf:/etc/clamav/clamd.conf:ro
+      - ./freshclam.conf:/etc/clamav/freshclam.conf:ro
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    networks: [scanner]
+    # No host port for ClamD. The official image runs freshclam + clamd.
+    healthcheck:
+      test: [CMD-SHELL, 'clamdscan --ping 1 >/dev/null 2>&1']
+      interval: 30s
+      timeout: 5s
+      start_period: 180s
+      retries: 3
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/clamav/worker/Dockerfile
+      target: runtime
+    restart: unless-stopped
+    user: '1000:1000'
+    read_only: true
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    env_file: .env.worker
+    environment:
+      TZ: UTC
+      CLAMD_HOST: clamav
+      CLAMD_PORT: '3310'
+      WORKER_BIND_HOST: 0.0.0.0
+      SCANNER_TMP_DIR: /tmp/signal-portal-scans
+      CLAMD_CONFIG_PATH: /run/scanner-policy/clamd.conf
+    volumes: ['./clamd.conf:/run/scanner-policy/clamd.conf:ro']
+    ports: ['127.0.0.1:8787:8080']
+    tmpfs: ['/tmp:size=160m,mode=1777']
+    networks: [scanner]
+    depends_on:
+      clamav: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, infra/clamav/healthcheck.mjs]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  tests:
+    profiles: [test]
+    build:
+      context: ../..
+      dockerfile: infra/clamav/worker/Dockerfile
+      target: diagnostics
+    user: '1000:1000'
+    read_only: true
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    environment:
+      TZ: UTC
+      CLAMD_HOST: clamav
+      RUN_GENUINE_CLAMAV: '1'
+    tmpfs: ['/tmp:size=160m,mode=1777']
+    networks: [scanner]
+    depends_on:
+      clamav: {condition: service_healthy}
+networks:
+  scanner: {}
+volumes:
+  signatures: {}

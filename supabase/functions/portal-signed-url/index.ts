@@ -35,7 +35,7 @@ Deno.serve(async (request) => {
   const userClient = createUserClient(env.supabaseUrl, authHeader);
   const asset = await userClient
     .from('collaboration_assets')
-    .select('storage_bucket, storage_path, thumbnail_storage_path')
+    .select('storage_bucket, storage_path, thumbnail_storage_path, security_required, security_status, security_review_status, file_sha256, scan_evidence')
     .eq('id', body.assetId)
     .eq('is_active', true)
     // RLS already enforces this for a non-admin caller — explicit
@@ -44,6 +44,8 @@ Deno.serve(async (request) => {
     .eq('upload_status', 'ready')
     .maybeSingle();
 
+  if (asset.data?.security_status === 'infected') return json({ error: 'NOT_AUTHORIZED' }, 403);
+  if (asset.data?.security_required && (asset.data.security_status !== 'clean' || asset.data.security_review_status !== 'approved' || !asset.data.scan_evidence?.complete || !asset.data.file_sha256)) return json({ error: 'NOT_AUTHORIZED' }, 403);
   if (!asset.data) return json({ error: 'NOT_AUTHORIZED' }, 403);
 
   // Fall back to the full image if a thumbnail was requested but

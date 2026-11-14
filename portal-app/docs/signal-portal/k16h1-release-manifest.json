@@ -1,0 +1,170 @@
+[
+  {
+    "file": "20260821015614_create_passport_members.sql",
+    "sourceSha256": "6492fdd007f553c2f3129eee0f4d54791a712f0d997653333654bc8ee87568ac",
+    "preparedSha256": "6492fdd007f553c2f3129eee0f4d54791a712f0d997653333654bc8ee87568ac",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822192348_add_passport_account_linking.sql",
+    "sourceSha256": "2be3d1d1cbe98716344bb1168933f9a12b7ce2c09b88f37cfeb2026d187ce106",
+    "preparedSha256": "2be3d1d1cbe98716344bb1168933f9a12b7ce2c09b88f37cfeb2026d187ce106",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822192444_tighten_link_my_passport_grant.sql",
+    "sourceSha256": "854bb5e904d0cb19defa17bfea826b16e3cb30ec8f18853a63685137fa1c532d",
+    "preparedSha256": "854bb5e904d0cb19defa17bfea826b16e3cb30ec8f18853a63685137fa1c532d",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822200231_phase2_player_identity_layer.sql",
+    "sourceSha256": "4d18baf0856adf361bc2ac97f66ccac70f70c9ef1a048e2e27feecb9e0587dba",
+    "preparedSha256": "4d18baf0856adf361bc2ac97f66ccac70f70c9ef1a048e2e27feecb9e0587dba",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822205730_phase2_rls_perf_and_search_path_hardening.sql",
+    "sourceSha256": "61c27a03ffad7828c0b966a193972ba01a68e5f62d8696d171500fc473e042b6",
+    "preparedSha256": "61c27a03ffad7828c0b966a193972ba01a68e5f62d8696d171500fc473e042b6",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822215446_avatar_phase1_species_foundation.sql",
+    "sourceSha256": "cdd38a3f8d8e6fe830167661245917e74999c0e94b53fab3ce507137f7866443",
+    "preparedSha256": "cdd38a3f8d8e6fe830167661245917e74999c0e94b53fab3ce507137f7866443",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822235023_avatar_phase2c_permanent_species_lock.sql",
+    "sourceSha256": "927ffeaa26b2afefb925437d1afed669ae29f61f9d37b6f5c76b209aa8f0efc7",
+    "preparedSha256": "927ffeaa26b2afefb925437d1afed669ae29f61f9d37b6f5c76b209aa8f0efc7",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260822235140_avatar_phase2c_tighten_grants.sql",
+    "sourceSha256": "09a9fbbf72cc3d93f5ac1a18c643fb5add0cbc334e155f8cdb3932edd6b3368f",
+    "preparedSha256": "09a9fbbf72cc3d93f5ac1a18c643fb5add0cbc334e155f8cdb3932edd6b3368f",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260913205029_moon_racer_daily_votes.sql",
+    "sourceSha256": "8665fe38e52531413983284dc926e7d909b36dc21721a82eb7446d9010ad2baa",
+    "preparedSha256": "8665fe38e52531413983284dc926e7d909b36dc21721a82eb7446d9010ad2baa",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20260913205148_moon_racer_vote_results_tighten_grants.sql",
+    "sourceSha256": "cbf649ad794df3a6211f32e85b9f069a03cd52f9bdeac2f1760cf991ed9f6edd",
+    "preparedSha256": "cbf649ad794df3a6211f32e85b9f069a03cd52f9bdeac2f1760cf991ed9f6edd",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261106140000_signal_portal_schema.sql",
+    "sourceSha256": "d60a24a7b942add4370b00d56f31ff0a3aede1c96e4898c0d575f0618b37af08",
+    "preparedSha256": "d60a24a7b942add4370b00d56f31ff0a3aede1c96e4898c0d575f0618b37af08",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261106140100_signal_portal_storage.sql",
+    "sourceSha256": "b0bfb2caf90a938fc481b8a958d094119e8f7e8d9118d4c103138c105ac0aaae",
+    "preparedSha256": "b0bfb2caf90a938fc481b8a958d094119e8f7e8d9118d4c103138c105ac0aaae",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261106150000_signal_portal_artwork.sql",
+    "sourceSha256": "74b1b9d2707943b9c90b9ca369c564d6ca9ae9e3716ee011764f443829ac97dd",
+    "preparedSha256": "74b1b9d2707943b9c90b9ca369c564d6ca9ae9e3716ee011764f443829ac97dd",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261106160000_signal_portal_upload_lifecycle.sql",
+    "sourceSha256": "ddc7399914bcba10c2248a89f1f0c7bec35b55a3b49f45a9837431e5dca37497",
+    "preparedSha256": "ddc7399914bcba10c2248a89f1f0c7bec35b55a3b49f45a9837431e5dca37497",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261106170000_signal_portal_security_hardening.sql",
+    "sourceSha256": "bccbef11629e752fd9848595ff5db070edac181a55540f2ebd2b59e0d9cca92a",
+    "preparedSha256": "bccbef11629e752fd9848595ff5db070edac181a55540f2ebd2b59e0d9cca92a",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261107220000_signal_portal_feedback_read_receipts.sql",
+    "sourceSha256": "bb7fe0a1ad49034b5a5cfcca12e061634f234e374492ce1d5a631acf4e345638",
+    "preparedSha256": "bb7fe0a1ad49034b5a5cfcca12e061634f234e374492ce1d5a631acf4e345638",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261108080000_signal_portal_project_classification.sql",
+    "sourceSha256": "1b8c8c90e5c94f63ef624436ebfed68c1a519bc9c3106fdf569bdc5c4be4f738",
+    "preparedSha256": "1b8c8c90e5c94f63ef624436ebfed68c1a519bc9c3106fdf569bdc5c4be4f738",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261109040000_signal_portal_feedback_attachments.sql",
+    "sourceSha256": "d7756770155f7bd7fcbd10c17cc29d3954996f55e00feec18a6429ff9a44fd45",
+    "preparedSha256": "d7756770155f7bd7fcbd10c17cc29d3954996f55e00feec18a6429ff9a44fd45",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261109063400_signal_portal_attachment_review.sql",
+    "sourceSha256": "756343af61eefe8f88a659501f65dc2aaaf9963e70f5a8938758fb5dc39e8894",
+    "preparedSha256": "756343af61eefe8f88a659501f65dc2aaaf9963e70f5a8938758fb5dc39e8894",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261109071500_signal_portal_attachment_owner_policy_fix.sql",
+    "sourceSha256": "38a3e4f4fe2f5513048a1f4be1b239e0c11d232676792603c34cb29f948246b6",
+    "preparedSha256": "38a3e4f4fe2f5513048a1f4be1b239e0c11d232676792603c34cb29f948246b6",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261109090000_signal_portal_attachment_scanning.sql",
+    "sourceSha256": "b7e301ce5d9e68f11f0d377ba2a563bbaae6b2c9f9d895aa9e4c1820e4fa366f",
+    "preparedSha256": "0d23a1fd3f68405096e2d2eeb374e552fba14e8e6bfc5f52110b89d9d6793f4a",
+    "schedulerOmitted": true
+  },
+  {
+    "file": "20261109091500_signal_portal_cron_secret_fix.sql",
+    "sourceSha256": "135986628bb363be1b8c83eaaafa02cb967b9afb725572bfdba6e024687d6553",
+    "preparedSha256": "d197a1fe2ca7f4b56ed73509549561b3ba146941c2fdf69948fdd0d09cf2ddd4",
+    "schedulerOmitted": true
+  },
+  {
+    "file": "20261109092000_signal_portal_cron_header_fix.sql",
+    "sourceSha256": "a3d14d7aa7de88e104cfa5df261595d8997f5776fd93f090bff175662bb1d165",
+    "preparedSha256": "b36b08a8b1e342c13588e2e2fbd4dce7131c0457b2cd9c381742d72bffd45e51",
+    "schedulerOmitted": true
+  },
+  {
+    "file": "20261109150000_signal_portal_zip_attachment_support.sql",
+    "sourceSha256": "96a0e65ee7a03fa64a2621bdae722ca1bc822ba946bee8374866d71de9155a8c",
+    "preparedSha256": "96a0e65ee7a03fa64a2621bdae722ca1bc822ba946bee8374866d71de9155a8c",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261109151500_signal_portal_zip_storage_mime_fix.sql",
+    "sourceSha256": "5a882a604d98a7a563eb952d1eaf6c437f5185c65e74bcf06dafd9ad3604d79d",
+    "preparedSha256": "5a882a604d98a7a563eb952d1eaf6c437f5185c65e74bcf06dafd9ad3604d79d",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261110010000_signal_portal_scan_lease_recovery.sql",
+    "sourceSha256": "e8d4254db96ac4a696da54ad67573bdf6290912140b7add7aba372d40e39ddfe",
+    "preparedSha256": "e8d4254db96ac4a696da54ad67573bdf6290912140b7add7aba372d40e39ddfe",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261110011500_signal_portal_scan_claim_function.sql",
+    "sourceSha256": "ce9dc2be5b6c6396539fdb2e3a39c3e9be6673cc76c55581ed327fead233d785",
+    "preparedSha256": "ce9dc2be5b6c6396539fdb2e3a39c3e9be6673cc76c55581ed327fead233d785",
+    "schedulerOmitted": false
+  },
+  {
+    "file": "20261110013000_signal_portal_scan_recovery_cron.sql",
+    "sourceSha256": "b226c5bdbf63b7353a07e44067fb26b811912b42eca10f43e89a8037d09c1699",
+    "preparedSha256": "f2a6ea9690b1823133e5bab3153bf6c3edb62a3c916a0b033e22759ed761289d",
+    "schedulerOmitted": true
+  }
+]

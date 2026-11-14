@@ -62,6 +62,39 @@ export async function run(ctx) {
     return data?.status === 'pending';
   });
 
+  // --- Stage K1: administrator eligibility, no invitation required ---
+  await check('an administrator (no invitation at all) requesting access gets the identical neutral response, no error', async () => {
+    const result = await callEdgeFunction(supabaseUrl, anonKey, 'portal-request-access', { body: { email: fixtures.adminIdentity.email } });
+    return result.status === 200 && result.body.ok === true;
+  });
+
+  await check('the administrator truly has no pending invitation anywhere (this is a genuine no-invitation path, not an accidental one)', async () => {
+    const { data } = await clients.admin.from('artist_invitations').select('id').eq('status', 'pending').ilike('email', fixtures.adminIdentity.email);
+    return (data ?? []).length === 0;
+  });
+
+  await check("the fix's exact eligibility condition is independently true for the administrator (non-revoked portal_admins row exists for their auth.users id)", async () => {
+    const { data: userList } = await clients.admin.auth.admin.listUsers({ perPage: 1000 });
+    const matched = userList?.users.find((u) => u.email?.toLowerCase() === fixtures.adminIdentity.email.toLowerCase());
+    if (!matched) return false;
+    const { data: adminRow } = await clients.admin.from('portal_admins').select('user_id').eq('user_id', matched.id).is('revoked_at', null).maybeSingle();
+    return Boolean(adminRow);
+  });
+
+  await check('a REVOKED admin (revoked_at set) is NOT treated as eligible by the same condition -- the fix checks revoked_at, not just row existence', async () => {
+    const revokedAdminEmail = testEmail('access-flow-revoked-admin');
+    const created = await clients.admin.auth.admin.createUser({ email: revokedAdminEmail, email_confirm: true });
+    const uid = created.data.user.id;
+    await clients.admin.from('portal_admins').insert({ user_id: uid, granted_by: fixtures.adminIdentity.uid, revoked_at: new Date().toISOString() });
+
+    const { data: adminRow } = await clients.admin.from('portal_admins').select('user_id').eq('user_id', uid).is('revoked_at', null).maybeSingle();
+    const conditionCorrectlyFalse = !adminRow;
+
+    await clients.admin.from('portal_admins').delete().eq('user_id', uid);
+    await clients.admin.auth.admin.deleteUser(uid);
+    return conditionCorrectlyFalse;
+  });
+
   // --- rate limiting: logging-before-gating means every attempt is recorded, eligible or not ---
   const rateLimitEmail = testEmail('access-flow-rate-limit');
   let allNeutral = true;

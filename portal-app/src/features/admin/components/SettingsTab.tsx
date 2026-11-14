@@ -27,6 +27,7 @@ function Row({ label, value }: { label: string; value: Status | string }) {
  * infrastructure.
  */
 export function SettingsTab() {
+  const [scannerStatus, setScannerStatus] = useState('Checking scanner status…');
   const [backendStatus, setBackendStatus] = useState<Status>('UNKNOWN');
   const [authStatus, setAuthStatus] = useState<Status>('UNKNOWN');
   const [storageStatus, setStorageStatus] = useState<Status>('UNKNOWN');
@@ -35,6 +36,10 @@ export function SettingsTab() {
   const keyConfigured = Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   useEffect(() => {
+    supabase.functions.invoke('portal-admin-scanner-status', {body:{}}).then(({data,error}) => {
+      if(error||!data?.ok) {setScannerStatus('Scanner status unavailable');return;}
+      setScannerStatus(`Configuration: ${data.configuration}; Cloudmersive key: ${data.cloudmersiveConfigured ? 'configured (operation not checked)' : 'absent'}; ClamAV worker: ${data.workerHealthy ? 'healthy' : 'unavailable'}. Monthly app-observed outcomes: ${JSON.stringify(data.observedMonthlyOutcomes ?? {})}. Actual provider account usage is unknown.`);
+    });
     supabase
       .from('portal_admins')
       .select('user_id', { head: true, count: 'exact' })
@@ -56,6 +61,7 @@ export function SettingsTab() {
   return (
     <>
       <h2>Settings &amp; System Status</h2>
+      <p className="sp-admin__status-msg">{scannerStatus}</p>
       <div className="sp-admin__table-wrap" style={{ maxWidth: 560 }}>
         <table className="sp-admin__table">
           <tbody>

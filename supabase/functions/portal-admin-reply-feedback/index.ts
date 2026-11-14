@@ -51,15 +51,19 @@ Deno.serve(async (request) => {
     if (members.data?.length === 1) recipientUserId = members.data[0].user_id;
   }
 
-  const inserted = await adminClient.from('collaboration_feedback').insert({
-    collaboration_id: body.collaborationId,
-    author_id: admin.uid,
-    asset_id: body.assetId ?? null,
-    recipient_user_id: recipientUserId,
-    kind: 'admin_reply',
-    is_admin_reply: true,
-    body: text,
-  });
+  const inserted = await adminClient
+    .from('collaboration_feedback')
+    .insert({
+      collaboration_id: body.collaborationId,
+      author_id: admin.uid,
+      asset_id: body.assetId ?? null,
+      recipient_user_id: recipientUserId,
+      kind: 'admin_reply',
+      is_admin_reply: true,
+      body: text,
+    })
+    .select('id')
+    .single();
 
   if (inserted.error) return json({ error: 'REPLY_FAILED' }, 500);
 
@@ -71,5 +75,6 @@ Deno.serve(async (request) => {
     details: { asset_id: body.assetId ?? null },
   });
 
-  return json({ ok: true });
+  // Stage K1.6C: backward-compatible addition, same as portal-submit-feedback.
+  return json({ ok: true, feedbackId: inserted.data.id });
 });

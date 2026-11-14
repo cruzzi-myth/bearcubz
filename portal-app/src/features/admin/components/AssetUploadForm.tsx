@@ -12,7 +12,6 @@ const ASSET_TYPE_OPTIONS: { value: AssetType; label: string }[] = [
   { value: 'visual_concept', label: 'Artwork — Visual Concept' },
 ];
 
-const VISUAL_TYPES = new Set<AssetType>(['track_cover', 'alternate_cover', 'visual_image', 'visual_concept']);
 const MAX_BYTES: Record<AssetType, number> = {
   audio_short: 100 * 1024 * 1024,
   audio_full: 100 * 1024 * 1024,
@@ -49,7 +48,6 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
   const [displayLabel, setDisplayLabel] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [promoteToPrimaryCover, setPromoteToPrimaryCover] = useState(false);
   const [stage, setStage] = useState<Stage>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +63,11 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
       setError(`File type ${file.type || '(unknown)'} isn't allowed for this category.`);
       return;
     }
+    const transferLimit = 50 * 1024 * 1024;
+    if (file.size > transferLimit) {
+      setError('This development storage configuration supports files up to 50 MiB. Larger-file delivery is not enabled.');
+      return;
+    }
     if (file.size > MAX_BYTES[assetType]) {
       setError(`File is too large for this category (max ${Math.round(MAX_BYTES[assetType] / (1024 * 1024))}MB).`);
       return;
@@ -78,7 +81,7 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
       fileSizeBytes: file.size,
       displayLabel: displayLabel.trim(),
       description: description.trim() || undefined,
-      includeThumbnail: VISUAL_TYPES.has(assetType),
+      includeThumbnail: false, // Full-image fallback; never allocate unuploaded thumbnail bytes.
     });
     if (!requested.ok) {
       setStage('failed');
@@ -95,7 +98,7 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
     }
 
     setStage('confirming');
-    const confirmed = await confirmUpload(requested.data.assetId, VISUAL_TYPES.has(assetType) && promoteToPrimaryCover);
+    const confirmed = await confirmUpload(requested.data.assetId);
     if (!confirmed.ok) {
       setStage('failed');
       setError(`Upload completed but could not be verified: ${confirmed.error}. It will not appear to any artist.`);
@@ -106,7 +109,6 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
     setFile(null);
     setDisplayLabel('');
     setDescription('');
-    setPromoteToPrimaryCover(false);
     onUploaded();
   }
 
@@ -136,14 +138,9 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
         <label htmlFor="asset-file">File</label>
         <input id="asset-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} disabled={busy} required />
       </div>
-      {VISUAL_TYPES.has(assetType) && (
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-          <input type="checkbox" checked={promoteToPrimaryCover} onChange={(e) => setPromoteToPrimaryCover(e.target.checked)} disabled={busy} />
-          Set as primary cover once verified
-        </label>
-      )}
+      <p className="sp-admin__status-msg">After security release review, use Set Primary in the Asset Library to select cover artwork.</p>
       {error && <p className="sp-admin__status-msg sp-admin__status-msg--error">{error}</p>}
-      {stage === 'done' && <p className="sp-admin__status-msg sp-admin__status-msg--success">Uploaded and verified.</p>}
+      {stage === 'done' && <p className="sp-admin__status-msg sp-admin__status-msg--success">Upload received. Security scanning and release review must complete before artist delivery.</p>}
       <button type="submit" className="sp-admin__btn" disabled={busy}>
         {stage === 'requesting' && 'Requesting authorized upload…'}
         {stage === 'uploading' && 'Uploading…'}

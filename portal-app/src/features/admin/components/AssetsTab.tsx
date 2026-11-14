@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { useAdminAssets } from '../hooks/useAdminAssets';
-import { updateAsset, markAssetInactive, confirmUpload } from '../services/adminApi';
+import { updateAsset, markAssetInactive, confirmUpload, approveAssetSecurity } from '../services/adminApi';
 import { AssetUploadForm } from './AssetUploadForm';
 import { AssetLibraryList } from '../../../components/AssetLibraryList';
 import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
@@ -44,6 +44,7 @@ function PreviewButton({ assetId }: { assetId: string }) {
 
 export function AssetsTab() {
   const { state: collabState } = useAdminCollaborations();
+  const [securityError, setSecurityError] = useState<string | null>(null);
   const [selectedCollaboration, setSelectedCollaboration] = useState<string>('');
   const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const { state: assetState, reload } = useAdminAssets(selectedCollaboration || undefined);
@@ -63,6 +64,13 @@ export function AssetsTab() {
     reload();
   }
 
+  async function handleSecurity(assetId: string, approve = false) {
+    setSecurityError(null);
+    const result = approve ? await approveAssetSecurity(assetId) : await confirmUpload(assetId, false, true);
+    if (!result.ok) setSecurityError(result.error);
+    reload();
+  }
+
   async function handleRetryConfirm(assetId: string) {
     await confirmUpload(assetId);
     reload();
@@ -73,6 +81,7 @@ export function AssetsTab() {
   return (
     <>
       <h2>Asset Library</h2>
+      {securityError && <p role="alert" className="sp-admin__status-msg sp-admin__status-msg--error">{securityError}</p>}
 
       {/* Stage K1.4.1 — the compact music-library-style browser (same
           shared row component the artist-facing Asset Library uses).
@@ -118,6 +127,7 @@ export function AssetsTab() {
                   <th>Type</th>
                   <th>Version</th>
                   <th>Upload Status</th>
+                  <th>Security</th>
                   <th>Approval</th>
                   <th>Primary Cover</th>
                   <th>Size</th>
@@ -127,12 +137,19 @@ export function AssetsTab() {
               </thead>
               <tbody>
                 {assetState.assets.map((asset) => (
-                  <tr key={asset.id} style={{ opacity: asset.isActive ? 1 : 0.45 }}>
-                    <td>{asset.displayLabel}</td>
+                  <tr key={asset.id}>
+                    <td>{asset.displayLabel}{!asset.isActive && <span className="sp-admin__pill">Inactive</span>}</td>
                     <td>{asset.assetType}</td>
                     <td>{asset.version}</td>
                     <td>
                       <span className={statusPillClass(asset.uploadStatus)}>{asset.uploadStatus}</span>
+                    </td>
+                    <td>
+                      <span>{asset.securityRequired ? asset.securityStatus : 'Legacy — scan evidence incomplete'}</span>
+                      {asset.scanEvidence?.provider && <div>{asset.scanEvidence.provider}</div>}
+                      {asset.scanEvidence?.detail && <div>{asset.scanEvidence.detail}</div>}
+                      {asset.securityStatus === 'clean' && asset.securityReviewStatus !== 'approved' && <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleSecurity(asset.id, true)}>Approve security release</button>}
+                      {(['legacy_unverified','pending','error'].includes(asset.securityStatus) || (asset.securityStatus === 'scanning' && asset.scanLeaseExpiresAt && Date.parse(asset.scanLeaseExpiresAt) < Date.now())) && <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleSecurity(asset.id)}>{asset.securityStatus === 'scanning' ? 'Retry expired scan' : 'Scan / revalidate'}</button>}
                     </td>
                     <td>
                       {asset.approvalStatus ? (

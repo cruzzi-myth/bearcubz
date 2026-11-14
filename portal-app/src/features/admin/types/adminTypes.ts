@@ -70,6 +70,11 @@ export type AdminAsset = {
   uploadedBy: string;
   uploadedAt: string;
   verifiedAt: string | null;
+  scanLeaseExpiresAt: string | null;
+  securityRequired: boolean;
+  securityStatus: string;
+  securityReviewStatus: string;
+  scanEvidence: { provider?: string; detail?: string; complete?: boolean } | null;
 };
 
 export type AdminFeedbackMessage = {
@@ -90,4 +95,52 @@ export type AdminAuditEntry = {
   targetId: string | null;
   details: unknown;
   createdAt: string;
+};
+
+// Stage K1.6D — the single linear lifecycle state from the
+// collaboration_feedback_attachments migration (K1.6C rev.3). Admins
+// see every status; an ordinary member only ever sees 'available' (or
+// their own row's real status, per the K1.6D "survives a refresh"
+// policy — not relevant to this admin-only type).
+export type AttachmentStatus = 'pending_upload' | 'uploaded' | 'awaiting_scan' | 'rejected' | 'clean' | 'promoting' | 'available' | 'failed';
+
+// Stage K1.6E — malware clearance and administrator approval are
+// separate, server-controlled fields, independent of the physical-
+// location `status` lifecycle above (see the K1.6E migration's own
+// comment for the full rationale).
+export type SecurityStatus = 'pending' | 'scanning' | 'clean' | 'infected' | 'error';
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export type AdminAttachment = {
+  id: string;
+  feedbackId: string;
+  collaborationId: string;
+  collaborationTitle: string;
+  messageBody: string;
+  authorId: string;
+  authorIsAdminReply: boolean;
+  originalFilename: string;
+  mimeType: string;
+  byteSize: number;
+  status: AttachmentStatus;
+  securityStatus: SecurityStatus;
+  securityScanDetail: string | null;
+  scanProvider: string | null;
+  reviewStatus: ReviewStatus;
+  rejectionReason: string | null;
+  uploadedAt: string;
+  promotionError: string | null;
+  // Stage K1.6G section 8 — lease/retry bookkeeping surfaced for
+  // administrator recovery visibility. None of these drive any
+  // access-control decision on the frontend; they are read-only
+  // displays of state the server already enforces.
+  scanAttemptCount: number;
+  scanStartedAt: string | null;
+  scanCompletedAt: string | null;
+  scanLastError: string | null;
+  scanNextRetryAt: string | null;
+  awaitingScannerCapacity: boolean;
+  scanWaitingSince: string | null;
+  scanRetentionExpiresAt: string | null;
+  isActive: boolean;
 };

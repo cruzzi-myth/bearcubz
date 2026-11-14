@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import type { CollaborationAsset } from '../hooks/useAuthorizedCollaboration';
 import { useSignedAssetUrl } from '../hooks/useSignedAssetUrl';
+import { PdfCanvasViewer } from './PdfCanvasViewer';
+import './private-proposal-viewer.css';
 
 type Props = { asset: CollaborationAsset; onClose: () => void };
 
 /**
- * Rendered in-page via <iframe>, never a new-tab link — a signed URL
- * handed to the browser's own address bar/history would outlive the
- * component that requested it. Viewing is the only action here;
- * there is no acceptance/signature step, intentionally.
+ * Stage K1.6B addendum — a real page-by-page PDF.js renderer (see
+ * PdfCanvasViewer), not a browser <iframe> embed. The document itself
+ * still only ever reaches the browser via the same short-lived
+ * signed URL useSignedAssetUrl already minted — nothing about how the
+ * proposal is authorized or delivered changed, only how it's
+ * displayed once it arrives.
  */
 export function PrivateProposalViewer({ asset, onClose }: Props) {
   const signed = useSignedAssetUrl(asset.id, 'full');
@@ -21,11 +25,11 @@ export function PrivateProposalViewer({ asset, onClose }: Props) {
           Viewing this document is not an acceptance of its terms. <button type="button" onClick={() => setDismissedNotice(true)}>Dismiss</button>
         </p>
       )}
+
       {signed.status === 'loading' && <p className="sp-proposal__empty">Requesting secure document access…</p>}
       {signed.status === 'unavailable' && <p className="sp-proposal__empty">Couldn't authorize this document right now.</p>}
-      {signed.status === 'ready' && (
-        <iframe title={asset.displayLabel} src={signed.url} style={{ width: '100%', height: '60vh', border: '1px solid var(--sp-glass-border)', borderRadius: 10 }} />
-      )}
+      {signed.status === 'ready' && <PdfCanvasViewer url={signed.url} label={asset.displayLabel} />}
+
       <button type="button" className="sp-proposal__view-btn" onClick={onClose}>
         Close
       </button>

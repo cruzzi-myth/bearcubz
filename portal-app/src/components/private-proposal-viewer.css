@@ -1,0 +1,116 @@
+/* Stage K1.6B addendum — premium PDF.js document viewer. */
+.sp-proposal__viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(820px, 92vw);
+}
+
+.sp-pdf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-pdf__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(8, 7, 15, 0.7);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 10px;
+}
+
+.sp-pdf__pager,
+.sp-pdf__zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sp-pdf__toolbar button {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: var(--cyan);
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  min-height: 32px;
+  min-width: 32px;
+}
+
+.sp-pdf__toolbar button:hover:not(:disabled),
+.sp-pdf__toolbar button:focus-visible {
+  background: rgba(0, 229, 255, 0.2);
+}
+
+.sp-pdf__toolbar button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.sp-pdf__fit-btn {
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sp-pdf__fit-btn--active {
+  background: rgba(0, 229, 255, 0.3) !important;
+  color: #fff !important;
+}
+
+.sp-pdf__page-indicator {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--sp-ink-soft);
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+/* Near-opaque so the chamber's own background art never reduces
+   document contrast or legibility, per the addendum's explicit
+   readability requirement. */
+.sp-pdf__canvas-viewport {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-height: min(68vh, 760px);
+  overflow: auto;
+  background: #e9e9ec;
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.sp-pdf__canvas-viewport:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+
+.sp-pdf__canvas-viewport canvas {
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 640px) {
+  .sp-proposal__viewer {
+    width: 96vw;
+  }
+
+  .sp-pdf__toolbar {
+    justify-content: center;
+  }
+
+  .sp-pdf__canvas-viewport {
+    max-height: 56vh;
+    padding: 8px;
+  }
+}

@@ -4,7 +4,7 @@ import { usePortalAuth } from '../../auth/PortalAuthContext';
 import { portalAsset } from '../../../lib/assetPath';
 import '../admin.css';
 
-export type AdminTab = 'overview' | 'artists' | 'collaborations' | 'assets' | 'invitations' | 'feedback' | 'audit' | 'settings';
+export type AdminTab = 'overview' | 'artists' | 'collaborations' | 'assets' | 'invitations' | 'feedback' | 'attachments' | 'audit' | 'settings';
 
 const TABS: { id: AdminTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -13,6 +13,7 @@ const TABS: { id: AdminTab; label: string }[] = [
   { id: 'assets', label: 'Asset Library' },
   { id: 'invitations', label: 'Invitations' },
   { id: 'feedback', label: 'Transmissions' },
+  { id: 'attachments', label: 'Attachments' },
   { id: 'audit', label: 'Audit Log' },
   { id: 'settings', label: 'Settings' },
 ];

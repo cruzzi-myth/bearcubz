@@ -49,7 +49,13 @@ export function VisualGalleryPage() {
                   <GalleryTile key={img.id} asset={img} onOpen={() => setOpenAssetId(img.id)} />
                 ))}
               </div>
-              {open && <GalleryLightbox asset={open} onClose={() => setOpenAssetId(null)} />}
+              {open && (
+                <GalleryLightbox
+                  asset={open}
+                  onClose={() => setOpenAssetId(null)}
+                  siblings={{ images, onNavigate: setOpenAssetId }}
+                />
+              )}
             </div>
           );
         })()}

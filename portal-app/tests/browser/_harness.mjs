@@ -1,8 +1,15 @@
 let passed = 0;
 let failed = 0;
+let skipped = 0;
 const failures = [];
+// Optional focused reruns avoid exhausting the live development API budgets.
+const filter = process.env.SIGNAL_PORTAL_BROWSER_FILTER ? new RegExp(process.env.SIGNAL_PORTAL_BROWSER_FILTER) : null;
 
 export async function check(name, fn) {
+  if (filter && !filter.test(name)) {
+    skipped += 1;
+    return;
+  }
   try {
     const ok = await fn();
     if (ok) {
@@ -21,7 +28,7 @@ export async function check(name, fn) {
 }
 
 export function summary(label) {
-  console.log(`\n${label}: ${passed} passed, ${failed} failed`);
+  console.log(`\n${label}: ${passed} passed, ${failed} failed, ${skipped} skipped`);
   if (failed > 0) {
     console.log('Failed:', failures.join(', '));
     process.exitCode = 1;

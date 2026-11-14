@@ -1,0 +1,238 @@
+{
+  "scope": "Native PostgreSQL, full real 17-migration production baseline (including unrelated moon-racer-vote/passport migrations) + 12 real pending migrations, scheduler blocks stripped; no pg_cron/pg_net/GoTrue/Storage HTTP runtime",
+  "generatedAt": "2026-11-13T00:17:18.424Z",
+  "files": [
+    {
+      "file": "20260821015614_create_passport_members.sql",
+      "sha256": "6492fdd007f553c2f3129eee0f4d54791a712f0d997653333654bc8ee87568ac",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822192348_add_passport_account_linking.sql",
+      "sha256": "2be3d1d1cbe98716344bb1168933f9a12b7ce2c09b88f37cfeb2026d187ce106",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822192444_tighten_link_my_passport_grant.sql",
+      "sha256": "854bb5e904d0cb19defa17bfea826b16e3cb30ec8f18853a63685137fa1c532d",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822200231_phase2_player_identity_layer.sql",
+      "sha256": "4d18baf0856adf361bc2ac97f66ccac70f70c9ef1a048e2e27feecb9e0587dba",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822205730_phase2_rls_perf_and_search_path_hardening.sql",
+      "sha256": "61c27a03ffad7828c0b966a193972ba01a68e5f62d8696d171500fc473e042b6",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822215446_avatar_phase1_species_foundation.sql",
+      "sha256": "cdd38a3f8d8e6fe830167661245917e74999c0e94b53fab3ce507137f7866443",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822235023_avatar_phase2c_permanent_species_lock.sql",
+      "sha256": "927ffeaa26b2afefb925437d1afed669ae29f61f9d37b6f5c76b209aa8f0efc7",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260822235140_avatar_phase2c_tighten_grants.sql",
+      "sha256": "09a9fbbf72cc3d93f5ac1a18c643fb5add0cbc334e155f8cdb3932edd6b3368f",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260913205029_moon_racer_daily_votes.sql",
+      "sha256": "8665fe38e52531413983284dc926e7d909b36dc21721a82eb7446d9010ad2baa",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20260913205148_moon_racer_vote_results_tighten_grants.sql",
+      "sha256": "cbf649ad794df3a6211f32e85b9f069a03cd52f9bdeac2f1760cf991ed9f6edd",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261106140000_signal_portal_schema.sql",
+      "sha256": "d60a24a7b942add4370b00d56f31ff0a3aede1c96e4898c0d575f0618b37af08",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261106140100_signal_portal_storage.sql",
+      "sha256": "b0bfb2caf90a938fc481b8a958d094119e8f7e8d9118d4c103138c105ac0aaae",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261106150000_signal_portal_artwork.sql",
+      "sha256": "74b1b9d2707943b9c90b9ca369c564d6ca9ae9e3716ee011764f443829ac97dd",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261106160000_signal_portal_upload_lifecycle.sql",
+      "sha256": "ddc7399914bcba10c2248a89f1f0c7bec35b55a3b49f45a9837431e5dca37497",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261106170000_signal_portal_security_hardening.sql",
+      "sha256": "bccbef11629e752fd9848595ff5db070edac181a55540f2ebd2b59e0d9cca92a",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261107220000_signal_portal_feedback_read_receipts.sql",
+      "sha256": "bb7fe0a1ad49034b5a5cfcca12e061634f234e374492ce1d5a631acf4e345638",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261108080000_signal_portal_project_classification.sql",
+      "sha256": "1b8c8c90e5c94f63ef624436ebfed68c1a519bc9c3106fdf569bdc5c4be4f738",
+      "phase": "production-baseline (17)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109040000_signal_portal_feedback_attachments.sql",
+      "sha256": "d7756770155f7bd7fcbd10c17cc29d3954996f55e00feec18a6429ff9a44fd45",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109063400_signal_portal_attachment_review.sql",
+      "sha256": "756343af61eefe8f88a659501f65dc2aaaf9963e70f5a8938758fb5dc39e8894",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109071500_signal_portal_attachment_owner_policy_fix.sql",
+      "sha256": "38a3e4f4fe2f5513048a1f4be1b239e0c11d232676792603c34cb29f948246b6",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109090000_signal_portal_attachment_scanning.sql",
+      "sha256": "b7e301ce5d9e68f11f0d377ba2a563bbaae6b2c9f9d895aa9e4c1820e4fa366f",
+      "phase": "pending (12)",
+      "schedulerOmitted": true,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109091500_signal_portal_cron_secret_fix.sql",
+      "sha256": "135986628bb363be1b8c83eaaafa02cb967b9afb725572bfdba6e024687d6553",
+      "phase": "pending (12)",
+      "schedulerOmitted": true,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109092000_signal_portal_cron_header_fix.sql",
+      "sha256": "a3d14d7aa7de88e104cfa5df261595d8997f5776fd93f090bff175662bb1d165",
+      "phase": "pending (12)",
+      "schedulerOmitted": true,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109150000_signal_portal_zip_attachment_support.sql",
+      "sha256": "96a0e65ee7a03fa64a2621bdae722ca1bc822ba946bee8374866d71de9155a8c",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261109151500_signal_portal_zip_storage_mime_fix.sql",
+      "sha256": "5a882a604d98a7a563eb952d1eaf6c437f5185c65e74bcf06dafd9ad3604d79d",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261110010000_signal_portal_scan_lease_recovery.sql",
+      "sha256": "e8d4254db96ac4a696da54ad67573bdf6290912140b7add7aba372d40e39ddfe",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261110011500_signal_portal_scan_claim_function.sql",
+      "sha256": "ce9dc2be5b6c6396539fdb2e3a39c3e9be6673cc76c55581ed327fead233d785",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261110013000_signal_portal_scan_recovery_cron.sql",
+      "sha256": "b226c5bdbf63b7353a07e44067fb26b811912b42eca10f43e89a8037d09c1699",
+      "phase": "pending (12)",
+      "schedulerOmitted": true,
+      "status": "applied",
+      "errorMessage": null
+    },
+    {
+      "file": "20261110020000_signal_portal_dual_scanner_evidence.sql",
+      "sha256": "8f43dcf09d42a032c005ee3d0c8bffa8af5c060e0c2139a332043d3eb487de5e",
+      "phase": "pending (12)",
+      "schedulerOmitted": false,
+      "status": "applied",
+      "errorMessage": null
+    }
+  ]
+}

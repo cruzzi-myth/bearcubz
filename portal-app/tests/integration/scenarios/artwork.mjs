@@ -19,6 +19,8 @@ async function uploadReadyCover(ctx, label) {
     authHeader: bearerFor(fixtures.adminIdentity),
     body: { assetId: requested.body.assetId },
   });
+  const released = await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-review-asset', { authHeader: bearerFor(fixtures.adminIdentity), body: { assetId: requested.body.assetId, decision: 'approve' } });
+  if (released.status !== 200) throw new Error('Synthetic cover security release was not cleared');
   return requested.body.assetId;
 }
 
@@ -128,6 +130,7 @@ export async function run(ctx) {
     authHeader: bearerFor(fixtures.adminIdentity),
     body: { assetId: requestedAudio.body.assetId },
   });
+  await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-review-asset', { authHeader: bearerFor(fixtures.adminIdentity), body: { assetId: requestedAudio.body.assetId, decision: 'approve' } });
   const audioPromote = await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-manage-collaboration', {
     authHeader: bearerFor(fixtures.adminIdentity),
     body: { op: 'update_asset', assetId: requestedAudio.body.assetId, isPrimaryCover: true },

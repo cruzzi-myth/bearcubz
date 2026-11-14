@@ -1,0 +1,100 @@
+{
+  "scope": "Native PostgreSQL portal schema with explicit auth/storage shims; no pg_cron, pg_net, GoTrue or Storage runtime",
+  "files": [
+    {
+      "file": "20261106140000_signal_portal_schema.sql",
+      "sha256": "d60a24a7b942add4370b00d56f31ff0a3aede1c96e4898c0d575f0618b37af08",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261106140100_signal_portal_storage.sql",
+      "sha256": "b0bfb2caf90a938fc481b8a958d094119e8f7e8d9118d4c103138c105ac0aaae",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261106150000_signal_portal_artwork.sql",
+      "sha256": "74b1b9d2707943b9c90b9ca369c564d6ca9ae9e3716ee011764f443829ac97dd",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261106160000_signal_portal_upload_lifecycle.sql",
+      "sha256": "ddc7399914bcba10c2248a89f1f0c7bec35b55a3b49f45a9837431e5dca37497",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261106170000_signal_portal_security_hardening.sql",
+      "sha256": "bccbef11629e752fd9848595ff5db070edac181a55540f2ebd2b59e0d9cca92a",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261107220000_signal_portal_feedback_read_receipts.sql",
+      "sha256": "bb7fe0a1ad49034b5a5cfcca12e061634f234e374492ce1d5a631acf4e345638",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261108080000_signal_portal_project_classification.sql",
+      "sha256": "1b8c8c90e5c94f63ef624436ebfed68c1a519bc9c3106fdf569bdc5c4be4f738",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261109040000_signal_portal_feedback_attachments.sql",
+      "sha256": "d7756770155f7bd7fcbd10c17cc29d3954996f55e00feec18a6429ff9a44fd45",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261109063400_signal_portal_attachment_review.sql",
+      "sha256": "756343af61eefe8f88a659501f65dc2aaaf9963e70f5a8938758fb5dc39e8894",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261109071500_signal_portal_attachment_owner_policy_fix.sql",
+      "sha256": "38a3e4f4fe2f5513048a1f4be1b239e0c11d232676792603c34cb29f948246b6",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261109090000_signal_portal_attachment_scanning.sql",
+      "sha256": "b7e301ce5d9e68f11f0d377ba2a563bbaae6b2c9f9d895aa9e4c1820e4fa366f",
+      "schedulerOmitted": true
+    },
+    {
+      "file": "20261109091500_signal_portal_cron_secret_fix.sql",
+      "sha256": "135986628bb363be1b8c83eaaafa02cb967b9afb725572bfdba6e024687d6553",
+      "schedulerOmitted": true
+    },
+    {
+      "file": "20261109092000_signal_portal_cron_header_fix.sql",
+      "sha256": "a3d14d7aa7de88e104cfa5df261595d8997f5776fd93f090bff175662bb1d165",
+      "schedulerOmitted": true
+    },
+    {
+      "file": "20261109150000_signal_portal_zip_attachment_support.sql",
+      "sha256": "96a0e65ee7a03fa64a2621bdae722ca1bc822ba946bee8374866d71de9155a8c",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261109151500_signal_portal_zip_storage_mime_fix.sql",
+      "sha256": "5a882a604d98a7a563eb952d1eaf6c437f5185c65e74bcf06dafd9ad3604d79d",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261110010000_signal_portal_scan_lease_recovery.sql",
+      "sha256": "e8d4254db96ac4a696da54ad67573bdf6290912140b7add7aba372d40e39ddfe",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261110011500_signal_portal_scan_claim_function.sql",
+      "sha256": "ce9dc2be5b6c6396539fdb2e3a39c3e9be6673cc76c55581ed327fead233d785",
+      "schedulerOmitted": false
+    },
+    {
+      "file": "20261110013000_signal_portal_scan_recovery_cron.sql",
+      "sha256": "b226c5bdbf63b7353a07e44067fb26b811912b42eca10f43e89a8037d09c1699",
+      "schedulerOmitted": true
+    },
+    {
+      "file": "20261110020000_signal_portal_dual_scanner_evidence.sql",
+      "sha256": "8f43dcf09d42a032c005ee3d0c8bffa8af5c060e0c2139a332043d3eb487de5e",
+      "schedulerOmitted": false
+    }
+  ]
+}

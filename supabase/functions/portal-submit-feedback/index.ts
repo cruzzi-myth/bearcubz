@@ -86,16 +86,24 @@ Deno.serve(async (request) => {
   // author_id comes from the verified session, never from the
   // request body — there is no field a client could set to post as
   // someone else.
-  const inserted = await adminClient.from('collaboration_feedback').insert({
-    collaboration_id: body.collaborationId,
-    author_id: uid,
-    asset_id: body.assetId ?? null,
-    kind: body.kind,
-    body: text,
-    is_admin_reply: false,
-  });
+  const inserted = await adminClient
+    .from('collaboration_feedback')
+    .insert({
+      collaboration_id: body.collaborationId,
+      author_id: uid,
+      asset_id: body.assetId ?? null,
+      kind: body.kind,
+      body: text,
+      is_admin_reply: false,
+    })
+    .select('id')
+    .single();
 
   if (inserted.error) return json({ error: 'SUBMIT_FAILED' }, 500);
 
-  return json({ ok: true });
+  // Stage K1.6C: backward-compatible addition — feedbackId lets the
+  // caller chain attachment uploads to this exact, real message (see
+  // portal-request-attachment-upload-url). Every existing caller that
+  // only reads `ok` is unaffected.
+  return json({ ok: true, feedbackId: inserted.data.id });
 });

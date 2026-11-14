@@ -63,7 +63,40 @@ Deno.serve(async (request) => {
     .gt('expires_at', new Date().toISOString())
     .maybeSingle();
 
-  if (!invitation.data) return json(NEUTRAL_RESPONSE);
+  let eligible = Boolean(invitation.data);
+
+  // Stage K1: an administrator signs in through this exact same path
+  // and must never also need a pending artist invitation -- but
+  // nothing about the artist invitation branch above changes, and
+  // nothing here grants admin status itself (that's still decided
+  // exclusively by is_portal_admin(), server-side, every time the
+  // signed-in session is checked). This only decides whether THIS
+  // request is eligible to receive an OTP at all, the same binary
+  // decision the invitation check above already makes -- and the
+  // response stays byte-identical either way, so this adds no new
+  // way to distinguish "is an admin" from "has an invitation" from
+  // "neither" by watching this endpoint.
+  //
+  // Looks up admins first (a tiny, slow-growing set), then resolves
+  // each one's email by id -- not the reverse. An earlier version of
+  // this paginated ALL auth.users (perPage: 1000) and filtered in
+  // memory, which would have meant fetching the entire user base
+  // (including every Moon Racer Passport holder) on every single
+  // non-invited request -- the common case for this public,
+  // enumeration-resistant endpoint. Cost here scales with the number
+  // of administrators, never with total registered users.
+  if (!eligible) {
+    const admins = await client.from('portal_admins').select('user_id').is('revoked_at', null);
+    for (const row of admins.data ?? []) {
+      const { data: userData } = await client.auth.admin.getUserById(row.user_id);
+      if (userData.user?.email?.toLowerCase() === email) {
+        eligible = true;
+        break;
+      }
+    }
+  }
+
+  if (!eligible) return json(NEUTRAL_RESPONSE);
 
   // Eligible. Make sure the auth user exists before attempting OTP —
   // signInWithOtp with shouldCreateUser:false requires it, and we're

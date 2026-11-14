@@ -1,0 +1,18 @@
+# ClamAV's root-context build is deny-by-default: never send repository secrets/assets.
+**
+!infra/
+!infra/clamav/
+!infra/clamav/worker/
+!infra/clamav/worker/**
+!infra/clamav/clamd.conf
+!infra/clamav/healthcheck.mjs
+!infra/clamav/tests/
+!infra/clamav/tests/genuine.test.mjs
+!supabase/
+!supabase/functions/
+!supabase/functions/_shared/
+!supabase/functions/_shared/attachmentSafety.ts
+!supabase/functions/_shared/zipValidation.ts
+!supabase/functions/_shared/clamavPolicy.ts
+**/.env*
+**/*.log

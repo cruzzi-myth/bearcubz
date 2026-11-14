@@ -3,8 +3,12 @@ import { useState, type FormEvent } from 'react';
 import { PortalChamberLayout } from '../layouts/PortalChamberLayout';
 import { PortalEmptyState } from '../components/PortalEmptyState';
 import { ChamberNoProjectState } from '../components/ChamberNoProjectState';
+import { AttachmentComposer } from '../components/AttachmentComposer';
+import { AttachmentList } from '../components/AttachmentList';
 import { useAuthorizedCollaboration } from '../hooks/useAuthorizedCollaboration';
 import { useFeedbackThread } from '../hooks/useFeedbackThread';
+import { useAttachmentUpload } from '../hooks/useAttachmentUpload';
+import { useMessageAttachments } from '../hooks/useMessageAttachments';
 import { PortalHost } from '../features/portal-host/PortalHost';
 import { supabase } from '../services/supabaseClient';
 import './chamber-content.css';
@@ -24,6 +28,14 @@ export function TransmissionChamberPage() {
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const attachmentUpload = useAttachmentUpload();
+  // The real feedbackId this composer's current/most-recent send used
+  // — a retry must upload against the SAME message, never a blank or
+  // stale id.
+  const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
+
+  const messageIds = thread.status === 'ready' ? thread.messages.map((m) => m.id) : [];
+  const attachmentsByMessage = useMessageAttachments(messageIds);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,15 +46,29 @@ export function TransmissionChamberPage() {
     setSubmitError(null);
     // author identity is never sent from here — portal-submit-feedback
     // derives it exclusively from the caller's verified session.
-    const { error } = await supabase.functions.invoke('portal-submit-feedback', {
+    const { data, error } = await supabase.functions.invoke<{ ok: boolean; feedbackId?: string }>('portal-submit-feedback', {
       body: { collaborationId: id, kind: 'general', body: text },
     });
-    setSubmitting(false);
 
-    if (error) {
+    if (error || !data?.ok || !data.feedbackId) {
+      setSubmitting(false);
       setSubmitError("Couldn't send that right now. Please try again.");
       return;
     }
+
+    // Stage K1.6C: attachments upload AFTER the message exists — the
+    // real feedbackId from the response above is the only identifier
+    // the attachment functions ever trust (see their own comments on
+    // why collaborationId is never client-supplied). A failed
+    // attachment never blocks the others or the message itself, which
+    // has already been sent successfully by this point.
+    setActiveFeedbackId(data.feedbackId);
+    const pending = attachmentUpload.uploads.filter((u) => u.status === 'validating');
+    if (pending.length > 0) {
+      await attachmentUpload.uploadAll(data.feedbackId, pending);
+    }
+
+    setSubmitting(false);
     setBody('');
     if ('reload' in thread) thread.reload();
   }
@@ -81,6 +107,7 @@ export function TransmissionChamberPage() {
                     <span>{formatAt(m.createdAt)}</span>
                   </div>
                   <p className="sp-transmission__msg-body">{m.body}</p>
+                  <AttachmentList attachments={attachmentsByMessage.byMessage[m.id] ?? []} />
                 </div>
               ))}
             </div>
@@ -100,6 +127,13 @@ export function TransmissionChamberPage() {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Share your thoughts on this collaboration…"
               maxLength={4000}
+              disabled={submitting}
+            />
+            <AttachmentComposer
+              uploads={attachmentUpload.uploads}
+              onAddFiles={attachmentUpload.addFiles}
+              onRemove={attachmentUpload.removeUpload}
+              onRetry={(localId) => activeFeedbackId && void attachmentUpload.retryUpload(activeFeedbackId, localId)}
               disabled={submitting}
             />
             {submitError && <p className="sp-transmission__status sp-transmission__status--error">{submitError}</p>}

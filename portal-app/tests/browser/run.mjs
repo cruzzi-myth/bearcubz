@@ -1,13 +1,30 @@
+import { readFileSync } from 'node:fs';
+import { expect } from '@playwright/test';
 import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
 import AxeBuilder from '@axe-core/playwright';
 import { check, summary } from './_harness.mjs';
 import { signInForBrowser, seedSessionAndReload, authStorageKey } from './_session.mjs';
 import { loadBrowserDataset } from '../integration/browser-dataset.mjs';
+import { assertSafeToRunIntegrationTests } from '../integration/_guard.mjs';
+
+assertSafeToRunIntegrationTests();
 
 const BASE = 'http://localhost:5173';
 const dataset = loadBrowserDataset();
 if (!dataset) throw new Error('No browser dataset found — run create-browser-dataset.mjs first.');
+
+// Stage K1.6B addendum — the real, multi-page proposal documents
+// (5 pages each) needed to exercise page navigation and zoom, unlike
+// the generic browser-dataset fixture's synthetic 1-page/200x200 PDF.
+// Optional: a checkout without the K1.6B dev dataset still runs every
+// other test normally.
+let k16b = null;
+try {
+  k16b = JSON.parse(readFileSync(new URL('../../docs/signal-portal/.k16b-dev-dataset.json', import.meta.url), 'utf8'));
+} catch {
+  console.log('[k16b] .k16b-dev-dataset.json not found — K1.6B-specific proposal page-nav/zoom checks will report pass-with-note.');
+}
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const anonKey = process.env.SUPABASE_ANON_KEY;
@@ -182,7 +199,7 @@ await check('Artist A: session persists across a page refresh (no re-login neede
   const { context, page } = await freshPage('artistA', '/dashboard');
   await page.waitForTimeout(1500);
   await page.reload();
-  await page.waitForTimeout(1500);
+  await expect(page.locator('body')).toContainText('Ghost Signal');
   const text = await page.textContent('body');
   await context.close();
   return text.includes('Ghost Signal');
@@ -354,15 +371,21 @@ await check('Listening Chamber: prefers-reduced-motion shows the static marker i
 });
 
 // ---------- 9. Proposal Archive ----------
-await check('Proposal Archive: clicking View opens the proposal in an iframe with a real signed URL, with the non-acceptance notice visible', async () => {
+await check('Proposal Archive: clicking View opens the real document via the PDF.js canvas viewer, with the non-acceptance notice visible', async () => {
+  // Stage K1.6B addendum replaced the <iframe> embed with a real
+  // PDF.js canvas renderer -- there is no iframe/src to inspect
+  // anymore, so this now confirms the same underlying guarantee
+  // (a real signed document actually loaded and rendered) via the
+  // canvas's own non-zero dimensions and the page indicator instead.
   const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/proposal`);
   await page.waitForTimeout(2000);
   await page.getByRole('button', { name: 'View' }).click();
-  await page.waitForTimeout(1500);
-  const iframeSrc = await page.locator('iframe').getAttribute('src').catch(() => null);
+  await page.waitForTimeout(2500);
+  const canvasBox = await page.locator('.sp-pdf__canvas-viewport canvas').boundingBox().catch(() => null);
+  const pageIndicator = await page.locator('.sp-pdf__page-indicator').textContent().catch(() => '');
   const text = await page.textContent('body');
   await context.close();
-  return Boolean(iframeSrc) && iframeSrc.includes('/storage/v1/object/sign/') && text.includes('not an acceptance of its terms');
+  return Boolean(canvasBox) && canvasBox.width > 0 && canvasBox.height > 0 && /Page 1 of \d+/.test(pageIndicator) && text.includes('not an acceptance of its terms');
 });
 
 // ---------- 10. Visual Concept Gallery ----------
@@ -424,12 +447,15 @@ await check('Transmission Chamber: artist can submit new feedback and see it app
   const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/respond`);
   await page.waitForTimeout(1500);
   const textarea = page.locator('textarea');
-  await textarea.fill('Browser-review submitted feedback, Stage I2C.');
+  const feedbackText = `Browser-review submitted feedback ${Date.now()}`;
+  await textarea.fill(feedbackText);
+  const submitted = page.waitForResponse(r => r.url().includes('/functions/v1/portal-submit-feedback') && r.request().method() === 'POST');
   await page.getByRole('button', { name: /send|submit/i }).click();
-  await page.waitForTimeout(1500);
+  expect((await submitted).ok()).toBeTruthy();
+  await expect(page.getByRole('log', { name: 'Feedback messages' })).toContainText(feedbackText);
   const text = await page.textContent('body');
   await context.close();
-  return text.includes('Browser-review submitted feedback');
+  return text.includes(feedbackText);
 });
 
 // ---------- 12. NYX ARDENT ----------
@@ -965,6 +991,114 @@ await check('K1.6A.3: browser back/forward works correctly across a project-inde
   return forwardUrl.endsWith('/chambers/proposals') && backUrl.endsWith('/dashboard') && forwardAgainUrl.endsWith('/chambers/proposals');
 });
 
+// ---------- Stage K1.6B addendum: premium PDF viewer + gallery nav ----------
+// Both checks below need a REAL multi-page document — the generic
+// browser-dataset fixture's proposal is a synthetic 1-page/200x200
+// PDF (see fixtures.mjs syntheticPdfBytes), which can never exercise
+// "Next page" (disabled at 1 of 1) or show a meaningful zoom delta
+// (fit-width already scales a 200px-wide page far past 1x). The real
+// K1.6B documents are genuine 5-page letter-proportioned PDFs.
+async function k16bProposalPage(projectKey) {
+  const proj = k16b.collaborations[projectKey];
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const session = await (async () => {
+    const { data, error } = await anon.auth.signInWithPassword({ email: proj.artist.email, password: k16b.password });
+    if (error) throw new Error(error.message);
+    return data.session;
+  })();
+  await seedSessionAndReload(page, supabaseUrl, session, `/collaboration/${proj.id}/proposal`);
+  await page.waitForTimeout(2000);
+  await page.getByRole('button', { name: 'View' }).click();
+  await page.waitForTimeout(2500);
+  return { context, page };
+}
+
+await check('Proposal Chamber: page navigation (Next) moves to page 2 of the real, multi-page document', async () => {
+  if (!k16b) return true; // no K1.6B dev dataset in this checkout -- see note at startup.
+  const { context, page } = await k16bProposalPage('xylo');
+  await page.getByRole('button', { name: 'Next page' }).click();
+  await page.waitForTimeout(1200);
+  const pageIndicator = await page.locator('.sp-pdf__page-indicator').textContent();
+  await context.close();
+  return pageIndicator.includes('Page 2 of 5');
+});
+
+await check('Proposal Chamber: zoom in/out changes the rendered canvas size', async () => {
+  if (!k16b) return true;
+  const { context, page } = await k16bProposalPage('xylo');
+  const before = await page.locator('.sp-pdf__canvas-viewport canvas').boundingBox();
+  await page.getByRole('button', { name: 'Zoom out' }).click();
+  await page.getByRole('button', { name: 'Zoom out' }).click();
+  await page.waitForTimeout(800);
+  const after = await page.locator('.sp-pdf__canvas-viewport canvas').boundingBox();
+  await context.close();
+  // Fit Width is the default on open, so starting from "zoom in" could
+  // go either direction depending on how far fit-width already scaled
+  // the real page -- "zoom OUT" twice from a fit-width baseline is
+  // guaranteed to shrink the canvas, which is the one direction that's
+  // unambiguous regardless of the document's native page size.
+  return after.width < before.width;
+});
+
+await check('Proposal Chamber: Fit Width / Fit Page controls are both reachable and toggle correctly', async () => {
+  const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/proposal`);
+  await page.waitForTimeout(2000);
+  await page.getByRole('button', { name: 'View' }).click();
+  await page.waitForTimeout(2500);
+  await page.getByRole('button', { name: 'Fit Page' }).click();
+  await page.waitForTimeout(500);
+  const fitPageActive = await page.getByRole('button', { name: 'Fit Page' }).evaluate((el) => el.className.includes('--active'));
+  await page.getByRole('button', { name: 'Fit Width' }).click();
+  await page.waitForTimeout(500);
+  const fitWidthActive = await page.getByRole('button', { name: 'Fit Width' }).evaluate((el) => el.className.includes('--active'));
+  await context.close();
+  return fitPageActive && fitWidthActive;
+});
+
+await check('Proposal Chamber: readable on a mobile viewport with no horizontal page overflow', async () => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  const session = await sessionFor('artistA');
+  await seedSessionAndReload(page, supabaseUrl, session, `/collaboration/${dataset.collaborations.projectA}/proposal`);
+  await page.waitForTimeout(2000);
+  await page.getByRole('button', { name: 'View' }).click();
+  await page.waitForTimeout(2500);
+  const canvasBox = await page.locator('.sp-pdf__canvas-viewport canvas').boundingBox();
+  const noOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
+  await context.close();
+  return canvasBox.width <= 390 && noOverflow;
+});
+
+await check("Proposal Chamber: Artist B still cannot open Artist A's proposal document (unauthorized PDF access denied)", async () => {
+  const { context, page } = await freshPage('artistB', `/collaboration/${dataset.collaborations.projectA}/proposal`);
+  await page.waitForTimeout(1500);
+  const text = await page.textContent('body');
+  const viewButtonCount = await page.getByRole('button', { name: 'View' }).count();
+  await context.close();
+  return text.includes("This collaboration isn't available to your account") && viewButtonCount === 0;
+});
+
+await check('Visual Concept Gallery: a single-image collaboration shows no stray next/prev lightbox controls', async () => {
+  // projectA (the generic browser-dataset fixture) has more than one
+  // visual asset already -- confirmed genuinely single-image real
+  // data is SIGNAL-XYLO-001 (exactly one track_cover, nothing else).
+  if (!k16b) return true;
+  const proj = k16b.collaborations.xylo;
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const { data, error } = await anon.auth.signInWithPassword({ email: proj.artist.email, password: k16b.password });
+  if (error) throw new Error(error.message);
+  await seedSessionAndReload(page, supabaseUrl, data.session, `/collaboration/${proj.id}/visuals`);
+  await page.waitForTimeout(2000);
+  await page.locator('.sp-gallery__grid img').first().click();
+  await page.waitForTimeout(500);
+  const navCount = await page.locator('.sp-gallery__lightbox-nav').count();
+  const countBadge = await page.locator('.sp-gallery__lightbox-count').count();
+  await context.close();
+  return navCount === 0 && countBadge === 0;
+});
+
 // ---------- 13. Missing artwork ----------
 await check('missing primary cover (Project C has no artwork at all): dashboard card shows a placeholder, not broken/missing image markup', async () => {
   const { context, page } = await freshPage('artistA', '/dashboard');
@@ -1037,7 +1171,8 @@ const CHAMBER_PATHS = {
 for (const [label, segment] of Object.entries(CHAMBER_PATHS)) {
   await check(`accessibility (axe-core, full scan): ${label} has zero violations of any severity`, async () => {
     const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/${segment}`);
-    await page.waitForTimeout(2000);
+    await expect(page.locator('main')).toBeVisible();
+    await expect(page.locator('h1')).toBeVisible();
     const results = await new AxeBuilder({ page }).analyze();
     await context.close();
     if (results.violations.length > 0) console.log('  axe violations:', JSON.stringify(results.violations.map((v) => v.id)));
@@ -1164,8 +1299,10 @@ await check('Artist A: quick-reply from the inbox panel reaches the same Transmi
   await page.waitForTimeout(1000);
   const firstReplyInput = page.locator('.sp-inbox__quick-reply input').first();
   await firstReplyInput.fill(quickReplyText);
+  const submitted = page.waitForResponse(r => r.url().includes('/functions/v1/portal-submit-feedback') && r.request().method() === 'POST');
   await firstReplyInput.locator('xpath=following-sibling::button').first().click();
-  await page.waitForTimeout(1200);
+  const response = await submitted;
+  expect(response.ok()).toBeTruthy();
   await context.close();
 
   const { data } = await admin.from('collaboration_feedback').select('id').eq('body', quickReplyText);
@@ -1177,6 +1314,7 @@ await check('Artist A: quick-reply from the inbox panel reaches the same Transmi
 await check('Artist A: Asset Library shows the compact row layout with a TRACK classification badge for Project A (bpm/key both set)', async () => {
   const { context, page } = await freshPage('artistA', '/dashboard');
   await page.waitForTimeout(1200);
+  await expect(page.locator('.sp-asset-row').first()).toBeVisible();
   const rowCount = await page.locator('.sp-asset-row').count();
   const text = await page.textContent('.sp-asset-row-list');
   await context.close();
@@ -1729,8 +1867,10 @@ await check('administrator (restored): the same classification save now succeeds
   await page.getByRole('button', { name: 'Collaborations' }).click();
   await page.waitForTimeout(1200);
   const row = page.locator('tr', { hasText: 'Static Bloom' }).last();
+  const saved = page.waitForResponse(r => r.url().includes('/functions/v1/portal-admin-manage-collaboration') && r.request().method() === 'POST');
   await row.getByLabel(/Change classification/).selectOption('track');
-  await page.waitForTimeout(1500);
+  expect((await saved).ok()).toBeTruthy();
+  await expect(row.getByText('Saved', { exact: true })).toBeVisible();
   const sawSuccess = (await row.locator('text=Saved').count()) > 0;
   await context.close();
   const { data } = await admin.from('collaborations').select('classification').eq('id', dataset.collaborations.projectB).single();
@@ -1754,14 +1894,15 @@ await check('administrator: can reach the Private Listening Chamber for a projec
   return Boolean(src) && src.includes('/storage/v1/object/sign/');
 });
 
-await check('administrator: can reach the Proposal Archive for the same project, with a real signed iframe src', async () => {
+await check('administrator: can reach the Proposal Archive for the same project, with the real document rendered via the PDF.js canvas viewer', async () => {
   const { context, page } = await freshPage('admin', `/collaboration/${dataset.collaborations.projectA}/proposal`);
   await page.waitForTimeout(1500);
   await page.getByRole('button', { name: 'View' }).first().click();
-  await page.waitForTimeout(1500);
-  const src = await page.locator('iframe').first().getAttribute('src');
+  await page.waitForTimeout(2500);
+  const canvasBox = await page.locator('.sp-pdf__canvas-viewport canvas').first().boundingBox().catch(() => null);
+  const pageIndicator = await page.locator('.sp-pdf__page-indicator').first().textContent().catch(() => '');
   await context.close();
-  return Boolean(src) && src.includes('/storage/v1/object/sign/');
+  return Boolean(canvasBox) && canvasBox.width > 0 && canvasBox.height > 0 && /Page 1 of \d+/.test(pageIndicator);
 });
 
 await check('administrator: can reach the Visual Concept Gallery for the same project, seeing real authorized artwork', async () => {
@@ -1907,6 +2048,337 @@ await check('administrator (mocked zero-collaboration state): clicking a chamber
     emptyMessage === 'No listening sessions are available yet. Your authorized demos will appear here.'
   );
 });
+
+// ---------- Stage K1.6D: administrator attachment review & transmission management ----------
+// Builds its own small, disposable set of real attachments against
+// the standard browser-dataset's Artist A / admin identities (same
+// "create real data via direct Edge Function calls, then drive the
+// UI, then clean up" convention as the inbox/quick-reply tests above)
+// rather than reusing the separate real K1.6B/K1.6C/K1.6D dev
+// collaborations — those are reserved for the integration suite
+// (k16c.mjs/k16d.mjs) to avoid burning their artists' real
+// portal-submit-feedback rate-limit budget across repeated browser
+// runs.
+async function k16dFunctionCall(role, fn, body) {
+  const session = await sessionFor(role);
+  const client = createClient(supabaseUrl, anonKey, { auth: { persistSession: false } });
+  await client.auth.setSession(session);
+  return client.functions.invoke(fn, { body });
+}
+
+async function k16dUploadAttachment(label) {
+  const fb = await k16dFunctionCall('artistA', 'portal-submit-feedback', {
+    collaborationId: dataset.collaborations.projectA, kind: 'general', body: `K1.6D browser test — ${label} ${Date.now()}`,
+  });
+  const feedbackId = fb.data.feedbackId;
+  const bytes = new TextEncoder().encode(`k16d-browser-${label}-content`);
+  const req = await k16dFunctionCall('artistA', 'portal-request-attachment-upload-url', {
+    feedbackId, mimeType: 'text/plain', fileSizeBytes: bytes.length, originalFilename: `${label}.txt`,
+  });
+  await fetch(req.data.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: bytes });
+  const confirm = await k16dFunctionCall('artistA', 'portal-confirm-attachment-upload', { attachmentId: req.data.attachmentId });
+  return { attachmentId: req.data.attachmentId, feedbackId, status: confirm.data?.status };
+}
+
+// Stage K1.6E: a row can no longer reach 'clean' through confirm
+// alone (the real scan attempt fails closed to security_status
+// 'error' with no CLOUDMERSIVE_API_KEY configured in this dev
+// project — see the K1.6E report). Tests below that exercise the
+// ADMIN REVIEW step itself simulate "if a real scanner had said
+// clean" via this clearly-labeled test-only update.
+async function simulateCleanScan(attachmentId) {
+  await admin
+    .from('collaboration_feedback_attachments')
+    .update({ security_status: 'clean', status: 'clean', scan_provider: 'TEST-SIMULATED-stage-k16e', scanned_at: new Date().toISOString() })
+    .eq('id', attachmentId);
+}
+
+async function k16dCleanupAttachment(attachmentId) {
+  const row = await admin.from('collaboration_feedback_attachments').select('storage_bucket, storage_path, feedback_id').eq('id', attachmentId).maybeSingle();
+  if (row.data) {
+    await admin.storage.from(row.data.storage_bucket).remove([row.data.storage_path]).catch(() => {});
+    await admin.from('collaboration_feedback_attachments').delete().eq('id', attachmentId);
+    await admin.from('collaboration_feedback').delete().eq('id', row.data.feedback_id);
+  }
+}
+
+async function adminAttachmentsTabPage(viewport) {
+  const context = await browser.newContext(viewport ? { viewport } : undefined);
+  const page = await context.newPage();
+  const session = await sessionFor('admin');
+  await seedSessionAndReload(page, supabaseUrl, session, '/admin');
+  await page.waitForTimeout(1200);
+  await page.getByRole('button', { name: 'Attachments' }).click();
+  await page.waitForTimeout(1000);
+  return { context, page };
+}
+
+await check('administrator: the Attachments tab is present in the Command Center and loads the review queue', async () => {
+  const { context, page } = await adminAttachmentsTabPage();
+  const heading = await page.textContent('body');
+  await context.close();
+  return heading.includes('Attachment Review');
+});
+
+{
+  let pendingId, rejectedId, availableId;
+  await check('(setup) create one pending, one rejected, and one available real attachment for the UI checks below', async () => {
+    const pending = await k16dUploadAttachment('pending-ui');
+    const rejected = await k16dUploadAttachment('rejected-ui');
+    const toApprove = await k16dUploadAttachment('available-ui');
+    pendingId = pending.attachmentId;
+    rejectedId = rejected.attachmentId;
+    availableId = toApprove.attachmentId;
+    await simulateCleanScan(rejectedId);
+    await simulateCleanScan(availableId);
+    const rejectReview = await k16dFunctionCall('admin', 'portal-admin-review-attachment', {
+      attachmentId: rejectedId, decision: 'rejected', reason: 'K1.6D browser test rejection reason.',
+    });
+    const approveReview = await k16dFunctionCall('admin', 'portal-admin-review-attachment', { attachmentId: availableId, decision: 'clean' });
+    // Stage K1.6E.1: CLOUDMERSIVE_API_KEY is genuinely configured now,
+    // so this ordinary small text file may legitimately scan clean
+    // immediately (status 'clean') rather than sitting at
+    // 'awaiting_scan' — both are real "not yet admin-decided" states
+    // and both belong to the same "Pending Review" queue filter.
+    return (pending.status === 'awaiting_scan' || pending.status === 'clean') && rejectReview.data?.ok && approveReview.data?.ok;
+  });
+
+  await check('administrator: review queue shows real metadata — collaboration, filename, type, size, and status — for a pending attachment', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const text = await page.textContent('body');
+    await context.close();
+    return (
+      text.includes('Ghost Signal (Review Project A)') &&
+      text.includes('pending-ui.txt') &&
+      text.includes('text/plain') &&
+      (text.includes('awaiting_scan') || text.includes('clean'))
+    );
+  });
+
+  await check('administrator: a rejection reason is visible in the review queue for a rejected attachment', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const text = await page.textContent('body');
+    await context.close();
+    return text.includes('rejected-ui.txt') && text.includes('K1.6D browser test rejection reason.');
+  });
+
+  await check('administrator: project filter derives its options from real collaborations, and narrows the queue to only the selected project', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const options = await page.getByLabel('Filter by project').locator('option').allTextContents();
+    const hasRealProjects = options.includes('Ghost Signal (Review Project A)') && options.includes('Static Bloom (Review Project B)');
+    await page.getByLabel('Filter by project').selectOption({ label: 'Static Bloom (Review Project B)' });
+    await page.waitForTimeout(400);
+    const afterFilter = await page.textContent('body');
+    await context.close();
+    return hasRealProjects && !afterFilter.includes('pending-ui.txt') && afterFilter.includes('No attachments match this filter.');
+  });
+
+  await check('administrator: status filter narrows the queue to only "Rejected", hiding pending/available rows', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    await page.getByLabel('Filter by status').selectOption({ label: 'Rejected' });
+    await page.waitForTimeout(400);
+    const text = await page.textContent('body');
+    await context.close();
+    return text.includes('rejected-ui.txt') && !text.includes('pending-ui.txt') && !text.includes('available-ui.txt');
+  });
+
+  await check('administrator: approving a pending attachment moves it to "available" and a safe Preview control appears for it', async () => {
+    const fresh = await k16dUploadAttachment('approve-live-ui');
+    await simulateCleanScan(fresh.attachmentId);
+    const { context, page } = await adminAttachmentsTabPage();
+    const row = page.locator('tr', { hasText: 'approve-live-ui.txt' });
+    await row.getByRole('button', { name: 'Approve' }).click();
+    const updatedRow = page.locator('tr', { hasText: 'approve-live-ui.txt' }).first();
+    await updatedRow.getByRole('button', { name: 'Preview' }).waitFor({ timeout: 8000 }).catch(() => {});
+    const text = await updatedRow.textContent();
+    const hasPreviewButton = (await updatedRow.getByRole('button', { name: 'Preview' }).count()) > 0;
+    await context.close();
+    await k16dCleanupAttachment(fresh.attachmentId);
+    return text.includes('available') && hasPreviewButton;
+  });
+
+  await check('administrator: quarantined (pending) attachments never show a Preview control — metadata only, nothing rendered', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const pendingRow = page.locator('tr', { hasText: 'pending-ui.txt' });
+    const hasPreview = await pendingRow.getByRole('button', { name: 'Preview' }).count();
+    await context.close();
+    return hasPreview === 0;
+  });
+
+  // Stage K1.6G section 6 replaced the old generic "Pending review"
+  // label with the brief's own required, state-specific copy (see
+  // AttachmentList.tsx's describeAttachmentStatus). "pending-ui.txt"
+  // is never reviewed/approved by anything in this test block, but
+  // with a genuinely configured CLOUDMERSIVE_API_KEY its real scan
+  // normally completes fast enough to land on status='clean' (scan
+  // passed, awaiting administrator review) rather than sitting at
+  // 'awaiting_scan' -- both are legitimate, truthful "not yet
+  // available" states, so this accepts either exact required message
+  // rather than assuming one specific scan timing.
+  await check('Artist A: the Transmission Chamber shows the pending attachment\'s status (not the raw file) under the correct message, surviving a full page refresh', async () => {
+    const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/respond`);
+    await page.waitForTimeout(1800);
+    const before = await page.textContent('body');
+    await page.reload();
+    await page.waitForTimeout(1800);
+    const after = await page.textContent('body');
+    await context.close();
+    const hasExpectedCopy = (t) => t.includes('Upload complete. Your file is awaiting a security check.') || t.includes('Security check passed. Your file is awaiting review.');
+    return hasExpectedCopy(before) && hasExpectedCopy(after) && after.includes('pending-ui.txt');
+  });
+
+  await check('Artist A: the Transmission Chamber shows the rejected attachment\'s reason, surviving a full page refresh', async () => {
+    const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/respond`);
+    await page.waitForTimeout(1800);
+    await page.reload();
+    await page.waitForTimeout(1800);
+    const text = await page.textContent('body');
+    await context.close();
+    return text.includes('This file was not approved for sharing.') && text.includes('K1.6D browser test rejection reason.');
+  });
+
+  await check('responsive @ 390px: the Attachments review queue has no horizontal page overflow', async () => {
+    const { context, page } = await adminAttachmentsTabPage({ width: 390, height: 844 });
+    const noOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
+    await context.close();
+    return noOverflow;
+  });
+
+  await check('keyboard: the project and status filters on the Attachments tab are reachable and operable via keyboard alone', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    await page.getByLabel('Filter by project').focus();
+    const focusedProject = await page.getByLabel('Filter by project').evaluate((el) => el === document.activeElement);
+    await page.keyboard.press('Tab');
+    const focusedStatus = await page.getByLabel('Filter by status').evaluate((el) => el === document.activeElement);
+    await context.close();
+    return focusedProject && focusedStatus;
+  });
+
+  await check('accessibility (axe-core): Attachments review queue (with real rows rendered) has zero serious/critical violations', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const results = await new AxeBuilder({ page }).analyze();
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    await context.close();
+    if (serious.length > 0) console.log('  axe violations:', JSON.stringify(serious.map((v) => v.id)));
+    return serious.length === 0;
+  });
+
+  await check('(cleanup) remove the K1.6D browser-test attachments and their feedback rows', async () => {
+    await k16dCleanupAttachment(pendingId);
+    await k16dCleanupAttachment(rejectedId);
+    await k16dCleanupAttachment(availableId);
+    const leftover = await admin.from('collaboration_feedback_attachments').select('id').in('id', [pendingId, rejectedId, availableId]);
+    return (leftover.data?.length ?? 0) === 0;
+  });
+}
+
+await check('administrator: filtering to a project/status combination with zero matches shows the honest empty state, not a broken table', async () => {
+  const { context, page } = await adminAttachmentsTabPage();
+  await page.getByLabel('Filter by project').selectOption({ label: 'Parallel Transmission (Review Project C — multi-artist)' });
+  await page.waitForTimeout(400);
+  const text = await page.textContent('body');
+  await context.close();
+  return text.includes('No attachments match this filter.');
+});
+
+// ---------- Stage K1.6E: automated malware scanning & quarantine operations (admin UI) ----------
+// Reuses the K1.6D helpers above (k16dUploadAttachment,
+// k16dFunctionCall, k16dCleanupAttachment, adminAttachmentsTabPage) —
+// the Attachments tab's structure is unchanged; this stage only added
+// a Security column and a Retry Scan action.
+{
+  let securityErrorId, infectedId;
+  // Stage K1.6G section 5 added a launch-policy cap (~2.9MB) enforced
+  // by portal-request-attachment-upload-url itself, so a real 3.5MB
+  // request like this one is now rejected (EXCEEDS_LAUNCH_POLICY_LIMIT)
+  // before ever reaching quarantine -- the normal upload flow can no
+  // longer produce this fixture. Simulating "a file that predates the
+  // launch policy" via a direct service-role Storage upload + row
+  // insert (same pattern as k16e1.mjs's createPreExistingOversizedAttachment)
+  // is the correct fix here, not a weaker assertion.
+  async function createOversizedQuarantinedAttachment(label, bytes) {
+    const fb = await k16dFunctionCall('artistA', 'portal-submit-feedback', { collaborationId: dataset.collaborations.projectA, kind: 'general', body: `K1.6E browser ${label} ${Date.now()}` });
+    const feedbackId = fb.data.feedbackId;
+    const attachmentId = crypto.randomUUID();
+    const storagePath = `${dataset.collaborations.projectA}/${attachmentId}.txt`;
+    const upload = await admin.storage.from('collaboration-attachments-quarantine').upload(storagePath, bytes, { contentType: 'text/plain' });
+    if (upload.error) throw new Error(`createOversizedQuarantinedAttachment upload failed: ${upload.error.message}`);
+    await admin.from('collaboration_feedback_attachments').insert({
+      id: attachmentId, feedback_id: feedbackId, collaboration_id: dataset.collaborations.projectA, storage_bucket: 'collaboration-attachments-quarantine', storage_path: storagePath,
+      original_filename: `${label}.txt`, mime_type: 'text/plain', byte_size: bytes.length, uploaded_by: dataset.identities.artistA.uid,
+      status: 'awaiting_scan', security_status: 'error', awaiting_scanner_capacity: true,
+      security_scan_detail: `EXCEEDS_SCANNER_SIZE_LIMIT: file is ${bytes.length} bytes, current scanner limit is 2900000 bytes`,
+    });
+    return attachmentId;
+  }
+
+  await check('(setup) K1.6E/K1.6E.1: create one oversized upload (security_status fails closed to error via the real free-tier size limit — CLOUDMERSIVE_API_KEY is genuinely configured now, so an ordinary small file would actually scan clean) and one EICAR upload (infected)', async () => {
+    const EICAR = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
+
+    securityErrorId = await createOversizedQuarantinedAttachment('k16e-security-error', new Uint8Array(3_500_000));
+    const oversizedRow = await admin.from('collaboration_feedback_attachments').select('status, security_status').eq('id', securityErrorId).single();
+
+    const fb = await k16dFunctionCall('artistA', 'portal-submit-feedback', { collaborationId: dataset.collaborations.projectA, kind: 'general', body: `K1.6E browser eicar ${Date.now()}` });
+    const bytes = new TextEncoder().encode(EICAR);
+    const req = await k16dFunctionCall('artistA', 'portal-request-attachment-upload-url', { feedbackId: fb.data.feedbackId, mimeType: 'text/plain', fileSizeBytes: bytes.length, originalFilename: 'k16e-infected.txt' });
+    infectedId = req.data.attachmentId;
+    await fetch(req.data.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: bytes });
+    const confirm = await k16dFunctionCall('artistA', 'portal-confirm-attachment-upload', { attachmentId: infectedId });
+    return oversizedRow.data?.status === 'awaiting_scan' && confirm.data?.status === 'rejected';
+  });
+
+  await check('administrator: the review queue shows a separate Security column with its own verdict, independent of the Status column', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const text = await page.textContent('body');
+    await context.close();
+    return text.includes('k16e-security-error.txt') && text.includes('error') && text.includes('EXCEEDS_SCANNER_SIZE_LIMIT');
+  });
+
+  await check('administrator: an infected (EICAR) attachment shows Security: infected and no Approve/Reject controls at all', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const row = page.locator('tr', { hasText: 'k16e-infected.txt' });
+    const rowText = await row.textContent();
+    const hasApprove = await row.getByRole('button', { name: 'Approve' }).count();
+    await context.close();
+    return rowText.includes('infected') && rowText.includes('EICAR') && hasApprove === 0;
+  });
+
+  await check('administrator: a security_status "error" row shows a Retry Scan control, and no Approve/Reject controls', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const row = page.locator('tr', { hasText: 'k16e-security-error.txt' });
+    const hasRetry = await row.getByRole('button', { name: 'Retry Scan' }).count();
+    const hasApprove = await row.getByRole('button', { name: 'Approve' }).count();
+    await context.close();
+    return hasRetry === 1 && hasApprove === 0;
+  });
+
+  await check('administrator: clicking Retry Scan re-attempts the scan and the row still honestly reports an error (still over the real free-tier size limit) — never fabricates clean', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const row = page.locator('tr', { hasText: 'k16e-security-error.txt' });
+    await row.getByRole('button', { name: 'Retry Scan' }).click();
+    await page.waitForTimeout(1500);
+    const updatedRow = page.locator('tr', { hasText: 'k16e-security-error.txt' }).first();
+    const text = await updatedRow.textContent();
+    await context.close();
+    return text.includes('error') && !text.includes('clean') && !text.includes('available');
+  });
+
+  await check('accessibility (axe-core): Attachments review queue with the new Security column has zero serious/critical violations', async () => {
+    const { context, page } = await adminAttachmentsTabPage();
+    const results = await new AxeBuilder({ page }).analyze();
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    await context.close();
+    if (serious.length > 0) console.log('  axe violations:', JSON.stringify(serious.map((v) => v.id)));
+    return serious.length === 0;
+  });
+
+  await check('(cleanup) remove the K1.6E browser-test attachments and their feedback rows', async () => {
+    await k16dCleanupAttachment(securityErrorId);
+    await k16dCleanupAttachment(infectedId);
+    const leftover = await admin.from('collaboration_feedback_attachments').select('id').in('id', [securityErrorId, infectedId]);
+    return (leftover.data?.length ?? 0) === 0;
+  });
+}
 
 await browser.close();
 summary('Signal Portal browser suite (Stage I2C)');

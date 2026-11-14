@@ -1,0 +1,54 @@
+{
+  "securityAssertions": {
+    "passed": 233,
+    "failed": 0,
+    "skipped": 0
+  },
+  "workerPolicyProtocolTests": {
+    "passed": 43,
+    "failed": 0,
+    "skipped": 0,
+    "providerRepliesMocked": true
+  },
+  "nativeDatabaseAssertions": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0
+  },
+  "genuineClamavTests": {
+    "passed": 0,
+    "failed": 0,
+    "skipped": 8
+  },
+  "broadDevelopmentIntegration": {
+    "passed": 186,
+    "failed": 0,
+    "skipped": 0
+  },
+  "h2InitialIntegration": {
+    "passed": 10,
+    "failed": 2,
+    "skipped": 0
+  },
+  "h2FocusedIntegration": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 10
+  },
+  "fullBrowser": {
+    "passed": 176,
+    "failed": 1,
+    "skipped": 0
+  },
+  "focusedBrowser": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 176
+  },
+  "finalAdminUI": {
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0
+  },
+  "productionReadiness": "BLOCKED"
+}

@@ -6,6 +6,7 @@ import { CollaborationsTab } from '../features/admin/components/CollaborationsTa
 import { AssetsTab } from '../features/admin/components/AssetsTab';
 import { InvitationsTab } from '../features/admin/components/InvitationsTab';
 import { FeedbackTab } from '../features/admin/components/FeedbackTab';
+import { AttachmentsTab } from '../features/admin/components/AttachmentsTab';
 import { AuditTab } from '../features/admin/components/AuditTab';
 import { SettingsTab } from '../features/admin/components/SettingsTab';
 
@@ -25,6 +26,7 @@ export function AdminPage() {
       {tab === 'assets' && <AssetsTab />}
       {tab === 'invitations' && <InvitationsTab />}
       {tab === 'feedback' && <FeedbackTab />}
+      {tab === 'attachments' && <AttachmentsTab />}
       {tab === 'audit' && <AuditTab />}
       {tab === 'settings' && <SettingsTab />}
     </AdminLayout>

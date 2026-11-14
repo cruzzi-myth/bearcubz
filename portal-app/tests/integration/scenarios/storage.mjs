@@ -41,7 +41,9 @@ export async function run(ctx) {
     authHeader: bearerFor(fixtures.adminIdentity),
     body: { assetId: requested.body.assetId },
   });
-  await check('confirm-upload verifies the real object and marks it ready', async () => confirmed.status === 200 && confirmed.body.uploadStatus === 'ready');
+  await check('confirm-upload scans the real object and requires separate security release review', async () => confirmed.status === 200 && confirmed.body.uploadStatus === 'verifying' && confirmed.body.reviewRequired === true);
+  const reviewed = await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-review-asset', { authHeader: bearerFor(fixtures.adminIdentity), body: { assetId: requested.body.assetId, decision: 'approve' } });
+  await check('explicit administrator security review releases the genuinely scanned asset', async () => reviewed.status === 200 && reviewed.body.uploadStatus === 'ready');
 
   await check('the authorized member (Artist A) can mint a signed URL for their own ready asset', async () => {
     const result = await callEdgeFunction(supabaseUrl, anonKey, 'portal-signed-url', {

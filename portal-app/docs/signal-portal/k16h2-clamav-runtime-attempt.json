@@ -1,0 +1,13 @@
+{
+  "versionRequested": "1.4.6",
+  "officialPackageUrl": "https://www.clamav.net/downloads/production/clamav-1.4.6.macos.universal.pkg",
+  "packageSha256": "a1898a0269e1cad0dc9d9be988a79541f287f205c6537d4a846c5ff3ac3e4a1f",
+  "gpgSignature": "Good signature",
+  "officialKeySource": "https://raw.githubusercontent.com/Cisco-Talos/clamav-documentation/main/src/manual/cisco-talos.gpg",
+  "gpgFingerprint": "5BADCA2665EF59DCF8A23D8B707F0DB480836771",
+  "macInstallerSignatureStatus": "pkgutil reported invalid signature; independent official detached GPG authentication succeeded",
+  "runtimeAttempt": "Extracted to /tmp without system-wide installation; clamd --version failed loading @rpath/libclamav.12.dylib from /usr/local/clamav/lib",
+  "daemonStarted": false,
+  "genuineClamavScans": 0,
+  "systemPathsModified": false
+}

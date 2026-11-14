@@ -1,0 +1,25 @@
+{
+  "fixture": "generated non-private PNG",
+  "scan": {
+    "detail": null,
+    "verdict": "clean",
+    "complete": true,
+    "fileSize": 68,
+    "filename": "bc8a0e8f-878e-4b17-9519-7467d2860143.png",
+    "mimeType": "image/png",
+    "provider": "cloudmersive",
+    "workerId": null,
+    "attemptId": "6600bcb2-a153-4adf-a3dc-9cc85ffa8eef",
+    "startedAt": "2026-11-09T23:51:27.001Z",
+    "fileSha256": "53bef91ca7cf33cab25540283cb08f8a3b3a9c316b61c0f8362575315bce7a0f",
+    "completedAt": "2026-11-09T23:51:27.949Z",
+    "withinLimits": true,
+    "engineVersion": null,
+    "errorCategory": null,
+    "policyVersion": "signal-portal-k16h2-v1",
+    "signatureVersion": null,
+    "signatureTimestamp": null
+  },
+  "securityReview": "approved",
+  "artisticApproval": "pending"
+}

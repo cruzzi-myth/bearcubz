@@ -18,6 +18,9 @@ dist-ssr
 # Stage I2C browser-review dataset tracking (synthetic identities +
 # their password, test project only) — never committed.
 tests/integration/.browser-dataset.json
+# Stage K1.6B dev collaboration dataset tracking (synthetic dev
+# identities + their password, dev project only) — never committed.
+docs/signal-portal/.k16b-dev-dataset.json
 
 # Editor directories and files
 .vscode/*
