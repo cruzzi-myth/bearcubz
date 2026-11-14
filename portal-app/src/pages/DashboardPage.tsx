@@ -63,7 +63,7 @@ export function DashboardPage() {
           </span>
           {isAdmin && (
             <Link to="/admin" className="sp-dash__admin-return">
-              Return to Command Center
+              Command Center
             </Link>
           )}
           <button type="button" className="sp-dash__signout" onClick={() => void signOut()}>

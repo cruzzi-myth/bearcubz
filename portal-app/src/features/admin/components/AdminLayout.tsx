@@ -67,7 +67,7 @@ export function AdminLayout({ activeTab, onTabChange, children }: Props) {
               Link/session as "Return to Signal Portal" above it —
               navigating here never signs the admin out and never
               creates or touches a collaboration_members row. */}
-          <Link to="/dashboard">View Artist Portal</Link>
+          <Link to="/dashboard">Dashboard</Link>
           <Link to="/">← Return to Signal Portal</Link>
           <button type="button" onClick={() => void signOut()}>
             Sign Out

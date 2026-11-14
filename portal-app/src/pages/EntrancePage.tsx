@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { portalAsset } from '../lib/assetPath';
 import { supabase } from '../services/supabaseClient';
@@ -86,6 +86,35 @@ export function EntrancePage() {
   const dashboard = useDashboardData();
   const navigate = useNavigate();
   const variant = useEntranceVariant();
+
+  // Dashboard-first navigation (Stage K1.6M): the Dashboard, not this
+  // entrance screen, is the primary landing page right after a
+  // successful sign-in — for both artists and administrators (an
+  // admin is never auto-sent to /admin).
+  //
+  // The naive version of this ("navigate once authStatus becomes
+  // signed-in") was tried and is wrong: PortalAuthContext's status
+  // always STARTS at 'loading' and only resolves asynchronously,
+  // whether or not a session already existed in storage before this
+  // page even mounted — so that transition looks identical for a
+  // genuine fresh magic-link return and for an admin who already has
+  // a session simply reloading or deliberately navigating back to
+  // "/" (e.g. via "← Return to Signal Portal" from the Command
+  // Center). A real browser test caught this: it auto-bounced that
+  // link straight back to /dashboard, breaking it.
+  //
+  // The only thing that's actually different between those two cases
+  // is the URL itself: a genuine magic-link return always arrives
+  // with Supabase's auth tokens in the hash (#access_token=...&type=
+  // magiclink); a plain reload or an in-app Link navigation never
+  // does. Capturing that fact once, synchronously, on this
+  // component's very first render — before anything (including
+  // supabase-js's own listener) has a chance to consume and clear the
+  // hash — is what makes the distinction reliable.
+  const cameFromMagicLinkRef = useRef(window.location.hash.includes('access_token='));
+  useEffect(() => {
+    if (cameFromMagicLinkRef.current && authStatus === 'signed-in') navigate('/dashboard');
+  }, [authStatus, navigate]);
 
   const collaborations: HostCollaboration[] =
     dashboard.kind === 'ready' ? dashboard.collaborations.map((c) => ({ id: c.id, title: c.title, availableAssetTypes: c.availableAssetTypes })) : [];
