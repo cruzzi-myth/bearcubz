@@ -247,6 +247,21 @@ export async function confirmUpload(assetId: string, promoteToPrimaryCover?: boo
   return { ok: true, data };
 }
 
+/**
+ * The artist-facing portal-signed-url function won't sign anything
+ * until security_review_status = 'approved' — exactly the decision
+ * an admin previewing an asset is about to make, so it can never
+ * serve this case. This calls the separate admin-only function that
+ * still requires genuine, complete scan evidence (or legacy +
+ * upload_status = 'ready'), just not prior approval.
+ */
+export async function requestAdminAssetPreviewUrl(assetId: string, variant: 'full' | 'thumbnail' = 'full'): Promise<ApiResult<{ url: string; expiresInSeconds: number }>> {
+  const { data, error } = await supabase.functions.invoke('portal-admin-asset-signed-url', { body: { assetId, variant } });
+  if (error) return { ok: false, error: mapError(error) };
+  if (data?.error) return { ok: false, error: data.error };
+  return { ok: true, data };
+}
+
 export async function replyToFeedback(collaborationId: string, body: string, assetId?: string): Promise<ApiResult<{ ok: true }>> {
   const { data, error } = await supabase.functions.invoke('portal-admin-reply-feedback', { body: { collaborationId, body, assetId } });
   if (error) return { ok: false, error: mapError(error) };

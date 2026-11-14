@@ -5,7 +5,7 @@ import { updateAsset, markAssetInactive, confirmUpload, approveAssetSecurity } f
 import { AssetUploadForm } from './AssetUploadForm';
 import { AssetLibraryList } from '../../../components/AssetLibraryList';
 import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
-import { useSignedAssetUrl } from '../../../hooks/useSignedAssetUrl';
+import { useAdminAssetPreview } from '../hooks/useAdminAssetPreview';
 import { isCoverEligible } from '../lib/coverEligibility';
 import type { ApprovalStatus, AdminCollaboration } from '../types/adminTypes';
 
@@ -23,7 +23,7 @@ function statusPillClass(status: string): string {
 
 function PreviewButton({ assetId }: { assetId: string }) {
   const [open, setOpen] = useState(false);
-  const signed = useSignedAssetUrl(open ? assetId : null, 'full');
+  const signed = useAdminAssetPreview(open ? assetId : null, 'full');
 
   if (!open) {
     return (
@@ -33,7 +33,7 @@ function PreviewButton({ assetId }: { assetId: string }) {
     );
   }
   if (signed.status !== 'ready') {
-    return <span className="sp-admin__empty">{signed.status === 'unavailable' ? 'Not available' : 'Requesting signed URL…'}</span>;
+    return <span className="sp-admin__empty">{signed.status === 'unavailable' ? 'Not available — scan not yet genuinely clean' : 'Requesting signed URL…'}</span>;
   }
   return (
     <a href={signed.url} target="_blank" rel="noopener noreferrer" className="sp-admin__btn sp-admin__btn--ghost">
@@ -109,7 +109,7 @@ export function AssetsTab() {
       {selectedCollaboration && (
         <div className="sp-admin__section">
           <h2>Upload</h2>
-          <AssetUploadForm collaborationId={selectedCollaboration} onUploaded={reload} />
+          <AssetUploadForm collaborationId={selectedCollaboration} onUploaded={reload} existingAssets={assetState.kind === 'ready' ? assetState.assets : []} />
         </div>
       )}
 
@@ -171,7 +171,7 @@ export function AssetsTab() {
                     <td>{new Date(asset.uploadedAt).toLocaleDateString()}</td>
                     <td>
                       <div className="sp-admin__row-actions">
-                        {asset.uploadStatus === 'ready' && <PreviewButton assetId={asset.id} />}
+                        {(asset.uploadStatus === 'ready' || asset.securityStatus === 'clean') && <PreviewButton assetId={asset.id} />}
                         {!asset.isPrimaryCover && isCoverEligible(asset) && (
                           <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleSetPrimary(asset.id)}>
                             Set Primary

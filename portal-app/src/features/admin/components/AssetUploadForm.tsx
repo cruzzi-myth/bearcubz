@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { requestUploadUrl, confirmUpload } from '../services/adminApi';
-import type { AssetType } from '../types/adminTypes';
+import type { AdminAsset, AssetType } from '../types/adminTypes';
 
 const ASSET_TYPE_OPTIONS: { value: AssetType; label: string }[] = [
   { value: 'audio_short', label: 'Audio — Short Demo' },
@@ -31,8 +31,24 @@ const ALLOWED_MIME: Record<AssetType, string[]> = {
   visual_concept: ['image/jpeg', 'image/png', 'image/webp'],
 };
 
-type Props = { collaborationId: string; onUploaded: () => void };
+type Props = { collaborationId: string; onUploaded: () => void; existingAssets?: AdminAsset[] };
 type Stage = 'idle' | 'requesting' | 'uploading' | 'confirming' | 'done' | 'failed';
+
+/** Uploads via XHR (not fetch) specifically so real byte-level
+ * progress is observable — fetch() has no upload progress event. */
+function putWithProgress(url: string, file: File, onProgress: (fraction: number) => void): Promise<boolean> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', file.type);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded / e.total);
+    };
+    xhr.onload = () => resolve(xhr.status >= 200 && xhr.status < 300);
+    xhr.onerror = () => resolve(false);
+    xhr.send(file);
+  });
+}
 
 /**
  * Faithfully walks the real H10 sequence client-side: validate ->
@@ -43,13 +59,16 @@ type Stage = 'idle' | 'requesting' | 'uploading' | 'confirming' | 'done' | 'fail
  * that only ever happens after confirmUpload's own server-side check
  * succeeds.
  */
-export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
+export function AssetUploadForm({ collaborationId, onUploaded, existingAssets = [] }: Props) {
   const [assetType, setAssetType] = useState<AssetType>('audio_short');
   const [displayLabel, setDisplayLabel] = useState('');
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<Stage>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [uploadFraction, setUploadFraction] = useState(0);
+
+  const duplicateOfType = existingAssets.find((a) => a.assetType === assetType && a.isActive && a.uploadStatus === 'ready');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -90,8 +109,9 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
     }
 
     setStage('uploading');
-    const uploadResponse = await fetch(requested.data.uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-    if (!uploadResponse.ok) {
+    setUploadFraction(0);
+    const uploadOk = await putWithProgress(requested.data.uploadUrl, file, setUploadFraction);
+    if (!uploadOk) {
       setStage('failed');
       setError('The upload to Storage itself failed — nothing was confirmed, and this attempt will be retried as a fresh one next time.');
       return;
@@ -138,12 +158,23 @@ export function AssetUploadForm({ collaborationId, onUploaded }: Props) {
         <label htmlFor="asset-file">File</label>
         <input id="asset-file" type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} disabled={busy} required />
       </div>
+      {duplicateOfType && (
+        <p role="alert" className="sp-admin__status-msg sp-admin__status-msg--warning">
+          An active asset of this category already exists ("{duplicateOfType.displayLabel}"). Uploading will add a new version; the
+          existing one stays active until you mark it inactive in the table below.
+        </p>
+      )}
       <p className="sp-admin__status-msg">After security release review, use Set Primary in the Asset Library to select cover artwork.</p>
       {error && <p className="sp-admin__status-msg sp-admin__status-msg--error">{error}</p>}
+      {stage === 'uploading' && (
+        <progress className="sp-admin__upload-progress" value={uploadFraction} max={1} aria-label="Upload progress">
+          {Math.round(uploadFraction * 100)}%
+        </progress>
+      )}
       {stage === 'done' && <p className="sp-admin__status-msg sp-admin__status-msg--success">Upload received. Security scanning and release review must complete before artist delivery.</p>}
       <button type="submit" className="sp-admin__btn" disabled={busy}>
         {stage === 'requesting' && 'Requesting authorized upload…'}
-        {stage === 'uploading' && 'Uploading…'}
+        {stage === 'uploading' && `Uploading… ${Math.round(uploadFraction * 100)}%`}
         {stage === 'confirming' && 'Verifying…'}
         {(stage === 'idle' || stage === 'done' || stage === 'failed') && 'Upload'}
       </button>
