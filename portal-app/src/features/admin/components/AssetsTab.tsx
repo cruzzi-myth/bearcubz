@@ -7,13 +7,8 @@ import { AssetLibraryList } from '../../../components/AssetLibraryList';
 import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
 import { useAdminAssetPreview } from '../hooks/useAdminAssetPreview';
 import { isCoverEligible } from '../lib/coverEligibility';
+import { formatBytes } from '../lib/formatBytes';
 import type { ApprovalStatus, AdminCollaboration } from '../types/adminTypes';
-
-function formatBytes(bytes: number | null): string {
-  if (bytes == null) return '—';
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function statusPillClass(status: string): string {
   if (status === 'ready') return 'sp-admin__pill';
