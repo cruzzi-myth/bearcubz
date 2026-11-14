@@ -22,6 +22,11 @@ tests/integration/.browser-dataset.json
 # identities + their password, dev project only) — never committed.
 docs/signal-portal/.k16b-dev-dataset.json
 
+# Stage K1.6J — private artist contact research (real-world business
+# contact details for outreach planning). Internal administrative
+# record only; never committed, never published.
+docs/signal-portal/private/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
