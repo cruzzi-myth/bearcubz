@@ -21,10 +21,11 @@ export function GalleryTile({ asset, onOpen }: Props) {
     <button type="button" className="sp-gallery__tile" onClick={onOpen}>
       <span className="sp-sr-only">View </span>
       {signed.status === 'ready' && <img src={signed.url} alt="" />}
-      <span className="sp-gallery__tile-label">
-        {asset.approvalStatus && <span className="sp-gallery__tile-status">{asset.approvalStatus}</span>}
-        {asset.displayLabel}
-      </span>
+      {/* Stage K1.6L: useAuthorizedCollaboration now only ever
+          returns approved visual assets to an artist, so a status
+          pill here would always read "approved" — dead, misleading
+          UI. Removed rather than kept as a no-op. */}
+      <span className="sp-gallery__tile-label">{asset.displayLabel}</span>
     </button>
   );
 }

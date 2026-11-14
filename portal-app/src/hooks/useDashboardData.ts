@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { isBackendUnavailableError } from '../lib/supabaseErrors';
+import { isArtistVisibleAsset } from '../lib/assetVisibility';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import type { StorableClassification } from '../lib/collaborationClassification';
 
@@ -111,7 +112,7 @@ export function useDashboardData(): DashboardData {
           .in('id', activeIds),
         supabase
           .from('collaboration_assets')
-          .select('id, collaboration_id, asset_type, uploaded_at, is_primary_cover')
+          .select('id, collaboration_id, asset_type, approval_status, uploaded_at, is_primary_cover')
           .in('collaboration_id', activeIds)
           .eq('is_active', true)
           // RLS already enforces this for an artist's own read — this
@@ -143,6 +144,12 @@ export function useDashboardData(): DashboardData {
       const assetsByCollaboration = new Map<string, Set<string>>();
       const primaryCoverByCollaboration = new Map<string, string>();
       for (const asset of assetResult.data ?? []) {
+        // Stage K1.6L: an unapproved visual asset is counted as
+        // neither "available" (so the dashboard card can't claim
+        // Visuals are ready when the Gallery would show them empty —
+        // see isArtistVisibleAsset/useAuthorizedCollaboration) nor
+        // shown as the card's own cover thumbnail.
+        if (!isArtistVisibleAsset({ assetType: asset.asset_type, approvalStatus: asset.approval_status })) continue;
         const set = assetsByCollaboration.get(asset.collaboration_id) ?? new Set<string>();
         set.add(asset.asset_type);
         assetsByCollaboration.set(asset.collaboration_id, set);

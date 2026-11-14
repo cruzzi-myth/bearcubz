@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { isBackendUnavailableError } from '../lib/supabaseErrors';
+import { isArtistVisibleAsset } from '../lib/assetVisibility';
 
 export type CollaborationAsset = {
   id: string;
@@ -109,19 +110,29 @@ export function useAuthorizedCollaboration(id: string | undefined): Result {
           musicalKey: row.musical_key,
           genreTags: row.genre_tags,
         },
-        assets: (assetsResult.data ?? []).map((a) => ({
-          id: a.id,
-          assetType: a.asset_type,
-          displayLabel: a.display_label,
-          description: a.description,
-          version: a.version,
-          approvalStatus: a.approval_status,
-          isPrimaryCover: a.is_primary_cover,
-          mimeType: a.mime_type,
-          byteSize: a.byte_size,
-          uploadedAt: a.uploaded_at,
-          hasThumbnail: Boolean(a.thumbnail_storage_path),
-        })),
+        // Stage K1.6L: artistic approval is a real gate for artwork,
+        // not just a status label — an artist must never see their
+        // own track_cover/alternate_cover/visual_image/visual_concept
+        // before an administrator has approved it (the Gallery and
+        // the Listening Chamber's cover-art backdrop both consume
+        // this array directly). Audio and proposal assets have no
+        // approval_status at all (always null — see
+        // portal-admin-request-upload-url) and are unaffected.
+        assets: (assetsResult.data ?? [])
+          .filter((a) => isArtistVisibleAsset({ assetType: a.asset_type, approvalStatus: a.approval_status }))
+          .map((a) => ({
+            id: a.id,
+            assetType: a.asset_type,
+            displayLabel: a.display_label,
+            description: a.description,
+            version: a.version,
+            approvalStatus: a.approval_status,
+            isPrimaryCover: a.is_primary_cover,
+            mimeType: a.mime_type,
+            byteSize: a.byte_size,
+            uploadedAt: a.uploaded_at,
+            hasThumbnail: Boolean(a.thumbnail_storage_path),
+          })),
       });
     }
 

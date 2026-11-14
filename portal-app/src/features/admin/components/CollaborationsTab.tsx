@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { Fragment, useState, type FormEvent } from 'react';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { createCollaboration, updateCollaboration } from '../services/adminApi';
 import { CollaborationsReport } from '../../../components/CollaborationsReport';
@@ -33,9 +33,21 @@ export function CollaborationsTab() {
   const [bpm, setBpm] = useState('');
   const [musicalKey, setMusicalKey] = useState('');
   const [genre, setGenre] = useState('');
+  const [notes, setNotes] = useState('');
   const [classification, setClassification] = useState<ProjectClassification | ''>('');
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<{ title: string; artistDisplayName: string; bpm: string; musicalKey: string; genre: string; notes: string }>({
+    title: '',
+    artistDisplayName: '',
+    bpm: '',
+    musicalKey: '',
+    genre: '',
+    notes: '',
+  });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   // Per-row transient feedback for classification saves specifically —
   // 'saved' auto-clears; 'error' persists until the next attempt. Status
   // changes keep their existing silent reload()-only behavior (unchanged),
@@ -53,6 +65,7 @@ export function CollaborationsTab() {
       bpm: bpm ? Number(bpm) : undefined,
       musicalKey: musicalKey.trim() || undefined,
       genreTags: genre ? genre.split(',').map((g) => g.trim()).filter(Boolean) : undefined,
+      notes: notes.trim() || undefined,
       classification: isStorableClassification(classification) ? classification : undefined,
     });
     setCreating(false);
@@ -65,7 +78,46 @@ export function CollaborationsTab() {
     setBpm('');
     setMusicalKey('');
     setGenre('');
+    setNotes('');
     setClassification('');
+    reload();
+  }
+
+  function startEdit(c: AdminCollaboration) {
+    setEditingId(c.id);
+    setEditError(null);
+    setEditDraft({
+      title: c.title,
+      artistDisplayName: c.artistDisplayName,
+      bpm: c.bpm === null ? '' : String(c.bpm),
+      musicalKey: c.musicalKey ?? '',
+      genre: c.genreTags?.join(', ') ?? '',
+      notes: c.notes ?? '',
+    });
+  }
+
+  async function saveEdit() {
+    if (!editingId) return;
+    if (!editDraft.title.trim() || !editDraft.artistDisplayName.trim()) {
+      setEditError('Title and artist display name cannot be empty.');
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    const result = await updateCollaboration(editingId, {
+      title: editDraft.title.trim(),
+      artistDisplayName: editDraft.artistDisplayName.trim(),
+      bpm: editDraft.bpm.trim() ? Number(editDraft.bpm) : undefined,
+      musicalKey: editDraft.musicalKey.trim(),
+      genreTags: editDraft.genre.split(',').map((g) => g.trim()).filter(Boolean),
+      notes: editDraft.notes,
+    });
+    setEditSaving(false);
+    if (!result.ok) {
+      setEditError(result.error);
+      return;
+    }
+    setEditingId(null);
     reload();
   }
 
@@ -122,6 +174,10 @@ export function CollaborationsTab() {
           <input id="collab-genre" value={genre} onChange={(e) => setGenre(e.target.value)} />
         </div>
         <div className="sp-admin__field">
+          <label htmlFor="collab-notes">Notes (internal project code, creative direction, description)</label>
+          <textarea id="collab-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+        </div>
+        <div className="sp-admin__field">
           <label htmlFor="collab-classification">Classification</label>
           <select id="collab-classification" value={classification} onChange={(e) => setClassification(e.target.value as ProjectClassification | '')}>
             {CLASSIFICATION_OPTIONS.map((opt) => (
@@ -173,11 +229,13 @@ export function CollaborationsTab() {
                   <th>Created</th>
                   <th>Updated</th>
                   <th>Assets</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {state.collaborations.map((c) => (
-                  <tr key={c.id}>
+                  <Fragment key={c.id}>
+                  <tr>
                     <td>{c.title}</td>
                     <td>{c.artistDisplayName}</td>
                     <td>
@@ -215,7 +273,55 @@ export function CollaborationsTab() {
                     <td>{formatAt(c.createdAt)}</td>
                     <td>{formatAt(c.updatedAt)}</td>
                     <td>{c.assetCount}</td>
+                    <td>
+                      {editingId === c.id ? (
+                        <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => setEditingId(null)} disabled={editSaving}>
+                          Cancel
+                        </button>
+                      ) : (
+                        <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => startEdit(c)}>
+                          Edit metadata
+                        </button>
+                      )}
+                    </td>
                   </tr>
+                  {editingId === c.id && (
+                    <tr>
+                      <td colSpan={11}>
+                        <div className="sp-admin__form" style={{ marginTop: 0, marginBottom: 12 }}>
+                          <div className="sp-admin__field">
+                            <label htmlFor={`edit-title-${c.id}`}>Title</label>
+                            <input id={`edit-title-${c.id}`} value={editDraft.title} onChange={(e) => setEditDraft((d) => ({ ...d, title: e.target.value }))} disabled={editSaving} />
+                          </div>
+                          <div className="sp-admin__field">
+                            <label htmlFor={`edit-artist-${c.id}`}>Artist Display Name</label>
+                            <input id={`edit-artist-${c.id}`} value={editDraft.artistDisplayName} onChange={(e) => setEditDraft((d) => ({ ...d, artistDisplayName: e.target.value }))} disabled={editSaving} />
+                          </div>
+                          <div className="sp-admin__field">
+                            <label htmlFor={`edit-bpm-${c.id}`}>BPM</label>
+                            <input id={`edit-bpm-${c.id}`} type="number" value={editDraft.bpm} onChange={(e) => setEditDraft((d) => ({ ...d, bpm: e.target.value }))} disabled={editSaving} />
+                          </div>
+                          <div className="sp-admin__field">
+                            <label htmlFor={`edit-key-${c.id}`}>Musical Key</label>
+                            <input id={`edit-key-${c.id}`} value={editDraft.musicalKey} onChange={(e) => setEditDraft((d) => ({ ...d, musicalKey: e.target.value }))} disabled={editSaving} />
+                          </div>
+                          <div className="sp-admin__field">
+                            <label htmlFor={`edit-genre-${c.id}`}>Genre Tags (comma-separated)</label>
+                            <input id={`edit-genre-${c.id}`} value={editDraft.genre} onChange={(e) => setEditDraft((d) => ({ ...d, genre: e.target.value }))} disabled={editSaving} />
+                          </div>
+                          <div className="sp-admin__field">
+                            <label htmlFor={`edit-notes-${c.id}`}>Notes</label>
+                            <textarea id={`edit-notes-${c.id}`} value={editDraft.notes} onChange={(e) => setEditDraft((d) => ({ ...d, notes: e.target.value }))} rows={3} disabled={editSaving} />
+                          </div>
+                          {editError && <p className="sp-admin__status-msg sp-admin__status-msg--error">{editError}</p>}
+                          <button type="button" className="sp-admin__btn" onClick={saveEdit} disabled={editSaving}>
+                            {editSaving ? 'Saving…' : 'Save metadata'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

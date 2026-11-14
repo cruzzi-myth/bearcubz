@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Modal } from './Modal';
 import { ClassificationBadge } from './ClassificationBadge';
@@ -26,6 +26,11 @@ type Props = {
   collaboration: BriefingCollaboration;
   availableAssetTypes: Set<string>;
   onClose: () => void;
+  // Stage K1.6L — an optional admin-only section (e.g. the readiness
+  // checklist). Never passed by the artist-facing call site
+  // (AdminCollaborationBriefing is the only caller that supplies
+  // it), so an artist viewing their own briefing never sees it.
+  adminExtra?: ReactNode;
 };
 
 function formatDate(iso: string): string {
@@ -65,7 +70,7 @@ function CoverArt({ assetId }: { assetId: string | null }) {
  * genre tags and no notes) or explicitly labeled unavailable
  * (individual Production Details fields) — never fabricated.
  */
-export function CollaborationBriefingModal({ collaboration: c, availableAssetTypes, onClose }: Props) {
+export function CollaborationBriefingModal({ collaboration: c, availableAssetTypes, onClose, adminExtra }: Props) {
   const titleId = useId();
   const classification = classifyCollaboration({ classification: c.classification, bpm: c.bpm, musicalKey: c.musicalKey });
   const deliverables = buildDeliverables(availableAssetTypes);
@@ -185,6 +190,13 @@ export function CollaborationBriefingModal({ collaboration: c, availableAssetTyp
             Open Transmission Chamber →
           </Link>
         </section>
+
+        {adminExtra && (
+          <section className="sp-briefing__section" aria-labelledby={`${titleId}-readiness`}>
+            <h3 id={`${titleId}-readiness`}>08 — Readiness (administrator only)</h3>
+            {adminExtra}
+          </section>
+        )}
       </div>
     </Modal>
   );

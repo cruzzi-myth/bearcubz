@@ -402,6 +402,24 @@
   font-size: 13px;
 }
 
+.sp-admin__readiness-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sp-admin__readiness-item {
+  font-size: 13px;
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin__readiness-item--done {
+  color: var(--cyan);
+}
+
 @media (max-width: 720px) {
   .sp-admin__table-wrap {
     font-size: 12px;

@@ -104,6 +104,12 @@ Deno.serve(async (request) => {
     if (classificationProvided && body.classification !== null && !VALID_CLASSIFICATIONS.includes(String(body.classification))) {
       return json({ error: 'INVALID_CLASSIFICATION' }, 400);
     }
+    // Stage K1.6L: title/artistDisplayName were create-only until now
+    // (a typo meant starting over) — same non-empty-after-trim rule
+    // create_collaboration already enforces, so an edit can never
+    // blank either field out.
+    if (typeof body.title === 'string' && body.title.trim() === '') return json({ error: 'INVALID_INPUT' }, 400);
+    if (typeof body.artistDisplayName === 'string' && body.artistDisplayName.trim() === '') return json({ error: 'INVALID_INPUT' }, 400);
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (status !== undefined) patch.status = status;
@@ -111,6 +117,9 @@ Deno.serve(async (request) => {
     if (typeof body.bpm === 'number') patch.bpm = body.bpm;
     if (typeof body.musicalKey === 'string') patch.musical_key = body.musicalKey;
     if (classificationProvided) patch.classification = body.classification;
+    if (typeof body.title === 'string') patch.title = body.title.trim();
+    if (typeof body.artistDisplayName === 'string') patch.artist_display_name = body.artistDisplayName.trim();
+    if (Array.isArray(body.genreTags)) patch.genre_tags = body.genreTags;
 
     // Stage K1.5B: capture the PREVIOUS classification before writing,
     // so the audit record shows a real before/after pair rather than

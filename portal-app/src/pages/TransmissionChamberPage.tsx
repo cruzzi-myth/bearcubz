@@ -115,6 +115,10 @@ export function TransmissionChamberPage() {
           {thread.status === 'ready' && thread.messages.length === 0 && (
             <p className="sp-proposal__empty">No messages yet for this collaboration.</p>
           )}
+          {thread.status === 'loading' && <p className="sp-proposal__empty">Loading messages…</p>}
+          {(thread.status === 'error' || thread.status === 'backend-unavailable') && (
+            <p className="sp-proposal__empty">Couldn't load this collaboration's messages right now.</p>
+          )}
 
           <form className="sp-transmission__form" onSubmit={handleSubmit}>
             <label htmlFor="feedback-body" className="sp-listen__track-kind">

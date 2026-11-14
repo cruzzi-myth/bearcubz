@@ -43,9 +43,10 @@ export async function listArtists(): Promise<ApiResult<AdminArtistProfile[]>> {
   };
 }
 
-export async function listMemberships(userId?: string): Promise<ApiResult<AdminMembership[]>> {
+export async function listMemberships(userId?: string, collaborationId?: string): Promise<ApiResult<AdminMembership[]>> {
   let query = supabase.from('collaboration_members').select('collaboration_id, user_id, role, status, added_at, revoked_at');
   if (userId) query = query.eq('user_id', userId);
+  if (collaborationId) query = query.eq('collaboration_id', collaborationId);
   const { data, error } = await query;
   if (error) return { ok: false, error: error.message };
   return {
@@ -189,7 +190,16 @@ export function updateCollaboration(
   // keeps `null`, unlike `undefined`), distinct from omitting the key
   // entirely to leave it unchanged. The Edge Function distinguishes
   // the two exactly this way (Object.prototype.hasOwnProperty).
-  patch: { status?: CollaborationStatus; notes?: string; bpm?: number; musicalKey?: string; classification?: ProjectClassification | null },
+  patch: {
+    status?: CollaborationStatus;
+    notes?: string;
+    bpm?: number;
+    musicalKey?: string;
+    classification?: ProjectClassification | null;
+    title?: string;
+    artistDisplayName?: string;
+    genreTags?: string[];
+  },
 ) {
   return invokeManage({ op: 'update_collaboration', collaborationId, ...patch });
 }
