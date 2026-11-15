@@ -27,6 +27,15 @@ docs/signal-portal/.k16b-dev-dataset.json
 # record only; never committed, never published.
 docs/signal-portal/private/
 
+# Historical manual-QA screenshot evidence, ~51MB total — kept on disk
+# for reference but not worth the permanent git history bloat. Not
+# referenced by any code.
+docs/screenshots/stage-i2h/
+docs/screenshots/stage-k16b/
+docs/screenshots/stage-k16b-addendum/
+docs/screenshots/stage-k16c/
+docs/screenshots/stage-k16d/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
