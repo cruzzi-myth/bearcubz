@@ -56,13 +56,15 @@ try {
     return url.endsWith('/artist');
   });
 
-  await check('the Artist Portal has a "Dashboard" link that navigates back to /dashboard', async () => {
+  // Stage K1.6R correction: the chamber-nav "Dashboard" link is the
+  // Artist Portal's own home (/artist, self-referential here) — the
+  // central hub is reached via the separate, admin-only "Admin
+  // Dashboard" link instead (see k16r.mjs for that coverage).
+  await check('the Artist Portal\'s chamber-nav "Dashboard" link is self-referential (points to /artist, not the central hub)', async () => {
     const { context, page } = await freshPage(adminSession, '/artist');
-    await page.getByRole('link', { name: 'Dashboard', exact: true }).first().click();
-    await page.waitForTimeout(800);
-    const url = page.url();
+    const href = await page.getByRole('link', { name: 'Dashboard', exact: true }).first().getAttribute('href');
     await context.close();
-    return url.endsWith('/dashboard');
+    return href === '/artist';
   });
 
   await check('the Artist Portal does NOT show "Command Center" as a primary navigation link', async () => {

@@ -54,12 +54,22 @@ export function ArtistPortalPage() {
           <span className="sp-dash__brand-sub">ARTIST PORTAL</span>
         </div>
         {isAdmin && <span className="sp-dash__badge sp-dash__badge--admin">Administrator Preview</span>}
-        <nav className="sp-dash__nav" aria-label="Artist Portal navigation">
-          <Link to="/dashboard" className="sp-dash__admin-return">
-            Dashboard
-          </Link>
-          {isAdmin && <AdminControlsOverlay collaborationId={selected?.id} collaborationTitle={selected?.title} />}
-        </nav>
+        {/* Stage K1.6R: the Artist Portal is already this page's own
+            home, so no self-referential "Dashboard" link belongs
+            here — the chamber nav row below has its own "Dashboard"
+            link back to this same page, available to every
+            authorized user. "Admin Dashboard" is the
+            administrator-only escape hatch to the central hub
+            (/dashboard), positioned here above the chamber nav,
+            alongside Admin Controls — never mixed into it. */}
+        {isAdmin && (
+          <nav className="sp-dash__nav" aria-label="Administrator navigation">
+            <Link to="/dashboard" className="sp-dash__admin-return">
+              Admin Dashboard
+            </Link>
+            <AdminControlsOverlay collaborationId={selected?.id} collaborationTitle={selected?.title} />
+          </nav>
+        )}
       </header>
 
       <div className="sp-dash__nav-row">

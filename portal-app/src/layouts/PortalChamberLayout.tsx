@@ -65,14 +65,20 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
         <Link to="/" className="sp-chamber__brand">
           BE<span>λ</span>R CUBZ <span aria-hidden="true">·</span> SIGNAL PORTAL
         </Link>
-        {/* Stage K1.6P: Command Center is reachable only through the
-            Admin Controls overlay now, never as a primary header
-            link here — the Dashboard is the one hub connecting the
-            Artist Portal and Command Center branches (see
-            ChamberNav's own "Dashboard" link in the nav row below). */}
+        {/* Stage K1.6P/K1.6R: Command Center is reachable only
+            through the Admin Controls overlay, never as a primary
+            header link here. The chamber nav's own "Dashboard" link
+            (below) now goes to the Artist Portal (/artist), not the
+            central hub — "Admin Dashboard" is the administrator-only
+            escape hatch back to that hub (/dashboard), positioned in
+            this upper header, above the chamber nav, never mixed
+            into it. */}
         {isAdmin && (
           <>
             <span className="sp-chamber__admin-badge">Administrator Preview</span>
+            <Link to="/dashboard" className="sp-chamber__admin-dashboard-link">
+              Admin Dashboard
+            </Link>
             <AdminControlsOverlay collaborationId={id} collaborationTitle={currentTitle} />
           </>
         )}

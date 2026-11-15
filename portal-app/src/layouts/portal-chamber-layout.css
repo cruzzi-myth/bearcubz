@@ -47,6 +47,29 @@
    part of the same admin-context visual language rather than a new
    one. Non-interactive — Command Center is reached through the
    Admin Controls overlay now, not a primary header link. */
+/* Stage K1.6R: same cyan "administrator controls" visual language as
+   the Admin Controls trigger it sits beside (admin-controls-
+   overlay.css's .sp-admin-overlay__trigger) — a matched pair, not a
+   new treatment. */
+.sp-chamber__admin-dashboard-link {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  padding: 8px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sp-chamber__admin-dashboard-link:hover,
+.sp-chamber__admin-dashboard-link:focus-visible {
+  background: rgba(0, 255, 255, 0.12);
+}
+
 .sp-chamber__admin-badge {
   margin-left: auto;
   font-family: 'Share Tech Mono', monospace;

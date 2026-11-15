@@ -91,7 +91,13 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
 
   return (
     <nav className="sp-chamber-nav" aria-label="Signal Portal navigation">
-      <Link to="/dashboard" className="sp-chamber-nav__link" aria-current={location.pathname === '/dashboard' ? 'page' : undefined}>
+      {/* Stage K1.6R: this is the Artist Portal's own home (/artist),
+          not the central hub (/dashboard) — the hub is now reached
+          only through the admin-only "Admin Dashboard" link above
+          this nav row (PortalChamberLayout/ArtistPortalPage), so
+          ordinary artists are never left with two differently-
+          labeled "Dashboard" destinations at once. */}
+      <Link to="/artist" className="sp-chamber-nav__link" aria-current={location.pathname === '/artist' ? 'page' : undefined}>
         Dashboard
       </Link>
 
