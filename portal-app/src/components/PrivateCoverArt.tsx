@@ -1,40 +1,37 @@
 import { useSignedAssetUrl } from '../hooks/useSignedAssetUrl';
+import { CollaborationArtwork, type ArtworkVariant } from './CollaborationArtwork';
 
 type Props = {
   assetId: string | null;
-  variant?: 'full' | 'thumbnail';
-  className: string;
-  alt?: string;
+  collaborationId: string;
+  title: string;
+  size: number;
+  variant?: ArtworkVariant;
+  urlVariant?: 'full' | 'thumbnail';
 };
 
 /**
- * Stage K1.6S — extracted from CollaborationBriefingModal's own
- * local CoverArt (same fetch + fallback behavior, now shared with
- * the Listening Chamber and the Artist Portal project cards instead
- * of being duplicated a third time). `assetId` is expected to
- * already be approval-gated by the caller (useDashboardData /
- * useAuthorizedCollaboration both already only ever return an
- * approved primaryCoverAssetId/asset — see isArtistVisibleAsset) —
- * this component itself adds no new authorization logic; it only
- * ever mints a signed URL for whatever id it's given, exactly like
- * every other private-asset viewer in this app.
+ * Stage K1.6S/K1.6T — the artist-facing cover-art fetch wrapper:
+ * mints a signed URL via the same approval-gated portal-signed-url
+ * function every other artist-facing asset view already uses (an
+ * approved cover is all this ever receives — see
+ * useAuthorizedCollaboration.ts/useDashboardData.ts's own
+ * isArtistVisibleAsset gate), then hands the result to the one
+ * shared rendering component. The hook lives here, not in the
+ * caller, because a hook cannot be called once per row inside a
+ * .map() — this is the per-row isolation boundary that makes that
+ * safe.
  */
-export function PrivateCoverArt({ assetId, variant = 'thumbnail', className, alt = '' }: Props) {
-  const signed = useSignedAssetUrl(assetId, variant);
-
-  if (!assetId || signed.status === 'unavailable') {
-    return (
-      <div className={`${className} ${className}--placeholder`} aria-hidden="true">
-        <span>◈</span>
-      </div>
-    );
-  }
-  if (signed.status !== 'ready') {
-    return <div className={`${className} ${className}--loading`} aria-hidden="true" />;
-  }
+export function PrivateCoverArt({ assetId, collaborationId, title, size, variant = 'static', urlVariant = 'thumbnail' }: Props) {
+  const signed = useSignedAssetUrl(assetId, urlVariant);
   return (
-    <div className={className}>
-      <img src={signed.url} alt={alt} />
-    </div>
+    <CollaborationArtwork
+      collaborationId={collaborationId}
+      title={title}
+      size={size}
+      variant={variant}
+      loading={Boolean(assetId) && (signed.status === 'loading' || signed.status === 'idle')}
+      artworkUrl={signed.status === 'ready' ? signed.url : null}
+    />
   );
 }

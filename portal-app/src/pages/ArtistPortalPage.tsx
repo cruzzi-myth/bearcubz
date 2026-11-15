@@ -122,7 +122,7 @@ export function ArtistPortalPage() {
                   className={selected?.id === c.id ? 'sp-artist-portal__project-card sp-artist-portal__project-card--active' : 'sp-artist-portal__project-card'}
                   onClick={() => setSelectedId(c.id)}
                 >
-                  <PrivateCoverArt assetId={c.primaryCoverAssetId} className="sp-artist-portal__project-card-cover" />
+                  <PrivateCoverArt assetId={c.primaryCoverAssetId} collaborationId={c.id} title={c.title} size={64} variant="interactive" />
                   <span className="sp-artist-portal__project-card-text">
                     <span className="sp-artist-portal__project-card-title">{c.title}</span>
                     <span className="sp-artist-portal__project-card-artist">{c.artistDisplayName}</span>

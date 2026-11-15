@@ -115,7 +115,10 @@ try {
 
   await check('the Listening Chamber shows the same approved cover next to the player, and playback still works', async () => {
     const { context, page } = await freshPage(memberIdentity.session, `/collaboration/${collabAId}/listen`);
-    const hasCoverImg = await page.locator('.sp-listen__cover img').count();
+    // Stage K1.6T renamed the cover's own CSS class to the shared
+    // .sp-cover-art (CollaborationArtwork) — scoped to the header row
+    // so this doesn't also match any other cover elsewhere on the page.
+    const hasCoverImg = await page.locator('.sp-listen__header .sp-cover-art img').count();
     const hasPlayer = await page.locator('.sp-player').count();
     await context.close();
     return hasCoverImg === 1 && hasPlayer === 1;

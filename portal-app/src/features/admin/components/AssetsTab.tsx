@@ -130,7 +130,7 @@ export function AssetsTab({ initialCollaborationId }: Props) {
           management table underneath are untouched, still the real
           administrative interface. */}
       <div style={{ marginBottom: 24 }}>
-        <AssetLibraryList rows={collaborations} selectedId={briefingTarget?.id ?? null} onSelect={(row) => setBriefingTarget(row)} />
+        <AssetLibraryList rows={collaborations} selectedId={briefingTarget?.id ?? null} onSelect={(row) => setBriefingTarget(row)} adminPreview />
       </div>
 
       <div className="sp-admin__field" style={{ maxWidth: 420, marginBottom: 20 }}>

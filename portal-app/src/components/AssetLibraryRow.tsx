@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useSignedAssetUrl } from '../hooks/useSignedAssetUrl';
 import { classifyCollaboration, type StorableClassification } from '../lib/collaborationClassification';
 import { ClassificationBadge } from './ClassificationBadge';
+import { PrivateCoverArt } from './PrivateCoverArt';
+import { AdminCollaborationArtwork } from './AdminCollaborationArtwork';
 import './asset-library-row.css';
 
 export type AssetLibraryRowData = {
@@ -19,22 +19,24 @@ export type AssetLibraryRowData = {
   primaryCoverAssetId: string | null;
 };
 
-function RowCover({ assetId }: { assetId: string | null }) {
-  const signed = useSignedAssetUrl(assetId, 'thumbnail');
-  const [loadFailed, setLoadFailed] = useState(false);
+// Stage K1.6T: the brief's own suggested 48-56px range for this
+// selector row.
+const COVER_SIZE = 52;
 
-  if (!assetId || signed.status === 'unavailable' || loadFailed) {
-    return (
-      <div className="sp-asset-row__cover sp-asset-row__cover--placeholder" aria-hidden="true">
-        <span>◈</span>
-      </div>
-    );
-  }
-  if (signed.status !== 'ready') return <div className="sp-asset-row__cover sp-asset-row__cover--loading" aria-hidden="true" />;
-  return (
-    <div className="sp-asset-row__cover">
-      <img src={signed.url} alt="" loading="lazy" onError={() => setLoadFailed(true)} />
-    </div>
+/**
+ * Stage K1.6T: `adminPreview` selects which signed-URL mechanism
+ * resolves the cover — this row is shared verbatim between the
+ * administrator Asset Library (where it must be true, so a
+ * genuinely clean-but-not-yet-approved cover can still be previewed,
+ * the same way the per-asset Preview button already can) and the
+ * artist-facing Dashboard (where it must stay false/omitted, so only
+ * an approved cover is ever shown — unchanged from before).
+ */
+function RowCover({ assetId, collaborationId, title, adminPreview }: { assetId: string | null; collaborationId: string; title: string; adminPreview?: boolean }) {
+  return adminPreview ? (
+    <AdminCollaborationArtwork assetId={assetId} collaborationId={collaborationId} title={title} size={COVER_SIZE} variant="interactive" />
+  ) : (
+    <PrivateCoverArt assetId={assetId} collaborationId={collaborationId} title={title} size={COVER_SIZE} variant="interactive" />
   );
 }
 
@@ -47,7 +49,17 @@ function RowCover({ assetId }: { assetId: string | null }) {
  * thereby reclassified as ARTWORK (Part III) — it comes from the same
  * single classifyCollaboration() every other surface uses.
  */
-export function AssetLibraryRow<T extends AssetLibraryRowData>({ row, selected, onSelect }: { row: T; selected?: boolean; onSelect: (row: T) => void }) {
+export function AssetLibraryRow<T extends AssetLibraryRowData>({
+  row,
+  selected,
+  onSelect,
+  adminPreview,
+}: {
+  row: T;
+  selected?: boolean;
+  onSelect: (row: T) => void;
+  adminPreview?: boolean;
+}) {
   const classification = classifyCollaboration({ classification: row.classification, bpm: row.bpm, musicalKey: row.musicalKey });
   const isTrack = classification === 'track';
 
@@ -72,7 +84,7 @@ export function AssetLibraryRow<T extends AssetLibraryRowData>({ row, selected, 
           }
         }}
       >
-        <RowCover assetId={row.primaryCoverAssetId} />
+        <RowCover assetId={row.primaryCoverAssetId} collaborationId={row.id} title={row.title} adminPreview={adminPreview} />
 
         <div className="sp-asset-row__info">
           <p className="sp-asset-row__title">

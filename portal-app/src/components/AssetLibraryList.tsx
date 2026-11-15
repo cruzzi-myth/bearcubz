@@ -6,16 +6,19 @@ type Props<T extends AssetLibraryRowData> = {
   onSelect: (row: T) => void;
   selectedId?: string | null;
   emptyMessage?: string;
+  /** Stage K1.6T — see AssetLibraryRow's own comment: true only for
+   * the administrator Asset Library's own collaboration selector. */
+  adminPreview?: boolean;
 };
 
-export function AssetLibraryList<T extends AssetLibraryRowData>({ rows, onSelect, selectedId, emptyMessage }: Props<T>) {
+export function AssetLibraryList<T extends AssetLibraryRowData>({ rows, onSelect, selectedId, emptyMessage, adminPreview }: Props<T>) {
   if (rows.length === 0) {
     return <p className="sp-asset-row-list__empty">{emptyMessage ?? 'No collaborations yet.'}</p>;
   }
   return (
     <ul className="sp-asset-row-list">
       {rows.map((row) => (
-        <AssetLibraryRow key={row.id} row={row} selected={selectedId === row.id} onSelect={onSelect} />
+        <AssetLibraryRow key={row.id} row={row} selected={selectedId === row.id} onSelect={onSelect} adminPreview={adminPreview} />
       ))}
     </ul>
   );

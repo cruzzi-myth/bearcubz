@@ -27,30 +27,9 @@
   border-bottom: 1px solid var(--sp-glass-border);
 }
 
-.sp-briefing__cover {
-  flex: none;
-  width: 96px;
-  height: 96px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.sp-briefing__cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.sp-briefing__cover--placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sp-ink-faint);
-  font-size: 28px;
-  border: 1px dashed var(--sp-glass-border);
-}
+/* Stage K1.6T: the cover itself is now rendered by the shared
+   CollaborationArtwork component (collaboration-artwork.css) at a
+   96px size prop — no longer styled here directly. */
 
 .sp-briefing__header-text {
   min-width: 0;

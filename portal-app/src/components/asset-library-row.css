@@ -75,11 +75,6 @@
   color: var(--cyan);
 }
 
-.sp-asset-row:hover .sp-asset-row__cover img,
-.sp-asset-row:focus-visible .sp-asset-row__cover img {
-  filter: brightness(1.15);
-}
-
 .sp-asset-row--selected {
   background: rgba(0, 229, 255, 0.1);
 }
@@ -88,40 +83,10 @@
   opacity: 1;
 }
 
-.sp-asset-row__cover {
-  flex: none;
-  width: 56px;
-  height: 56px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.sp-asset-row__cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: filter 0.15s ease;
-}
-
-.sp-asset-row__cover--placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sp-ink-faint);
-  font-size: 18px;
-  border: 1px dashed var(--sp-glass-border);
-}
-
-.sp-asset-row__cover--loading {
-  animation: sp-asset-row-cover-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes sp-asset-row-cover-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
-}
+/* Stage K1.6T: the cover itself (image/placeholder/loading) is now
+   the shared CollaborationArtwork component's own
+   collaboration-artwork.css — this file no longer styles it
+   directly. */
 
 .sp-asset-row__info {
   flex: 1 1 auto;
@@ -174,12 +139,6 @@
   border-radius: 999px;
   padding: 3px 8px;
   white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sp-asset-row__cover--loading {
-    animation: none;
-  }
 }
 
 /* Mobile target: metadata moves to a second line beneath title/artist

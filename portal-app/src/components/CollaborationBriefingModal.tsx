@@ -76,7 +76,7 @@ export function CollaborationBriefingModal({ collaboration: c, availableAssetTyp
           landmark. This is a dialog's own internal header section,
           not a second page banner. */}
       <div className="sp-briefing__header">
-        <PrivateCoverArt assetId={c.primaryCoverAssetId} className="sp-briefing__cover" />
+        <PrivateCoverArt assetId={c.primaryCoverAssetId} collaborationId={c.id} title={c.title} size={96} />
         <div className="sp-briefing__header-text">
           <p className="sp-briefing__eyebrow">Collaboration Briefing</p>
           <h2 id={titleId}>{c.title}</h2>
