@@ -1,0 +1,15 @@
+import { assert, importCompiled, report } from './runner.mjs';
+const { invitationStage, STAGE_LABEL, describeSendError } = await importCompiled(new URL('../../src/features/admin/lib/invitationDelivery.ts', import.meta.url).pathname);
+const FUT = new Date(Date.now() + 86_400_000).toISOString();
+const PAST = new Date(Date.now() - 86_400_000).toISOString();
+const inv = (o) => ({ status: 'pending', expiresAt: FUT, delivery: null, ...o });
+assert('no attempt => created', invitationStage(inv({})) === 'created');
+assert('requested => requested', invitationStage(inv({ delivery: { status: 'requested', at: '' } })) === 'requested');
+assert('sent => sent, labelled as accepted by provider (never "delivered")', invitationStage(inv({ delivery: { status: 'sent', at: '' } })) === 'sent' && !/delivered/i.test(STAGE_LABEL.sent));
+assert('failed => failed', invitationStage(inv({ delivery: { status: 'failed', at: '' } })) === 'failed');
+assert('accepted wins over any delivery state', invitationStage(inv({ status: 'accepted', delivery: { status: 'failed', at: '' } })) === 'accepted');
+assert('revoked wins over delivery state', invitationStage(inv({ status: 'revoked', delivery: { status: 'sent', at: '' } })) === 'revoked');
+assert('past expiry shows expired even if "sent"', invitationStage(inv({ expiresAt: PAST, delivery: { status: 'sent', at: '' } })) === 'expired');
+assert('known send error is explained', describeSendError('REVISED_PROPOSAL_NOT_READY').includes('revised proposal'));
+assert('unknown send error gets a safe generic message', describeSendError('???') === 'The invitation could not be sent.');
+report('invitationDelivery');

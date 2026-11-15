@@ -10,7 +10,7 @@ import { PortalEmptyState } from '../../components/PortalEmptyState';
  * collapsing them into one generic "not authorized" message.
  */
 export function RequirePortalAuth({ children }: { children: ReactNode }) {
-  const { status, authorization } = usePortalAuth();
+  const { status, authorization, retry } = usePortalAuth();
 
   if (status === 'loading' || (status === 'signed-in' && authorization === 'checking')) {
     return (
@@ -55,7 +55,12 @@ export function RequirePortalAuth({ children }: { children: ReactNode }) {
   if (authorization === 'error') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <PortalEmptyState message="Couldn't verify your access right now. Please try again." />
+        <div style={{ textAlign: 'center' }}>
+          <PortalEmptyState message="Couldn't verify your access right now. Your invitation has not been lost — please try again." />
+          <button type="button" className="sp-chamber-empty__link" onClick={retry} style={{ marginTop: 12 }}>
+            Try again
+          </button>
+        </div>
       </div>
     );
   }

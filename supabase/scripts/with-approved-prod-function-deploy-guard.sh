@@ -88,7 +88,7 @@ if [ "$proj_name" != "$EXPECTED_PROJECT_NAME" ]; then
 fi
 
 # ---------- 3 & 7. exactly one of the nine approved function names ----------
-APPROVED_NAMES="portal-request-access portal-signed-url portal-submit-feedback portal-admin-create-invitation portal-admin-list-invitations portal-admin-manage-collaboration portal-admin-reply-feedback portal-admin-request-upload-url portal-admin-confirm-upload"
+APPROVED_NAMES="portal-request-access portal-signed-url portal-submit-feedback portal-admin-create-invitation portal-admin-list-invitations portal-admin-manage-collaboration portal-admin-reply-feedback portal-admin-request-upload-url portal-admin-confirm-upload portal-admin-send-invitation"
 name_is_approved=0
 for approved in $APPROVED_NAMES; do
   [ "$function_name" = "$approved" ] && name_is_approved=1

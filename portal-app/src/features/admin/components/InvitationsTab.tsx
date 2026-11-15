@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { useAdminInvitations } from '../hooks/useAdminInvitations';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
-import { createInvitation, revokeInvitation, reissueInvitation } from '../services/adminApi';
+import { createInvitation, revokeInvitation, reissueInvitation, sendInvitation } from '../services/adminApi';
+import { PHASE01_RECIPIENTS } from '../lib/phase01Recipients';
+import { invitationStage, STAGE_LABEL, describeSendError, type InvitationStage } from '../lib/invitationDelivery';
 
 function formatAt(iso: string): string {
   try {
@@ -11,9 +13,9 @@ function formatAt(iso: string): string {
   }
 }
 
-function pillClass(status: string): string {
-  if (status === 'accepted') return 'sp-admin__pill';
-  if (status === 'revoked' || status === 'expired') return 'sp-admin__pill sp-admin__pill--bad';
+function pillClass(stage: InvitationStage): string {
+  if (stage === 'accepted' || stage === 'sent') return 'sp-admin__pill';
+  if (stage === 'revoked' || stage === 'expired' || stage === 'failed') return 'sp-admin__pill sp-admin__pill--bad';
   return 'sp-admin__pill sp-admin__pill--warn';
 }
 
@@ -29,6 +31,35 @@ export function InvitationsTab() {
   const [formNotice, setFormNotice] = useState<string | null>(null);
 
   const collaborations = collabState.kind === 'ready' ? collabState.collaborations : [];
+
+  // --- Phase 01 Send Invitation ---
+  const [recipientKey, setRecipientKey] = useState(PHASE01_RECIPIENTS[0].key);
+  const [confirmed, setConfirmed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendMsg, setSendMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const recipient = PHASE01_RECIPIENTS.find((r) => r.key === recipientKey) ?? PHASE01_RECIPIENTS[0];
+  const existingForRecipient =
+    state.kind === 'ready'
+      ? state.invitations.find((i) => i.email.toLowerCase() === recipient.email && i.collaborationId === recipient.collaborationId && invitationStage(i) !== 'revoked')
+      : undefined;
+  const existingStage = existingForRecipient ? invitationStage(existingForRecipient) : null;
+  const sendBlocked = existingStage === 'accepted' || existingStage === 'requested' || existingStage === 'sent';
+
+  async function handleSend() {
+    setSendMsg(null);
+    setSending(true);
+    const result = await sendInvitation({ email: recipient.email, collaborationId: recipient.collaborationId });
+    setSending(false);
+    setConfirmed(false);
+    if (result.ok) {
+      setSendMsg({ kind: 'success', text: 'Email sent — accepted by the mail provider. Inbox delivery cannot be confirmed from here.' });
+    } else if (result.failure) {
+      setSendMsg({ kind: 'error', text: `Delivery failed: ${result.failure.message}` });
+    } else {
+      setSendMsg({ kind: 'error', text: describeSendError(result.error) });
+    }
+    reload();
+  }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -69,7 +100,49 @@ export function InvitationsTab() {
 
   return (
     <>
-      <h2>Create Invitation</h2>
+      <h2>Send Invitation</h2>
+      <div className="sp-admin__form" aria-label="Send Invitation (Phase 01)">
+        <div className="sp-admin__field">
+          <label htmlFor="send-artist">Artist</label>
+          <select
+            id="send-artist"
+            value={recipientKey}
+            onChange={(e) => {
+              setRecipientKey(e.target.value);
+              setConfirmed(false);
+              setSendMsg(null);
+            }}
+          >
+            {PHASE01_RECIPIENTS.map((r) => (
+              <option key={r.key} value={r.key}>
+                {r.artistName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p>
+          <strong>Email:</strong> <span data-testid="send-email">{recipient.email}</span>
+        </p>
+        <p>
+          <strong>Collaboration:</strong> <span data-testid="send-collab">{recipient.collaborationTitle}</span> (artist access to this project only)
+        </p>
+        {recipient.note && <p className="sp-admin__empty">{recipient.note}</p>}
+        {existingStage && (
+          <p>
+            <strong>Status:</strong> <span className={pillClass(existingStage)}>{STAGE_LABEL[existingStage]}</span>
+          </p>
+        )}
+        <label className="sp-admin__field" style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+          <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} disabled={sendBlocked} />
+          <span>I confirm this email address and collaboration are correct.</span>
+        </label>
+        {sendMsg && <p className={`sp-admin__status-msg sp-admin__status-msg--${sendMsg.kind}`}>{sendMsg.text}</p>}
+        <button type="button" className="sp-admin__btn" onClick={handleSend} disabled={!confirmed || sending || sendBlocked}>
+          {sending ? 'Sending…' : 'Send Invitation'}
+        </button>
+      </div>
+
+      <h2 style={{ marginTop: 32 }}>Create Invitation</h2>
       <form className="sp-admin__form" onSubmit={handleCreate}>
         <div className="sp-admin__field">
           <label htmlFor="invite-email">Artist Email</label>
@@ -130,7 +203,14 @@ export function InvitationsTab() {
                     <td>{formatAt(inv.createdAt)}</td>
                     <td>{formatAt(inv.expiresAt)}</td>
                     <td>
-                      <span className={pillClass(inv.status)}>{inv.status}</span>
+                      {(() => {
+                        const stage = invitationStage(inv);
+                        return (
+                          <span className={pillClass(stage)} title={inv.delivery?.failure ?? undefined}>
+                            {STAGE_LABEL[stage]}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td>{inv.acceptedAt ? formatAt(inv.acceptedAt) : '—'}</td>
                     <td>{inv.revokedAt ? formatAt(inv.revokedAt) : '—'}</td>

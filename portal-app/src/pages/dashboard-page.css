@@ -110,8 +110,9 @@
 .sp-dash__nav {
   margin-left: auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 10px 16px;
 }
 
 .sp-dash__nav-current {

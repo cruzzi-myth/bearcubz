@@ -10,7 +10,7 @@ import { buildClients } from './_client.mjs';
 import { createFixtureSet, teardownFixtureSet } from './fixtures.mjs';
 import { summary } from './_harness.mjs';
 
-const SCENARIOS = ['auth', 'invitations', 'rls', 'storage', 'artwork', 'feedback', 'access', 'classification', 'k16b', 'k16c', 'k16d', 'k16e', 'k16e1', 'k16g', 'k16k', 'k16l', 'k16n', 'k16o'];
+const SCENARIOS = ['auth', 'invitations', 'invitationSend', 'rls', 'storage', 'artwork', 'feedback', 'access', 'classification', 'k16b', 'k16c', 'k16d', 'k16e', 'k16e1', 'k16g', 'k16k', 'k16l', 'k16n', 'k16o'];
 
 async function main() {
   let safe;
@@ -41,7 +41,11 @@ async function main() {
   };
 
   try {
+    // Optional focused rerun (comma-separated scenario names), e.g. when an
+    // external dependency (the malware scanner) is unavailable.
+    const only = process.env.SIGNAL_PORTAL_INTEGRATION_ONLY?.split(',').map((n) => n.trim()).filter(Boolean);
     for (const name of SCENARIOS) {
+      if (only && !only.includes(name)) continue;
       console.log(`\n--- ${name} ---`);
       const mod = await import(`./scenarios/${name}.mjs`);
       await mod.run(ctx);

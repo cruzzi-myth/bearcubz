@@ -32,6 +32,7 @@ portal-admin-manage-collaboration:clients.ts,cors.ts,requireAdmin.ts
 portal-admin-reply-feedback:clients.ts,cors.ts,requireAdmin.ts
 portal-admin-request-upload-url:clients.ts,cors.ts,requireAdmin.ts
 portal-admin-confirm-upload:clients.ts,cors.ts,requireAdmin.ts,uploadLifecycle.ts
+portal-admin-send-invitation:clients.ts,cors.ts,invitationPolicy.ts,invitationValidation.ts,requireAdmin.ts
 "
 
 : > "$OUT"

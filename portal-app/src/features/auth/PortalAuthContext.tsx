@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../services/supabaseClient';
 import { classifyAuthorization } from './portalAuthorization';
+import { isBackendUnavailableError } from '../../lib/supabaseErrors';
 
 export type PortalAuthStatus = 'loading' | 'signed-out' | 'signed-in';
 
@@ -30,6 +31,8 @@ interface PortalAuthState {
   isAdmin: boolean;
   session: Session | null;
   signOut: () => Promise<void>;
+  /** Re-runs invitation acceptance + the membership/admin check (used by the error state's retry). */
+  retry: () => void;
 }
 
 const PortalAuthContext = createContext<PortalAuthState | null>(null);
@@ -39,6 +42,7 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const [authorization, setAuthorization] = useState<PortalAuthorization>('checking');
   const [isAdmin, setIsAdmin] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,8 +57,21 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
       // their second visit. If the RPC itself doesn't exist yet
       // (migrations not applied), that's handled in step 2's check,
       // not here.
-      await supabase.rpc('accept_artist_invitation');
+      const accepted = await supabase.rpc('accept_artist_invitation');
       if (cancelled) return;
+      // NOT_ELIGIBLE (no pending invitation — every returning artist)
+      // and NOT_AUTHENTICATED are normal here. A missing RPC is handled
+      // by the backend-unavailable classification below. Anything else
+      // (network, server error) means acceptance may not have happened:
+      // surface an error with a retry — never a success/empty state.
+      if (accepted.error) {
+        const msg = accepted.error.message ?? '';
+        const expected = msg.includes('NOT_ELIGIBLE') || msg.includes('NOT_AUTHENTICATED') || isBackendUnavailableError(accepted.error);
+        if (!expected) {
+          setAuthorization('error');
+          return;
+        }
+      }
 
       // Step 2: read this user's OWN membership rows, unfiltered by
       // status — RLS scopes this to auth.uid() regardless, and
@@ -118,7 +135,7 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [attempt]);
 
   const value = useMemo<PortalAuthState>(
     () => ({
@@ -128,6 +145,10 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
       session,
       async signOut() {
         await supabase.auth.signOut();
+      },
+      retry() {
+        setAuthorization('checking');
+        setAttempt((n) => n + 1);
       },
     }),
     [status, authorization, isAdmin, session],

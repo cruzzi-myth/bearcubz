@@ -82,7 +82,7 @@ export function EntrancePage() {
   const [choicePrompt, setChoicePrompt] = useState<{ action: QuickActionId; choices: ProjectChoice[]; text: string } | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const { status: authStatus, isAdmin } = usePortalAuth();
+  const { status: authStatus, authorization, isAdmin } = usePortalAuth();
   const dashboard = useDashboardData();
   const navigate = useNavigate();
   const variant = useEntranceVariant();
@@ -113,8 +113,14 @@ export function EntrancePage() {
   // hash — is what makes the distinction reliable.
   const cameFromMagicLinkRef = useRef(window.location.hash.includes('access_token='));
   useEffect(() => {
-    if (cameFromMagicLinkRef.current && authStatus === 'signed-in') navigate('/dashboard');
-  }, [authStatus, navigate]);
+    // Wait for the invitation-acceptance + membership check to finish
+    // ('checking' → final) before redirecting, so an invited artist is
+    // never sent to an empty, pre-membership workspace. Artists land in
+    // their Artist Portal; administrators keep the Dashboard hub.
+    if (cameFromMagicLinkRef.current && authStatus === 'signed-in' && authorization !== 'checking') {
+      navigate(isAdmin ? '/dashboard' : '/artist', { replace: true });
+    }
+  }, [authStatus, authorization, isAdmin, navigate]);
 
   const collaborations: HostCollaboration[] =
     dashboard.kind === 'ready' ? dashboard.collaborations.map((c) => ({ id: c.id, title: c.title, availableAssetTypes: c.availableAssetTypes })) : [];

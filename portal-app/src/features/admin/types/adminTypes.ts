@@ -52,6 +52,8 @@ export type AdminInvitation = {
   acceptedAt: string | null;
   revokedAt: string | null;
   createdAt: string;
+  /** Latest audited send attempt, if any. 'sent' = accepted by the mail provider, never "delivered to inbox". */
+  delivery?: { status: 'requested' | 'sent' | 'failed' | string; failure?: string; at: string } | null;
 };
 
 export type AdminAsset = {

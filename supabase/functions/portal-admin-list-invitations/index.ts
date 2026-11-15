@@ -30,6 +30,22 @@ Deno.serve(async (request) => {
 
   if (error) return json({ error: 'LIST_FAILED' }, 500);
 
+  // Delivery state comes from the audited send attempts (latest per
+  // invitation). 'sent' means Supabase Auth accepted the message and
+  // handed it to the mail provider — not that it reached an inbox.
+  const sends = await adminClient
+    .from('portal_admin_audit_log')
+    .select('target_id, details, created_at')
+    .eq('action', 'send_invitation')
+    .order('created_at', { ascending: false })
+    .limit(500);
+  const latest = new Map<string, { status: string; failure?: string; at: string }>();
+  for (const row of sends.data ?? []) {
+    if (!row.target_id || latest.has(row.target_id)) continue;
+    const d = (row.details ?? {}) as Record<string, unknown>;
+    latest.set(row.target_id, { status: String(d.status ?? ''), failure: d.failure ? String(d.failure) : undefined, at: row.created_at });
+  }
+
   return json({
     invitations: (data ?? []).map((r) => ({
       id: r.id,
@@ -40,6 +56,7 @@ Deno.serve(async (request) => {
       acceptedAt: r.accepted_at,
       revokedAt: r.revoked_at,
       createdAt: r.created_at,
+      delivery: latest.get(r.id) ?? null,
     })),
   });
 });

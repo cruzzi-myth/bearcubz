@@ -245,6 +245,32 @@ export async function createInvitation(input: { email: string; collaborationId?:
   return { ok: true, data: { invitationId: data.invitationId } };
 }
 
+export type SendInvitationResult =
+  | { ok: true; invitationId: string; created: boolean; delivery: 'sent' }
+  | { ok: false; error: string; invitationId?: string; failure?: { code: string; message: string } };
+
+/** Admin-only: creates (or reuses) the pending invitation for this exact
+ * email + collaboration and asks Supabase Auth to email the secure
+ * sign-in link. Never exposes privileged credentials to the browser. */
+export async function sendInvitation(input: { email: string; collaborationId: string }): Promise<SendInvitationResult> {
+  const { data, error } = await supabase.functions.invoke('portal-admin-send-invitation', { body: input });
+  if (error) {
+    // Non-2xx responses surface as FunctionsHttpError with the Response in `context`.
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.json === 'function') {
+      try {
+        const body = await ctx.clone().json();
+        return { ok: false, error: String(body?.error ?? 'SEND_FAILED'), invitationId: body?.invitationId };
+      } catch {
+        /* fall through */
+      }
+    }
+    return { ok: false, error: mapError(error) };
+  }
+  if (data?.ok === true) return { ok: true, invitationId: data.invitationId, created: Boolean(data.created), delivery: 'sent' };
+  return { ok: false, error: 'DELIVERY_FAILED', invitationId: data?.invitationId, failure: data?.failure };
+}
+
 /** "Reissue" is the same operation as "create" — the Edge Function
  * already supersedes any existing pending invitation for the email. */
 export const reissueInvitation = createInvitation;

@@ -7,6 +7,8 @@ import { check, summary } from './_harness.mjs';
 import { signInForBrowser, seedSessionAndReload, authStorageKey } from './_session.mjs';
 import { loadBrowserDataset } from '../integration/browser-dataset.mjs';
 import { assertSafeToRunIntegrationTests } from '../integration/_guard.mjs';
+import { callEdgeFunction } from '../integration/_functions.mjs';
+import { syntheticPngBytes } from '../integration/fixtures.mjs';
 
 assertSafeToRunIntegrationTests();
 
@@ -1085,17 +1087,37 @@ await check('Visual Concept Gallery: a single-image collaboration shows no stray
   // data is SIGNAL-XYLO-001 (exactly one track_cover, nothing else).
   if (!k16b) return true;
   const proj = k16b.collaborations.xylo;
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  const { data, error } = await anon.auth.signInWithPassword({ email: proj.artist.email, password: k16b.password });
-  if (error) throw new Error(error.message);
-  await seedSessionAndReload(page, supabaseUrl, data.session, `/collaboration/${proj.id}/visuals`);
-  await page.waitForTimeout(2000);
-  await page.locator('.sp-gallery__grid img').first().click();
-  await page.waitForTimeout(500);
-  const navCount = await page.locator('.sp-gallery__lightbox-nav').count();
-  const countBadge = await page.locator('.sp-gallery__lightbox-count').count();
-  await context.close();
+  // The dev fixture collaboration no longer holds any assets, so this
+  // check provisions its own genuinely single-image data through the
+  // real admin upload/approval path and removes it afterwards.
+  const adminSess = await sessionFor('admin');
+  const bearer = `Bearer ${adminSess.access_token}`;
+  const bytes = syntheticPngBytes();
+  const req = await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-request-upload-url', {
+    authHeader: bearer,
+    body: { collaborationId: proj.id, assetType: 'track_cover', mimeType: 'image/png', fileSizeBytes: bytes.length, displayLabel: 'Single-image lightbox test cover' },
+  });
+  const assetId = req.body.assetId;
+  let navCount, countBadge;
+  try {
+    await fetch(req.body.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'image/png' }, body: bytes });
+    await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-confirm-upload', { authHeader: bearer, body: { assetId } });
+    await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-review-asset', { authHeader: bearer, body: { assetId, decision: 'approve' } });
+    await callEdgeFunction(supabaseUrl, anonKey, 'portal-admin-manage-collaboration', { authHeader: bearer, body: { op: 'update_asset', assetId, approvalStatus: 'approved', isPrimaryCover: true } });
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const { data, error } = await anon.auth.signInWithPassword({ email: proj.artist.email, password: k16b.password });
+    if (error) throw new Error(error.message);
+    await seedSessionAndReload(page, supabaseUrl, data.session, `/collaboration/${proj.id}/visuals`);
+    await page.waitForTimeout(2000);
+    await page.locator('.sp-gallery__grid img').first().click();
+    await page.waitForTimeout(500);
+    navCount = await page.locator('.sp-gallery__lightbox-nav').count();
+    countBadge = await page.locator('.sp-gallery__lightbox-count').count();
+    await context.close();
+  } finally {
+    await admin.from('collaboration_assets').delete().eq('id', assetId);
+  }
   return navCount === 0 && countBadge === 0;
 });
 
@@ -1608,10 +1630,10 @@ await check('Artist A: the classification badge is visible but no edit control e
   return badgeText.includes('Track') && selectCount === 0;
 });
 
-await check('administrator: "View Artist Portal" in the Command Center header navigates to the real artist dashboard, same session', async () => {
+await check('administrator: "Dashboard" in the Command Center header navigates to the administrator Dashboard, same session', async () => {
   const { context, page } = await freshPage('admin', '/admin');
   await page.waitForTimeout(1200);
-  await page.getByRole('link', { name: 'View Artist Portal' }).click();
+  await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await page.waitForTimeout(1000);
   const url = page.url();
   const hasAdminBadge = (await page.textContent('body'))?.includes('Administrator View');
@@ -1627,10 +1649,10 @@ await check('administrator: the artist dashboard shows ALL collaborations (admin
   return text.includes('Ghost Signal') && text.includes('Static Bloom') && text.includes('Parallel Transmission');
 });
 
-await check('administrator: "Return to Command Center" on the artist dashboard navigates back to /admin, same session', async () => {
+await check('administrator: "Command Center" on the administrator Dashboard navigates back to /admin, same session', async () => {
   const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
-  await page.getByRole('link', { name: 'Return to Command Center' }).click();
+  await page.getByRole('link', { name: 'Command Center', exact: true }).click();
   await page.waitForTimeout(1000);
   const url = page.url();
   const hasAdminChrome = (await page.textContent('body'))?.includes('Asset Library');
@@ -1638,29 +1660,30 @@ await check('administrator: "Return to Command Center" on the artist dashboard n
   return url.endsWith('/admin') && hasAdminChrome;
 });
 
-await check('Artist A: "Return to Command Center" never appears on the dashboard for an ordinary artist account', async () => {
+await check('Artist A: "Command Center" never appears on the dashboard for an ordinary artist account', async () => {
   const { context, page } = await freshPage('artistA', '/dashboard');
   await page.waitForTimeout(1200);
-  const count = await page.getByRole('link', { name: 'Return to Command Center' }).count();
+  const count = await page.getByRole('link', { name: 'Command Center', exact: true }).count();
   await context.close();
   return count === 0;
 });
 
-await check('administrator: "Return to Command Center" is present on a chamber page and navigates back to /admin', async () => {
+await check('administrator: "Command Center" (inside Admin Controls) is present on a chamber page and navigates back to /admin', async () => {
   const { context, page } = await freshPage('admin', `/collaboration/${dataset.collaborations.projectA}/listen`);
   await page.waitForTimeout(1500);
-  const linkCount = await page.getByRole('link', { name: 'Return to Command Center' }).count();
-  await page.getByRole('link', { name: 'Return to Command Center' }).click();
+  await page.getByRole('button', { name: 'Admin Controls', exact: true }).click();
+  const linkCount = await page.getByRole('link', { name: 'Command Center', exact: true }).count();
+  await page.getByRole('link', { name: 'Command Center', exact: true }).click();
   await page.waitForTimeout(1000);
   const url = page.url();
   await context.close();
   return linkCount === 1 && url.endsWith('/admin');
 });
 
-await check('Artist A: "Return to Command Center" never appears on a chamber page for an ordinary artist account', async () => {
+await check('Artist A: "Command Center" never appears on a chamber page for an ordinary artist account', async () => {
   const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/listen`);
   await page.waitForTimeout(1500);
-  const count = await page.getByRole('link', { name: 'Return to Command Center' }).count();
+  const count = await page.getByRole('link', { name: 'Command Center', exact: true }).count();
   await context.close();
   return count === 0;
 });
@@ -1682,9 +1705,9 @@ await check('administrator: the entrance quick-action tiles see the full admin-w
 await check('administrator navigation does not create or alter any collaboration_members row for the admin account', async () => {
   const { context, page } = await freshPage('admin', '/admin');
   await page.waitForTimeout(1200);
-  await page.getByRole('link', { name: 'View Artist Portal' }).click();
+  await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await page.waitForTimeout(800);
-  await page.getByRole('link', { name: 'Return to Command Center' }).click();
+  await page.getByRole('link', { name: 'Command Center', exact: true }).click();
   await page.waitForTimeout(800);
   await context.close();
   const { data } = await admin.from('collaboration_members').select('collaboration_id').eq('user_id', dataset.identities.admin.uid);
@@ -1696,9 +1719,9 @@ await check('session persistence: the Supabase session is byte-identical before 
   await page.waitForTimeout(1200);
   const storageKey = authStorageKey(supabaseUrl);
   const before = await page.evaluate((key) => localStorage.getItem(key), storageKey);
-  await page.getByRole('link', { name: 'View Artist Portal' }).click();
+  await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await page.waitForTimeout(600);
-  await page.getByRole('link', { name: 'Return to Command Center' }).click();
+  await page.getByRole('link', { name: 'Command Center', exact: true }).click();
   await page.waitForTimeout(600);
   const after = await page.evaluate((key) => localStorage.getItem(key), storageKey);
   await context.close();
@@ -1713,7 +1736,7 @@ await check('direct URL access to a chamber route while signed out still require
   return text.includes('authorized Signal Portal access') || text.includes('requires authorized');
 });
 
-await check('responsive @ 390px: Command Center header nav (incl. View Artist Portal) has no horizontal overflow', async () => {
+await check('responsive @ 390px: Command Center header nav (incl. Dashboard) has no horizontal overflow', async () => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   const session = await sessionFor('admin');
@@ -1737,10 +1760,10 @@ await check('responsive @ 390px: artist dashboard with admin nav controls has no
   return scrollWidth <= clientWidth + 1;
 });
 
-await check('keyboard: "View Artist Portal" and "Return to Command Center" are reachable and activatable via keyboard alone', async () => {
+await check('keyboard: "Dashboard" (Command Center) and "Command Center" (Dashboard) are reachable and activatable via keyboard alone', async () => {
   const { context, page } = await freshPage('admin', '/admin');
   await page.waitForTimeout(1200);
-  const viewPortalLink = page.getByRole('link', { name: 'View Artist Portal' });
+  const viewPortalLink = page.getByRole('link', { name: 'Dashboard', exact: true });
   await viewPortalLink.focus();
   const focusedOnLink = await viewPortalLink.evaluate((el) => el === document.activeElement);
   await page.keyboard.press('Enter');
@@ -1883,7 +1906,7 @@ await check('administrator (restored): the same classification save now succeeds
 await check('administrator: can reach the Private Listening Chamber for a project they are not a member of, with a real signed audio src', async () => {
   const { context, page } = await freshPage('admin', '/admin');
   await page.waitForTimeout(1200);
-  await page.getByRole('link', { name: 'View Artist Portal' }).click();
+  await page.getByRole('link', { name: 'Dashboard', exact: true }).click();
   await page.waitForTimeout(1000);
   await page.locator('.sp-asset-row', { hasText: 'Ghost Signal' }).click();
   await page.waitForTimeout(600);
