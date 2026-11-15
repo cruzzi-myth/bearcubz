@@ -2,9 +2,9 @@ import { useId, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Modal } from './Modal';
 import { ClassificationBadge } from './ClassificationBadge';
+import { PrivateCoverArt } from './PrivateCoverArt';
 import { classifyCollaboration, type StorableClassification } from '../lib/collaborationClassification';
 import { buildDeliverables, buildMaterials } from '../lib/collaborationMaterials';
-import { useSignedAssetUrl } from '../hooks/useSignedAssetUrl';
 import './collaboration-briefing-modal.css';
 
 export type BriefingCollaboration = {
@@ -41,22 +41,6 @@ function formatDate(iso: string): string {
   }
 }
 
-function CoverArt({ assetId }: { assetId: string | null }) {
-  const signed = useSignedAssetUrl(assetId, 'thumbnail');
-  if (!assetId || signed.status === 'unavailable') {
-    return (
-      <div className="sp-briefing__cover sp-briefing__cover--placeholder" aria-hidden="true">
-        <span>◈</span>
-      </div>
-    );
-  }
-  if (signed.status !== 'ready') return <div className="sp-briefing__cover sp-briefing__cover--loading" aria-hidden="true" />;
-  return (
-    <div className="sp-briefing__cover">
-      <img src={signed.url} alt="" />
-    </div>
-  );
-}
 
 /**
  * Stage K1.4 — the "official project dossier" overlay. Every section
@@ -92,7 +76,7 @@ export function CollaborationBriefingModal({ collaboration: c, availableAssetTyp
           landmark. This is a dialog's own internal header section,
           not a second page banner. */}
       <div className="sp-briefing__header">
-        <CoverArt assetId={c.primaryCoverAssetId} />
+        <PrivateCoverArt assetId={c.primaryCoverAssetId} className="sp-briefing__cover" />
         <div className="sp-briefing__header-text">
           <p className="sp-briefing__eyebrow">Collaboration Briefing</p>
           <h2 id={titleId}>{c.title}</h2>

@@ -5,6 +5,7 @@ import { useAdminPreviewMembership } from '../hooks/useAdminPreviewMembership';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { ChamberNav } from '../components/ChamberNav';
 import { AdminControlsOverlay } from '../components/AdminControlsOverlay';
+import { PrivateCoverArt } from '../components/PrivateCoverArt';
 import { PortalEmptyState } from '../components/PortalEmptyState';
 import { PortalHost } from '../features/portal-host/PortalHost';
 import { portalAsset } from '../lib/assetPath';
@@ -101,6 +102,15 @@ export function ArtistPortalPage() {
             <PortalEmptyState message="No collaborations are available yet." showReturnLink={false} />
           )}
           {data.kind === 'ready' && collaborations.length > 0 && (
+            // Stage K1.6S: visually distinct project cards (cover +
+            // title + artist) replacing the plain text buttons — the
+            // accessible name is pinned to just the title via
+            // aria-label (overriding what the card's own visible
+            // text content would otherwise compute to), so this
+            // remains a real radio selector, not a rebuild of the
+            // selection mechanism itself. Entry into the project's
+            // private chambers is the existing chamber-tile grid
+            // below, once selected — unchanged.
             <div className="sp-artist-portal__project-list" role="radiogroup" aria-labelledby="artist-project-h">
               {collaborations.map((c) => (
                 <button
@@ -108,10 +118,15 @@ export function ArtistPortalPage() {
                   type="button"
                   role="radio"
                   aria-checked={selected?.id === c.id}
-                  className={selected?.id === c.id ? 'sp-artist-portal__project-btn sp-artist-portal__project-btn--active' : 'sp-artist-portal__project-btn'}
+                  aria-label={c.title}
+                  className={selected?.id === c.id ? 'sp-artist-portal__project-card sp-artist-portal__project-card--active' : 'sp-artist-portal__project-card'}
                   onClick={() => setSelectedId(c.id)}
                 >
-                  {c.title}
+                  <PrivateCoverArt assetId={c.primaryCoverAssetId} className="sp-artist-portal__project-card-cover" />
+                  <span className="sp-artist-portal__project-card-text">
+                    <span className="sp-artist-portal__project-card-title">{c.title}</span>
+                    <span className="sp-artist-portal__project-card-artist">{c.artistDisplayName}</span>
+                  </span>
                 </button>
               ))}
             </div>

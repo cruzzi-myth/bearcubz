@@ -25,7 +25,10 @@ export function GalleryTile({ asset, onOpen }: Props) {
           returns approved visual assets to an artist, so a status
           pill here would always read "approved" — dead, misleading
           UI. Removed rather than kept as a no-op. */}
-      <span className="sp-gallery__tile-label">{asset.displayLabel}</span>
+      <span className="sp-gallery__tile-label">
+        {asset.isPrimaryCover && <span className="sp-gallery__tile-primary">Primary Cover</span>}
+        {asset.displayLabel}
+      </span>
     </button>
   );
 }

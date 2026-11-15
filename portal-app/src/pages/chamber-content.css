@@ -11,6 +11,60 @@
   gap: 14px;
 }
 
+/* Stage K1.6S — the square cover alongside the Listening Chamber's
+   title/meta. Same fallback visual language as the Briefing's own
+   cover placeholder (collaboration-briefing-modal.css), just sized
+   for this context. */
+.sp-listen__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sp-listen__cover {
+  flex: none;
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.sp-listen__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-listen__cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sp-ink-faint);
+  font-size: 36px;
+  border: 1px dashed var(--sp-glass-border);
+}
+
+.sp-listen__header-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 480px) {
+  .sp-listen__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sp-listen__cover {
+    width: 96px;
+    height: 96px;
+  }
+}
+
 .sp-listen__meta,
 .sp-proposal__meta {
   margin: 0;
@@ -153,7 +207,12 @@
   text-align: left;
 }
 
-.sp-gallery__tile-status {
+/* Stage K1.6S — was .sp-gallery__tile-status (a per-asset approval
+   pill, removed in K1.6L once every asset reaching this component
+   was guaranteed already-approved and the pill always read
+   "approved"); reused for the one real status worth surfacing here,
+   which collaboration this one is. */
+.sp-gallery__tile-primary {
   display: block;
   font-family: 'Share Tech Mono', monospace;
   font-size: 9px;

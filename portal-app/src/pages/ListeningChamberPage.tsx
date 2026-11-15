@@ -55,16 +55,34 @@ export function ListeningChamberPage() {
 
       {authz.status === 'authorized' && (
         <div className="sp-listen">
-          <p className="sp-listen__meta">
-            {authz.collaboration.artistDisplayName}
-            {authz.collaboration.bpm !== null && ` · ${authz.collaboration.bpm} BPM`}
-            {authz.collaboration.musicalKey && ` · ${authz.collaboration.musicalKey}`}
-            {authz.collaboration.genreTags && authz.collaboration.genreTags.length > 0 && ` · ${authz.collaboration.genreTags.join(', ')}`}
-          </p>
-          {/* Stage I2H: was h3, skipping a level under the chamber's
-              own h1 (PortalChamberLayout) — same class, same visible
-              style, just the correct semantic level. */}
-          <h2 className="sp-listen__title">{authz.collaboration.title}</h2>
+          {/* Stage K1.6S — a square cover alongside the title/meta,
+              distinct from the full-bleed backdrop above (Stage J):
+              that one is ambient atmosphere behind the whole chamber;
+              this is the explicit, player-adjacent cover. Both read
+              from the exact same already-fetched primaryCover/
+              coverSigned — never a second signed-URL request for the
+              same asset. Graceful fallback (a plain placeholder tile)
+              when no approved cover exists yet, same visual language
+              as the Briefing's own PrivateCoverArt fallback. */}
+          <div className="sp-listen__header">
+            <div className={primaryCover && coverSigned.status === 'ready' ? 'sp-listen__cover' : 'sp-listen__cover sp-listen__cover--placeholder'} aria-hidden="true">
+              {primaryCover && coverSigned.status === 'ready' && <img src={coverSigned.url} alt="" />}
+              {(!primaryCover || coverSigned.status !== 'ready') && <span>◈</span>}
+            </div>
+            <div className="sp-listen__header-text">
+              {/* Stage I2H: was h3, skipping a level under the
+                  chamber's own h1 (PortalChamberLayout) — same class,
+                  same visible style, just the correct semantic
+                  level. */}
+              <h2 className="sp-listen__title">{authz.collaboration.title}</h2>
+              <p className="sp-listen__meta">
+                {authz.collaboration.artistDisplayName}
+                {authz.collaboration.bpm !== null && ` · ${authz.collaboration.bpm} BPM`}
+                {authz.collaboration.musicalKey && ` · ${authz.collaboration.musicalKey}`}
+                {authz.collaboration.genreTags && authz.collaboration.genreTags.length > 0 && ` · ${authz.collaboration.genreTags.join(', ')}`}
+              </p>
+            </div>
+          </div>
 
           {(() => {
             const tracks = authz.assets.filter((a) => AUDIO_TYPES.has(a.assetType));

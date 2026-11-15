@@ -35,7 +35,10 @@ export function VisualGalleryPage() {
 
       {authz.status === 'authorized' &&
         (() => {
-          const images = authz.assets.filter((a) => VISUAL_ASSET_TYPES.has(a.assetType));
+          // Stage K1.6S: the primary cover leads the gallery — a
+          // stable sort (Array.prototype.sort preserves relative
+          // order among non-primary images), not a reshuffle.
+          const images = authz.assets.filter((a) => VISUAL_ASSET_TYPES.has(a.assetType)).sort((a, b) => Number(b.isPrimaryCover) - Number(a.isPrimaryCover));
           const open = images.find((img) => img.id === openAssetId);
 
           if (images.length === 0) {

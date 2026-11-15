@@ -13,29 +13,78 @@
 }
 
 .sp-artist-portal__project-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
 }
 
-.sp-artist-portal__project-btn {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+/* Stage K1.6S — visually distinct project cards (cover + title +
+   artist), replacing the plain text buttons. Still a real radio
+   selector underneath (role="radio", aria-label pinned to the
+   title) — only the presentation changed. */
+.sp-artist-portal__project-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  font-family: inherit;
   color: var(--sp-ink-soft);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--sp-glass-border);
-  border-radius: 8px;
-  padding: 10px 16px;
+  border-radius: 12px;
+  padding: 12px;
   cursor: pointer;
 }
 
-.sp-artist-portal__project-btn--active,
-.sp-artist-portal__project-btn:hover,
-.sp-artist-portal__project-btn:focus-visible {
+.sp-artist-portal__project-card--active,
+.sp-artist-portal__project-card:hover,
+.sp-artist-portal__project-card:focus-visible {
   color: #fff;
   border-color: var(--cyan);
+}
+
+.sp-artist-portal__project-card-cover {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.sp-artist-portal__project-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-artist-portal__project-card-cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sp-ink-faint);
+  font-size: 22px;
+  border: 1px dashed var(--sp-glass-border);
+}
+
+.sp-artist-portal__project-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sp-artist-portal__project-card-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sp-artist-portal__project-card-artist {
+  font-size: 12px;
+  color: var(--sp-ink-faint);
 }
 
 .sp-artist-portal__chamber-grid {
