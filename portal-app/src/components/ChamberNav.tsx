@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { resolveNavDestination, PROJECT_INDEPENDENT_PATH, type ChamberSegment } from '../lib/navDestination';
 import './chamber-nav.css';
 
@@ -31,6 +32,9 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
   const location = useLocation();
   const [pickedProjectId, setPickedProjectId] = useState<string | null>(null);
   const [pendingSegment, setPendingSegment] = useState<ChamberSegment | null>(null);
+
+  const { isAdmin } = usePortalAuth();
+  const homePath = isAdmin ? '/dashboard' : '/artist';
 
   const collaborations = dashboard.kind === 'ready' ? dashboard.collaborations : [];
   const activeProjectId =
@@ -97,7 +101,10 @@ export function ChamberNav({ currentCollaborationId }: { currentCollaborationId?
           this nav row (PortalChamberLayout/ArtistPortalPage), so
           ordinary artists are never left with two differently-
           labeled "Dashboard" destinations at once. */}
-      <Link to="/artist" className="sp-chamber-nav__link" aria-current={location.pathname === '/artist' ? 'page' : undefined}>
+      {/* Admin-context correction: administrators' Dashboard is the hub
+          (/dashboard); artists' is /artist. isAdmin comes from the
+          server-side is_portal_admin() check, not a client flag. */}
+      <Link to={homePath} className="sp-chamber-nav__link" aria-current={location.pathname === homePath ? 'page' : undefined}>
         Dashboard
       </Link>
 

@@ -16,7 +16,7 @@ export function ChamberNoProjectState({ message }: { message: string }) {
     <div className="sp-chamber-empty">
       <p className="sp-chamber-empty__message">{message}</p>
       <div className="sp-chamber-empty__actions">
-        <Link to="/dashboard" className="sp-chamber-empty__link">
+        <Link to={isAdmin ? '/dashboard' : '/artist'} className="sp-chamber-empty__link">
           Return to Dashboard
         </Link>
         {isAdmin && (

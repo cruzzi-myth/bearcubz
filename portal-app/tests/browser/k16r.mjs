@@ -59,14 +59,14 @@ try {
     return url.endsWith('/dashboard');
   });
 
-  await check('the chamber-nav "Dashboard" link on /artist now points to /artist itself (corrected from /dashboard)', async () => {
+  await check('ADMIN context: the chamber-nav "Dashboard" link points to /dashboard (admin hub); artists keep /artist — see k16v', async () => {
     const { context, page } = await freshPage(adminSession, '/artist');
     const href = await page.getByRole('link', { name: 'Dashboard', exact: true }).first().getAttribute('href');
     await context.close();
     // The dev server runs with no basename (vite.config.ts only
     // prefixes /portal in a production build) — the real link target
     // is just /artist here.
-    return href === '/artist';
+    return href === '/dashboard';
   });
 
   for (const [label, segment] of [
@@ -94,14 +94,14 @@ try {
       return url.endsWith('/dashboard');
     });
 
-    await check(`${label}: the chamber nav's "Dashboard" link returns to /artist, not /dashboard`, async () => {
+    await check(`${label}: the chamber nav's "Dashboard" link returns to the admin /dashboard (artists: /artist, see k16v)`, async () => {
       const { context, page } = await freshPage(adminSession, '/artist');
       await enterChamber(page, 'LOST TRANSITION', label);
       await page.getByRole('link', { name: 'Dashboard', exact: true }).first().click();
       await page.waitForTimeout(800);
       const url = page.url();
       await context.close();
-      return url.endsWith('/artist');
+      return url.endsWith('/dashboard');
     });
   }
 
