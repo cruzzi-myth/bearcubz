@@ -42,10 +42,12 @@
   padding: 10px clamp(20px, 5vw, 48px) 0;
 }
 
-/* Stage K1.5B: admin-only, same pink accent already used for the
-   entrance page's "ADMINISTRATOR ONLINE" badge, so it reads as part
-   of the same admin-context visual language rather than a new one. */
-.sp-chamber__admin-return {
+/* Stage K1.5B/K1.6P: admin-only, same pink accent already used for
+   the entrance page's "ADMINISTRATOR ONLINE" badge, so it reads as
+   part of the same admin-context visual language rather than a new
+   one. Non-interactive — Command Center is reached through the
+   Admin Controls overlay now, not a primary header link. */
+.sp-chamber__admin-badge {
   margin-left: auto;
   font-family: 'Share Tech Mono', monospace;
   font-size: 11px;
@@ -55,15 +57,7 @@
   border: 1px solid rgba(255, 45, 120, 0.4);
   border-radius: 999px;
   padding: 7px 14px;
-  text-decoration: none;
   white-space: nowrap;
-}
-
-.sp-chamber__admin-return:hover,
-.sp-chamber__admin-return:focus-visible {
-  color: #fff;
-  border-color: var(--pink);
-  background: rgba(255, 45, 120, 0.12);
 }
 
 .sp-chamber__brand {

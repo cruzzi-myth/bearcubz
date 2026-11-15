@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { ChamberNav } from '../components/ChamberNav';
+import { AdminControlsOverlay } from '../components/AdminControlsOverlay';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { portalAsset } from '../lib/assetPath';
 import './portal-chamber-layout.css';
 
@@ -40,6 +42,12 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
   // the current project across chamber-to-chamber navigation without
   // any component needing to pass it down explicitly.
   const { id } = useParams<{ id: string }>();
+  // Stage K1.6P: title for the Admin Controls panel's context line —
+  // reuses the same already-authorized collaboration list every
+  // other admin-preview surface draws from (useDashboardData), not a
+  // second query.
+  const dashboard = useDashboardData();
+  const currentTitle = id && dashboard.kind === 'ready' ? dashboard.collaborations.find((c) => c.id === id)?.title : undefined;
 
   return (
     <div className="sp-chamber">
@@ -57,10 +65,16 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
         <Link to="/" className="sp-chamber__brand">
           BE<span>λ</span>R CUBZ <span aria-hidden="true">·</span> SIGNAL PORTAL
         </Link>
+        {/* Stage K1.6P: Command Center is reachable only through the
+            Admin Controls overlay now, never as a primary header
+            link here — the Dashboard is the one hub connecting the
+            Artist Portal and Command Center branches (see
+            ChamberNav's own "Dashboard" link in the nav row below). */}
         {isAdmin && (
-          <Link to="/admin" className="sp-chamber__admin-return">
-            Return to Command Center
-          </Link>
+          <>
+            <span className="sp-chamber__admin-badge">Administrator Preview</span>
+            <AdminControlsOverlay collaborationId={id} collaborationTitle={currentTitle} />
+          </>
         )}
       </header>
       <div className="sp-chamber__nav-row">

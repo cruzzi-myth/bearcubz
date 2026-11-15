@@ -61,6 +61,12 @@ export function DashboardPage() {
           <span className="sp-dash__nav-current" aria-current="page">
             Dashboard
           </span>
+          {/* Stage K1.6P: the Dashboard is the hub connecting two
+              independent branches — Artist Portal (every authorized
+              user) and Command Center (administrators only). */}
+          <Link to="/artist" className="sp-dash__admin-return">
+            Artist Portal
+          </Link>
           {isAdmin && (
             <Link to="/admin" className="sp-dash__admin-return">
               Command Center

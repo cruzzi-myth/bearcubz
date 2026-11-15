@@ -6,6 +6,11 @@ import '../admin.css';
 
 export type AdminTab = 'overview' | 'artists' | 'collaborations' | 'assets' | 'invitations' | 'feedback' | 'attachments' | 'audit' | 'settings';
 
+// Exported so AdminPage can validate a deep-linked ?tab= query param
+// (Stage K1.6P, from the Admin Controls overlay) against the real,
+// registered tab ids — never trusting the URL value as-is.
+export const ADMIN_TABS: AdminTab[] = ['overview', 'artists', 'collaborations', 'assets', 'invitations', 'feedback', 'attachments', 'audit', 'settings'];
+
 const TABS: { id: AdminTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'artists', label: 'Artists' },

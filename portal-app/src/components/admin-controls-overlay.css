@@ -1,0 +1,160 @@
+/* Stage K1.6P — ADMIN CONTROLS. The trigger is a small fixed chip so
+   it never obstructs playback controls underneath (section 8); the
+   panel itself reuses Modal's accessible dialog shell, just
+   repositioned into a slide-out drawer rather than a centered box. */
+
+.sp-admin-overlay__trigger {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.sp-admin-overlay__trigger:hover,
+.sp-admin-overlay__trigger:focus-visible {
+  background: rgba(0, 255, 255, 0.12);
+}
+
+/* Right-side drawer on desktop/tablet — pushed to the overlay's
+   trailing edge via the auto-margin flex trick, full viewport height,
+   never covering the full screen so chamber playback stays visible
+   at a glance behind the scrim. */
+.sp-admin-overlay {
+  margin-left: auto;
+  margin-right: 0;
+  width: min(380px, 92vw);
+  height: 100%;
+  max-height: 100%;
+  border-radius: 0;
+  padding: 24px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.sp-admin-overlay h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sp-admin-overlay__context {
+  margin: 0 0 20px;
+  font-size: 12px;
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin-overlay__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sp-admin-overlay__action {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--sp-ink-soft);
+  background: transparent;
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sp-admin-overlay__action:hover,
+.sp-admin-overlay__action:focus-visible {
+  color: #fff;
+  border-color: var(--cyan);
+}
+
+.sp-admin-overlay__action[aria-disabled='true'],
+.sp-admin-overlay__action:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.sp-admin-overlay__preview {
+  margin-top: 18px;
+  border-top: 1px solid var(--sp-glass-border);
+  padding-top: 14px;
+}
+
+.sp-admin-overlay__preview h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin-overlay__preview-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.sp-admin-overlay__preview-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sp-admin-overlay__preview-detail {
+  display: block;
+  font-size: 11px;
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin-overlay__visible {
+  color: var(--cyan);
+}
+
+.sp-admin-overlay__hidden {
+  color: var(--red);
+}
+
+.sp-admin-overlay__empty {
+  font-size: 12px;
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin-overlay__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--sp-ink-soft);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Mobile: a collapsible bottom drawer instead of a full-height side
+   panel, so it never fully obscures the chamber behind it. */
+@media (max-width: 640px) {
+  .sp-admin-overlay {
+    margin-left: 0;
+    margin-top: auto;
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    border-radius: 16px 16px 0 0;
+  }
+}

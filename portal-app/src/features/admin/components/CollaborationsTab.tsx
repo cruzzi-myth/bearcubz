@@ -1,4 +1,4 @@
-import { Fragment, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useState, type FormEvent } from 'react';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { createCollaboration, updateCollaboration } from '../services/adminApi';
 import { CollaborationsReport } from '../../../components/CollaborationsReport';
@@ -25,7 +25,9 @@ function formatAt(iso: string): string {
   }
 }
 
-export function CollaborationsTab() {
+type Props = { initialEditCollaborationId?: string };
+
+export function CollaborationsTab({ initialEditCollaborationId }: Props) {
   const { state, reload } = useAdminCollaborations();
   const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const [title, setTitle] = useState('');
@@ -95,6 +97,18 @@ export function CollaborationsTab() {
       notes: c.notes ?? '',
     });
   }
+
+  // Stage K1.6P: the Admin Controls overlay's "Edit Project" deep
+  // link (/admin?tab=collaborations&edit=<id>) opens straight into
+  // the edit form for that collaboration, once the real list has
+  // loaded — the id is only ever used to find a row already present
+  // in this admin's own authorized, already-fetched list, never
+  // trusted as its own authorization.
+  useEffect(() => {
+    if (!initialEditCollaborationId || state.kind !== 'ready') return;
+    const match = state.collaborations.find((c) => c.id === initialEditCollaborationId);
+    if (match) startEdit(match);
+  }, [initialEditCollaborationId, state.kind]);
 
   async function saveEdit() {
     if (!editingId) return;

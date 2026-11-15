@@ -1,0 +1,74 @@
+/* Stage K1.6P — Artist Portal hub. Shares dashboard-page.css's chrome
+   (header, background, scrim, section headings); this only adds the
+   project-picker and chamber-tile grid specific to this page. */
+
+.sp-artist-portal__unverified-note {
+  font-size: 12px;
+  color: var(--sp-ink-soft);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 20px;
+  max-width: 640px;
+}
+
+.sp-artist-portal__project-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sp-artist-portal__project-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-ink-soft);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--sp-glass-border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.sp-artist-portal__project-btn--active,
+.sp-artist-portal__project-btn:hover,
+.sp-artist-portal__project-btn:focus-visible {
+  color: #fff;
+  border-color: var(--cyan);
+}
+
+.sp-artist-portal__chamber-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.sp-artist-portal__chamber-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 72px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--cyan);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.sp-artist-portal__chamber-tile:hover,
+.sp-artist-portal__chamber-tile:focus-visible {
+  background: rgba(0, 255, 255, 0.12);
+}
+
+@media (max-width: 480px) {
+  .sp-artist-portal__chamber-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

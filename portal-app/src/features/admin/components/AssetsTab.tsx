@@ -38,10 +38,12 @@ function PreviewButton({ assetId }: { assetId: string }) {
   );
 }
 
-export function AssetsTab() {
+type Props = { initialCollaborationId?: string };
+
+export function AssetsTab({ initialCollaborationId }: Props) {
   const { state: collabState } = useAdminCollaborations();
   const [securityError, setSecurityError] = useState<string | null>(null);
-  const [selectedCollaboration, setSelectedCollaboration] = useState<string>('');
+  const [selectedCollaboration, setSelectedCollaboration] = useState<string>(initialCollaborationId ?? '');
   const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const { state: assetState, reload } = useAdminAssets(selectedCollaboration || undefined);
   const [deleteTarget, setDeleteTarget] = useState<AdminAsset | null>(null);

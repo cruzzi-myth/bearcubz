@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAdminFeedback } from '../hooks/useAdminFeedback';
 import { replyToFeedback } from '../services/adminApi';
 
@@ -44,8 +44,19 @@ function ReplyForm({ collaborationId, onSent }: { collaborationId: string; onSen
   );
 }
 
-export function FeedbackTab() {
+type Props = { scrollToCollaborationId?: string };
+
+export function FeedbackTab({ scrollToCollaborationId }: Props) {
   const { state, reload } = useAdminFeedback();
+
+  // Stage K1.6P: the Admin Controls overlay's "Review Feedback" deep
+  // link (/admin?tab=feedback&collab=<id>) scrolls straight to that
+  // project's own thread, already rendered below — no separate view
+  // or filtered query, since every thread is already shown.
+  useEffect(() => {
+    if (!scrollToCollaborationId || state.kind !== 'ready') return;
+    document.getElementById(`feedback-${scrollToCollaborationId}`)?.scrollIntoView({ block: 'start' });
+  }, [scrollToCollaborationId, state.kind]);
 
   if (state.kind === 'loading') return <p className="sp-admin__empty">Loading transmissions…</p>;
   if (state.kind === 'backend-unavailable') return <p className="sp-admin__status-msg sp-admin__status-msg--error">Backend not configured in this environment yet.</p>;
@@ -58,7 +69,7 @@ export function FeedbackTab() {
         <p className="sp-admin__empty">No feedback has been submitted yet.</p>
       ) : (
         state.threads.map((thread) => (
-          <div key={thread.collaborationId} className="sp-admin__section">
+          <div key={thread.collaborationId} id={`feedback-${thread.collaborationId}`} className="sp-admin__section">
             <h2 style={{ fontSize: 14 }}>{thread.collaborationTitle}</h2>
             <div className="sp-admin__table-wrap">
               <table className="sp-admin__table">

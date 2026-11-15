@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
 import { EntrancePage } from '../pages/EntrancePage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { ArtistPortalPage } from '../pages/ArtistPortalPage';
 import { AdminPage } from '../pages/AdminPage';
 import { ListeningChamberPage } from '../pages/ListeningChamberPage';
 import { ProposalArchivePage } from '../pages/ProposalArchivePage';
@@ -32,6 +33,17 @@ export const portalRoutes: RouteObject[] = [
       <RequirePortalAdmin>
         <AdminPage />
       </RequirePortalAdmin>
+    ),
+  },
+  // Stage K1.6P: the dedicated Artist Portal hub — the DASHBOARD's
+  // other branch alongside /admin. Reuses the exact same chamber
+  // layout/nav every chamber already uses; see ArtistPortalPage.tsx.
+  {
+    path: 'artist',
+    element: (
+      <RequirePortalAuth>
+        <ArtistPortalPage />
+      </RequirePortalAuth>
     ),
   },
   {
