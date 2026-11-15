@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { usePortalAuth } from './PortalAuthContext';
 import { PortalEmptyState } from '../../components/PortalEmptyState';
 
@@ -32,6 +33,13 @@ export function RequirePortalAdmin({ children }: { children: ReactNode }) {
         <PortalEmptyState message="Couldn't verify administrator access right now. Please try again." showReturnLink={false} />
       </div>
     );
+  }
+
+  // An authorized artist who navigates here directly is sent to their own
+  // workspace rather than shown a dead end. This is a convenience only — the
+  // real boundary is is_portal_admin() / RLS on every admin call.
+  if (status === 'signed-in' && authorization === 'authorized' && !isAdmin) {
+    return <Navigate to="/artist" replace />;
   }
 
   if (status === 'signed-out' || !isAdmin) {

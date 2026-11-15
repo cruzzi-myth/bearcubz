@@ -35,7 +35,7 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
   // account, since isAdmin only ever reflects a real, server-verified
   // is_portal_admin() result (see PortalAuthContext), same guarantee
   // every other admin-only control in this app already relies on.
-  const { isAdmin } = usePortalAuth();
+  const { isAdmin, signOut } = usePortalAuth();
   // Stage K1.6A: this layout is shared by all four chambers, each
   // matched by the exact same `collaboration/:id/<segment>` route
   // shape -- reading :id here (once) is what lets ChamberNav preserve
@@ -82,6 +82,10 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
             <AdminControlsOverlay collaborationId={id} collaborationTitle={currentTitle} />
           </>
         )}
+        {/* Every signed-in user — artists included — must be able to sign out. */}
+        <button type="button" className={isAdmin ? 'sp-chamber__signout' : 'sp-chamber__signout sp-chamber__signout--end'} onClick={() => void signOut()}>
+          Sign Out
+        </button>
       </header>
       <div className="sp-chamber__nav-row">
         <ChamberNav currentCollaborationId={id} />

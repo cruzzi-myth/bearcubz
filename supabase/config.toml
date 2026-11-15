@@ -424,3 +424,9 @@ enabled = true
 # Dedicated internal bearer credential is checked in the function itself.
 [functions.portal-scanner-worker-access]
 verify_jwt = false
+
+# DEV/TEST ONLY: deterministic stand-in for the malware-scan provider used by
+# standard (credit-free) test runs. Never deployed to production (absent from
+# the production deploy manifest/guard). It returns scan verdicts only.
+[functions.portal-test-scanner-mock]
+verify_jwt = false

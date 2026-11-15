@@ -10,7 +10,7 @@ import { buildClients } from './_client.mjs';
 import { createFixtureSet, teardownFixtureSet } from './fixtures.mjs';
 import { summary } from './_harness.mjs';
 
-const SCENARIOS = ['auth', 'invitations', 'invitationSend', 'rls', 'storage', 'artwork', 'feedback', 'access', 'classification', 'k16b', 'k16c', 'k16d', 'k16e', 'k16e1', 'k16g', 'k16k', 'k16l', 'k16n', 'k16o'];
+const SCENARIOS = ['auth', 'invitations', 'invitationSend', 'rls', 'storage', 'artwork', 'feedback', 'access', 'classification', 'k16b', 'k16c', 'k16d', 'k16e', 'k16e1', 'k16g', 'k16k', 'k16l', 'k16n', 'k16o', 'scannerMock', 'liveProvider'];
 
 async function main() {
   let safe;
@@ -39,6 +39,20 @@ async function main() {
     supabaseUrl: safe.supabaseUrl,
     anonKey: process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY,
   };
+
+  // Scanner-mode preflight: ordinary runs must NOT spend real provider credits.
+  // They require the dev scanner to be in MOCK mode; live-provider runs require LIVE.
+  {
+    const { callEdgeFunction: call, bearerFor: bearer } = await import('./_functions.mjs');
+    const status = await call(ctx.supabaseUrl, ctx.anonKey, 'portal-admin-scanner-status', { authHeader: bearer(fixtures.adminIdentity), body: {} });
+    const mode = status.body?.scannerEndpointMode ?? 'unknown';
+    const wantLive = process.env.SIGNAL_PORTAL_LIVE_PROVIDER === '1';
+    console.log(`[integration] scanner mode: ${mode} (${wantLive ? 'live-provider verification' : 'standard / credit-free'})`);
+    if (wantLive ? mode !== 'live' : mode !== 'mock') {
+      await teardownFixtureSet(clients, fixtures);
+      throw new Error(`Scanner mode is "${mode}" but this run needs "${wantLive ? 'live' : 'mock'}". Run supabase/scripts/set-dev-scanner-mode.sh ${wantLive ? 'live' : 'mock'} first.`);
+    }
+  }
 
   try {
     // Optional focused rerun (comma-separated scenario names), e.g. when an

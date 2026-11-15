@@ -77,20 +77,21 @@ try {
     await context.close();
     return h === '/artist' && none;
   });
-  await check('ARTIST: direct /dashboard shows no Command Center / admin controls', async () => {
+  await check('ARTIST: direct /dashboard redirects to /artist and shows no admin UI', async () => {
     const { context, page } = await open(artistSession, '/dashboard');
-    await page.waitForTimeout(1500);
-    const all = await hrefs(page);
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const onArtist = path(page) === '/artist';
     const badge = await page.locator('.sp-dash__badge--admin').count();
     await context.close();
-    return !all.some(([, h]) => h === '/admin') && badge === 0;
+    return onArtist && badge === 0;
   });
-  await check('ARTIST: direct /admin is denied (no Command Center rendered)', async () => {
+  await check('ARTIST: direct /admin redirects to /artist (no Command Center rendered)', async () => {
     const { context, page } = await open(artistSession, '/admin');
-    await page.waitForTimeout(1500);
-    const text = await page.locator('body').innerText();
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const onArtist = path(page) === '/artist';
+    const adminUi = await page.getByRole('button', { name: 'Asset Library', exact: true }).count();
     await context.close();
-    return /administrator access is required/i.test(text);
+    return onArtist && adminUi === 0;
   });
   await check('ARTIST: refresh on /artist keeps /artist and nav target', async () => {
     const { context, page } = await open(artistSession, '/artist');

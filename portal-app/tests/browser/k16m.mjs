@@ -54,8 +54,9 @@ try {
     return !text.includes('Return to Command Center');
   });
 
-  await check('an ordinary artist (non-admin) sees NO Command Center link on the Dashboard at all', async () => {
-    const { context, page } = await freshPage(artistSession, '/dashboard');
+  await check('an ordinary artist (non-admin) sees NO Command Center link anywhere in their workspace', async () => {
+    const { context, page } = await freshPage(artistSession, '/artist');
+    await page.getByRole('heading', { name: 'Select a Collaboration' }).waitFor({ state: 'visible', timeout: 12000 });
     const count = await page.getByRole('link', { name: 'Command Center', exact: true }).count();
     await context.close();
     return count === 0;
@@ -96,12 +97,13 @@ try {
     return visible;
   });
 
-  await check('an artist attempting /admin directly is denied, never sees Command Center tab content', async () => {
+  await check('an artist attempting /admin directly is redirected to /artist, never sees Command Center tab content', async () => {
     const { context, page } = await freshPage(artistSession, '/admin');
-    const text = await page.locator('body').textContent();
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
     const sawAdminTab = await page.getByRole('button', { name: 'Asset Library', exact: true }).count();
+    const redirected = new URL(page.url()).pathname === '/artist';
     await context.close();
-    return text.includes('Administrator access is required') && sawAdminTab === 0;
+    return redirected && sawAdminTab === 0;
   });
 
   await check('an admin can reach /admin directly by URL (not just via the Dashboard link)', async () => {

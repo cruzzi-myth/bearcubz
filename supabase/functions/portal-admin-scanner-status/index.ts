@@ -2,6 +2,7 @@ import { corsHeaders,json } from '../_shared/cors.ts';
 import { requiredEnv,createAdminClient } from '../_shared/clients.ts';
 import { requireAdmin } from '../_shared/requireAdmin.ts';
 import { scannerConfig } from '../_shared/scannerPolicy.ts';
+import { resolveScanEndpoints } from '../_shared/scannerTestMode.ts';
 Deno.serve(async request=>{
  if(request.method==='OPTIONS')return new Response('ok',{headers:corsHeaders});
  if(request.method!=='POST')return json({error:'METHOD_NOT_ALLOWED'},405);
@@ -17,5 +18,5 @@ Deno.serve(async request=>{
   const response=await fetch(new URL('health',config.workerUrl!),{headers:{Authorization:`Bearer ${config.workerToken}`},signal:AbortSignal.timeout(3000),redirect:'error'});
   const status=await response.json();workerHealthy=response.ok&&status.healthy===true&&status.policyVersion==='signal-portal-k16h2-v1';
  }catch{/* accurately unavailable */}
- return json({ok:true,configuration:'valid',mode:config.mode,cloudmersiveConfigured:!!Deno.env.get('CLOUDMERSIVE_API_KEY'),workerHealthy,artistMaxBytes:config.artistMaxBytes,observedMonthlyOutcomes:counts,usageScope:'application-observed scan outcomes only; not provider account usage',truncated:(usage.data?.length??0)>=10000,actualProviderUsage:null});
+ return json({ok:true,configuration:'valid',mode:config.mode,cloudmersiveConfigured:!!Deno.env.get('CLOUDMERSIVE_API_KEY'),scannerEndpointMode:resolveScanEndpoints(n=>Deno.env.get(n)).kind,workerHealthy,artistMaxBytes:config.artistMaxBytes,observedMonthlyOutcomes:counts,usageScope:'application-observed scan outcomes only; not provider account usage',truncated:(usage.data?.length??0)>=10000,actualProviderUsage:null});
 });

@@ -2,6 +2,8 @@
 // Dev project, disposable identities only. No real email is sent: the one
 // Send click targets a collaboration that does not exist on dev, which the
 // function rejects BEFORE any mail is requested.
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { chromium } from 'playwright';
 import { createClient } from '@supabase/supabase-js';
 import { assertSafeToRunIntegrationTests } from '../integration/_guard.mjs';
@@ -91,7 +93,7 @@ try {
     await page.waitForTimeout(800);
     await page.getByLabel(/I confirm this email address/).check();
     await page.getByRole('button', { name: 'Send Invitation', exact: true }).click();
-    await page.waitForTimeout(2500);
+    await page.locator('.sp-admin__status-msg').first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
     const text = await page.locator('body').innerText();
     await context.close();
     return /does not exist/i.test(text) && !/Email sent — accepted/i.test(text);
@@ -132,18 +134,22 @@ try {
   });
   await check('journey: direct URL to the other collaboration is denied', async () => {
     const { context, page } = await open(artistSession, `/collaboration/${otherCollabId}/listen`);
+    await page.getByText(/isn't available to your account|not available/i).first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
     const text = await page.locator('body').innerText();
     await context.close();
     return /isn't available to your account|not available/i.test(text) && !text.includes(OTHER_TITLE);
   });
-  await check('journey: the artist has no Command Center access (/admin denied, no admin link)', async () => {
+  await check('journey: the artist has no Command Center access (/admin and /dashboard redirect to /artist, no admin link)', async () => {
     const { context, page } = await open(artistSession, '/admin');
-    const denied = /Administrator access is required/i.test(await page.locator('body').innerText());
-    const { page: p2, context: c2 } = await open(artistSession, '/artist');
-    const adminLinks = await p2.locator('a[href="/admin"]').count();
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const redirectedAdmin = path(page) === '/artist';
+    const { context: c3, page: p3 } = await open(artistSession, '/dashboard');
+    await p3.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const redirectedDash = path(p3) === '/artist';
+    const adminLinks = await p3.locator('a[href="/admin"]').count();
     await context.close();
-    await c2.close();
-    return denied && adminLinks === 0;
+    await c3.close();
+    return redirectedAdmin && redirectedDash && adminLinks === 0;
   });
   await check('journey: replayed acceptance creates no duplicate membership', async () => {
     const userClient = createClient(U, A, { auth: { persistSession: false } });
@@ -185,6 +191,39 @@ try {
     return heading && !overflow && inChamber;
   });
 
+  // ---- Setia's revised proposal: the exact production PDF, rendered by the real Proposal Chamber ----
+  const REVISED_PDF = `${homedir()}/Desktop/Portal Asset images/Artist collaboration proposals/SETIA SAINT HAVEN/WONKY_LIQUID_DREAMS_Revised_Vocal_Collaboration_Proposal.pdf`;
+  if (!existsSync(REVISED_PDF)) {
+    console.log('SKIP revised-proposal render check (local copy of the production PDF not found)');
+  } else {
+    const pdfBytes = readFileSync(REVISED_PDF);
+    const bearer = `Bearer ${adminSession.access_token}`;
+    const up = await callEdgeFunction(U, A, 'portal-admin-request-upload-url', {
+      authHeader: bearer,
+      body: { collaborationId: collabId, assetType: 'proposal_pdf', mimeType: 'application/pdf', fileSizeBytes: pdfBytes.length, displayLabel: 'Revised vocal collaboration proposal' },
+    });
+    await fetch(up.body.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/pdf' }, body: pdfBytes });
+    await callEdgeFunction(U, A, 'portal-admin-confirm-upload', { authHeader: bearer, body: { assetId: up.body.assetId } });
+    await callEdgeFunction(U, A, 'portal-admin-review-asset', { authHeader: bearer, body: { assetId: up.body.assetId, decision: 'approve' } });
+    await check('revised proposal (exact production PDF): scanned, security-approved and ready before the artist can see it', async () => {
+      const { data } = await admin.from('collaboration_assets').select('security_status, security_review_status, upload_status, file_sha256').eq('id', up.body.assetId).single();
+      return data.security_status === 'clean' && data.security_review_status === 'approved' && data.upload_status === 'ready' && data.file_sha256.startsWith('3f5c11ee');
+    });
+    await check('revised proposal: opens in the Proposal Chamber and BOTH pages render', async () => {
+      const fresh = await signInForBrowser(anon, email, PASSWORD);
+      const { context, page } = await open(fresh, `/collaboration/${collabId}/proposal`);
+      await page.getByRole('button', { name: 'View' }).first().click();
+      await page.locator('.sp-pdf__canvas-viewport canvas').first().waitFor({ state: 'visible', timeout: 15000 });
+      const p1 = await page.locator('.sp-pdf__page-indicator').first().textContent();
+      const box1 = await page.locator('.sp-pdf__canvas-viewport canvas').first().boundingBox();
+      await page.getByRole('button', { name: 'Next page' }).click();
+      await page.waitForFunction(() => /Page 2 of 2/.test(document.querySelector('.sp-pdf__page-indicator')?.textContent ?? ''), null, { timeout: 8000 });
+      const box2 = await page.locator('.sp-pdf__canvas-viewport canvas').first().boundingBox();
+      await context.close();
+      return /Page 1 of 2/.test(p1) && box1.width > 0 && box1.height > 0 && box2.width > 0 && box2.height > 0;
+    });
+  }
+
   // ---- expired / revoked do not grant access ----
   for (const kind of ['revoked', 'expired']) {
     await check(`${kind} invitation grants no access`, async () => {
@@ -207,6 +246,7 @@ try {
 } finally {
   await browser.close();
   await admin.from('artist_invitations').delete().ilike('email', '%k16w-%');
+  await admin.from('collaboration_assets').delete().in('collaboration_id', [collabId, otherCollabId]);
   await admin.from('collaboration_members').delete().in('collaboration_id', [collabId, otherCollabId]);
   await admin.from('collaborations').delete().in('id', [collabId, otherCollabId]);
   if (uid) await admin.auth.admin.deleteUser(uid);

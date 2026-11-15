@@ -82,12 +82,13 @@ try {
     // Dashboard's own asset-library list for this one collaboration.
     await admin.from('collaboration_members').insert({ collaboration_id: collabWithPendingCoverId, user_id: dataset.identities.artistA.uid, added_by: adminSession.user.id, status: 'active' });
     const artistSession = await signInForBrowser(anon, dataset.identities.artistA.email, dataset.password);
-    const { context, page } = await freshPage(artistSession, '/dashboard');
-    await page.waitForTimeout(1000);
-    const row = page.locator('.sp-asset-row', { hasText: 'K1.6T Pending Cover Test' });
+    // Artists no longer reach /dashboard (administrator hub); their
+    // artist-facing surface for this collaboration is its Artist Portal card.
+    const { context, page } = await freshPage(artistSession, '/artist');
+    const row = page.getByRole('radio', { name: 'K1.6T Pending Cover Test', exact: true });
     await expect(row).toBeVisible();
     await page.waitForTimeout(1000);
-    const hasImg = await row.locator('.sp-cover-art img').count();
+    const hasImg = await row.locator('img').count();
     const hasPlaceholder = await row.locator('.sp-cover-art--placeholder').count();
     await context.close();
     await admin.from('collaboration_members').delete().eq('collaboration_id', collabWithPendingCoverId).eq('user_id', dataset.identities.artistA.uid);

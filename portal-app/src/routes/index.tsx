@@ -9,6 +9,7 @@ import { VisualGalleryPage } from '../pages/VisualGalleryPage';
 import { TransmissionChamberPage } from '../pages/TransmissionChamberPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { RequirePortalAuth } from '../features/auth/RequirePortalAuth';
+import { RequirePortalAdminHub } from '../features/auth/RequirePortalAdminHub';
 import { RequirePortalAdmin } from '../features/auth/RequirePortalAdmin';
 
 // Paths are relative to the router basename ("/portal" in production
@@ -23,7 +24,9 @@ export const portalRoutes: RouteObject[] = [
     path: 'dashboard',
     element: (
       <RequirePortalAuth>
-        <DashboardPage />
+        <RequirePortalAdminHub>
+          <DashboardPage />
+        </RequirePortalAdminHub>
       </RequirePortalAuth>
     ),
   },

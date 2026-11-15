@@ -254,7 +254,7 @@ export function EntrancePage() {
           href="/dashboard"
           onClick={(e) => {
             e.preventDefault();
-            if (authStatus === 'signed-in') navigate('/dashboard');
+            if (authStatus === 'signed-in') navigate(isAdmin ? '/dashboard' : '/artist');
             else setActionMessage('Sign in above to view your authorized collaborations.');
           }}
           aria-label="Collaborations — your dashboard"

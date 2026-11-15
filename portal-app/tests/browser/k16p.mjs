@@ -40,11 +40,12 @@ try {
     return true;
   });
 
-  await check('Dashboard shows an "Artist Portal" link for an ordinary artist too', async () => {
+  await check('an ordinary artist who opens /dashboard is redirected to their Artist Portal (/artist)', async () => {
     const { context, page } = await freshPage(artistSession, '/dashboard');
-    const visible = await page.getByRole('link', { name: 'Artist Portal', exact: true }).isVisible();
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const ok = new URL(page.url()).pathname === '/artist';
     await context.close();
-    return visible;
+    return ok;
   });
 
   await check('clicking "Artist Portal" navigates to /artist', async () => {
@@ -60,11 +61,12 @@ try {
   // Artist Portal's own home (/artist, self-referential here) — the
   // central hub is reached via the separate, admin-only "Admin
   // Dashboard" link instead (see k16r.mjs for that coverage).
-  await check('the Artist Portal\'s chamber-nav "Dashboard" link is self-referential (points to /artist, not the central hub)', async () => {
+  await check('the Artist Portal\'s chamber-nav "Dashboard" link points an administrator to the central hub (/dashboard); artists keep /artist', async () => {
     const { context, page } = await freshPage(adminSession, '/artist');
     const href = await page.getByRole('link', { name: 'Dashboard', exact: true }).first().getAttribute('href');
     await context.close();
-    return href === '/artist';
+    // Administrator context: the chamber-nav Dashboard is the admin hub (c3bd0af).
+    return href === '/dashboard';
   });
 
   await check('the Artist Portal does NOT show "Command Center" as a primary navigation link', async () => {
@@ -182,9 +184,11 @@ try {
 
   await check('an artist cannot reach the Command Center even by direct URL (unaffected by this stage)', async () => {
     const { context, page } = await freshPage(artistSession, '/admin');
-    const text = await page.locator('body').textContent();
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const redirected = new URL(page.url()).pathname === '/artist';
+    const adminUi = await page.getByRole('button', { name: 'Asset Library', exact: true }).count();
     await context.close();
-    return text.includes('Administrator access is required');
+    return redirected && adminUi === 0;
   });
 
   await check('refreshing /artist as admin keeps the project picker and chamber-navigation accessible, not bounced', async () => {

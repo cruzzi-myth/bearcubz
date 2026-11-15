@@ -159,3 +159,27 @@
     transform: translateY(0);
   }
 }
+
+/* Sign Out — available to every signed-in user (artists have no other way to
+   end their session now that the administrator Dashboard is admin-only). */
+.sp-chamber__signout {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-soft, #c8c8d8);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--sp-glass-border, rgba(255, 255, 255, 0.2));
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sp-chamber__signout--end {
+  margin-left: auto;
+}
+.sp-chamber__signout:hover,
+.sp-chamber__signout:focus-visible {
+  color: #fff;
+  border-color: var(--cyan);
+}

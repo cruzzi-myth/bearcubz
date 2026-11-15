@@ -190,7 +190,7 @@ await check('administrator: signing out removes the admin entrance and returns t
 
 // ---------- 3. Authorized artist (Artist A) ----------
 await check('Artist A: authenticated dashboard shows exactly their 2 authorized projects', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(2000);
   const text = await page.textContent('body');
   await context.close();
@@ -198,7 +198,7 @@ await check('Artist A: authenticated dashboard shows exactly their 2 authorized 
 });
 
 await check('Artist A: session persists across a page refresh (no re-login needed)', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.reload();
   await expect(page.locator('body')).toContainText('Ghost Signal');
@@ -208,7 +208,7 @@ await check('Artist A: session persists across a page refresh (no re-login neede
 });
 
 await check('Artist A: Ghost Signal card shows its own primary artwork (img element present)', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(2000);
   const imgCount = await page.locator('img').count();
   await context.close();
@@ -217,7 +217,7 @@ await check('Artist A: Ghost Signal card shows its own primary artwork (img elem
 
 // ---------- 4. Isolated artist (Artist B) ----------
 await check('Artist B: dashboard shows ONLY Static Bloom, never Ghost Signal or Parallel Transmission', async () => {
-  const { context, page } = await freshPage('artistB', '/dashboard');
+  const { context, page } = await freshPage('artistB', '/artist');
   await page.waitForTimeout(2000);
   const text = await page.textContent('body');
   await context.close();
@@ -365,7 +365,10 @@ await check('Listening Chamber: prefers-reduced-motion shows the static marker i
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const session = await sessionFor('artistA');
   await seedSessionAndReload(page, supabaseUrl, session, `/collaboration/${dataset.collaborations.projectA}/listen`);
-  await page.waitForTimeout(2000);
+  // Wait for the real condition (static marker rendered) rather than a fixed
+  // delay, so shared-backend load can't cause a false failure; the assertion
+  // itself (no animated canvas, static marker present) is unchanged.
+  await page.locator('.sp-visualizer--static').first().waitFor({ state: 'attached', timeout: 12000 }).catch(() => {});
   const canvasCount = await page.locator('canvas.sp-visualizer').count();
   const staticCount = await page.locator('.sp-visualizer--static').count();
   await context.close();
@@ -462,7 +465,7 @@ await check('Transmission Chamber: artist can submit new feedback and see it app
 
 // ---------- 12. NYX ARDENT ----------
 await check('NYX ARDENT: host toggle button renders on the dashboard', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const count = await page.getByLabel(/Open Nyx Ardent/i).count();
   await context.close();
@@ -470,7 +473,7 @@ await check('NYX ARDENT: host toggle button renders on the dashboard', async () 
 });
 
 await check('NYX ARDENT: opening shows the dialog with the correct designation, not ECHO-7', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.getByLabel(/Open Nyx Ardent/i).click();
   await page.waitForTimeout(500);
@@ -480,7 +483,7 @@ await check('NYX ARDENT: opening shows the dialog with the correct designation, 
 });
 
 await check('NYX ARDENT: Artist A (2 projects) clicking "Listen to Demo" requires explicit project selection, never auto-picks', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.getByLabel(/Open Nyx Ardent/i).click();
   await page.waitForTimeout(500);
@@ -493,7 +496,7 @@ await check('NYX ARDENT: Artist A (2 projects) clicking "Listen to Demo" require
 });
 
 await check('NYX ARDENT: closes via the Close button and via Escape', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.getByLabel(/Open Nyx Ardent/i).click();
   await page.waitForTimeout(400);
@@ -514,7 +517,7 @@ await check('NYX ARDENT: available on a chamber page too, not just the dashboard
 
 // ---------- Stage K1.6A.1: standalone NYX ARDENT companion ----------
 await check('NYX ARDENT companion: renders as a standalone transparent character, no circular/rectangular frame remains', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const oldToggleCount = await page.locator('.sp-host__toggle').count();
   const companion = page.locator('.sp-host__companion');
@@ -533,7 +536,7 @@ await check('NYX ARDENT companion: renders as a standalone transparent character
 });
 
 await check('NYX ARDENT companion: can be dragged to a new position, and that position stays within the viewport', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const handle = page.locator('.sp-host__companion');
   const box = await handle.boundingBox();
@@ -552,7 +555,7 @@ await check('NYX ARDENT companion: can be dragged to a new position, and that po
 });
 
 await check('NYX ARDENT companion: a real drag never also opens the chat dialog', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const handle = page.locator('.sp-host__companion');
   const box = await handle.boundingBox();
@@ -567,7 +570,7 @@ await check('NYX ARDENT companion: a real drag never also opens the chat dialog'
 });
 
 await check('NYX ARDENT companion: a reset-position control appears after dragging and returns her to the default corner', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const handle = page.locator('.sp-host__companion');
   const defaultBox = await handle.boundingBox();
@@ -592,7 +595,7 @@ await check('NYX ARDENT companion: a reset-position control appears after draggi
 });
 
 await check('NYX ARDENT companion: keyboard-only activation (Tab + Enter) opens the chat, same as a click', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').focus();
   await page.keyboard.press('Enter');
@@ -603,7 +606,7 @@ await check('NYX ARDENT companion: keyboard-only activation (Tab + Enter) opens 
 });
 
 await check('NYX ARDENT companion: prefers-reduced-motion disables the float/pulse/entrance animations entirely', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.waitForTimeout(500);
   const wrapAnimation = await page.locator('.sp-host__companion-wrap').evaluate((el) => getComputedStyle(el).animationName);
@@ -628,7 +631,7 @@ await check('NYX ARDENT companion: mobile viewport sizes her down and never cove
 
 // ---------- Stage K1.6A.2: reactive character + chat window redesign ----------
 await check('NYX ARDENT reactive: the old circular chat portrait is gone from the open panel', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(400);
@@ -638,7 +641,7 @@ await check('NYX ARDENT reactive: the old circular chat portrait is gone from th
 });
 
 await check('NYX ARDENT reactive: the real transparent standalone artwork appears inside the open chat panel', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(400);
@@ -651,7 +654,7 @@ await check('NYX ARDENT reactive: the real transparent standalone artwork appear
 });
 
 await check('NYX ARDENT reactive: opening the chat triggers her greeting state', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(150);
@@ -662,7 +665,7 @@ await check('NYX ARDENT reactive: opening the chat triggers her greeting state',
 });
 
 await check('NYX ARDENT reactive: submitting a message moves her through listening, then thinking', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(2700); // let the greeting settle to idle first
@@ -677,7 +680,7 @@ await check('NYX ARDENT reactive: submitting a message moves her through listeni
 });
 
 await check('NYX ARDENT reactive: the real response arriving moves her to speaking', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(2700);
@@ -691,7 +694,7 @@ await check('NYX ARDENT reactive: the real response arriving moves her to speaki
 });
 
 await check('NYX ARDENT reactive: selecting a quick action triggers her presenting state', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(2700);
@@ -745,7 +748,7 @@ await check('NYX ARDENT reactive: a genuine backend failure (not fabricated) tri
 });
 
 await check('NYX ARDENT reactive: she returns to idle on her own after a completed interaction', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(2900); // past greet()'s own 2600ms idle-return
@@ -756,7 +759,7 @@ await check('NYX ARDENT reactive: she returns to idle on her own after a complet
 });
 
 await check('NYX ARDENT reactive: prefers-reduced-motion disables her state-change animations entirely', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(2700);
@@ -769,7 +772,7 @@ await check('NYX ARDENT reactive: prefers-reduced-motion disables her state-chan
 });
 
 await check('NYX ARDENT reactive: existing chat behavior (message history, auth-scoped quick actions) still works unchanged', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(400);
@@ -782,7 +785,7 @@ await check('NYX ARDENT reactive: existing chat behavior (message history, auth-
 });
 
 await check('NYX ARDENT reactive: a second, newer quick action is never overwritten by the first one\'s stale idle timer', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(2700);
@@ -865,7 +868,7 @@ await check('K1.6A.3: administrator with zero projects can open all five destina
 });
 
 await check('K1.6A.3: artist with zero projects can open all five destinations from the nav', async () => {
-  const { context, page } = await zeroProjectPage('artistA', '/dashboard');
+  const { context, page } = await zeroProjectPage('artistA', '/artist');
   const titles = [];
   for (const label of ['Listening Chamber', 'Transmission Chamber', 'Visual Concept Chamber', 'Proposal Chamber']) {
     await page.getByRole('button', { name: label }).click();
@@ -962,7 +965,7 @@ await check('K1.6A.3: existing project-specific authorization is unaffected — 
 });
 
 await check('K1.6A.3: zero-project navigation works on a mobile viewport too', async () => {
-  const { context, page } = await zeroProjectPage('artistA', '/dashboard', { width: 390, height: 844 });
+  const { context, page } = await zeroProjectPage('artistA', '/artist', { width: 390, height: 844 });
   await page.getByRole('button', { name: 'Visual Concept Chamber' }).click();
   await page.waitForTimeout(600);
   const title = await page.locator('.sp-chamber__title').textContent();
@@ -979,7 +982,7 @@ await check('K1.6A.3: NYX ARDENT remains available on every project-independent 
 });
 
 await check('K1.6A.3: browser back/forward works correctly across a project-independent chamber visit', async () => {
-  const { context, page } = await zeroProjectPage('artistA', '/dashboard');
+  const { context, page } = await zeroProjectPage('artistA', '/artist');
   await page.getByRole('button', { name: 'Proposal Chamber' }).click();
   await page.waitForTimeout(600);
   const forwardUrl = page.url();
@@ -990,7 +993,7 @@ await check('K1.6A.3: browser back/forward works correctly across a project-inde
   await page.waitForTimeout(500);
   const forwardAgainUrl = page.url();
   await context.close();
-  return forwardUrl.endsWith('/chambers/proposals') && backUrl.endsWith('/dashboard') && forwardAgainUrl.endsWith('/chambers/proposals');
+  return forwardUrl.endsWith('/chambers/proposals') && backUrl.endsWith('/artist') && forwardAgainUrl.endsWith('/chambers/proposals');
 });
 
 // ---------- Stage K1.6B addendum: premium PDF viewer + gallery nav ----------
@@ -1123,7 +1126,7 @@ await check('Visual Concept Gallery: a single-image collaboration shows no stray
 
 // ---------- 13. Missing artwork ----------
 await check('missing primary cover (Project C has no artwork at all): dashboard card shows a placeholder, not broken/missing image markup', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(2000);
   const brokenImages = await page.locator('img').evaluateAll((imgs) => imgs.filter((i) => i.naturalWidth === 0 && i.getAttribute('src')).length);
   await context.close();
@@ -1160,7 +1163,7 @@ await check('accessibility (axe-core): entrance page has zero serious/critical v
 });
 
 await check('accessibility (axe-core): artist dashboard has zero serious/critical violations', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const results = await new AxeBuilder({ page }).analyze();
   const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
@@ -1239,7 +1242,7 @@ await check('Stage I2H regression: Listening Chamber and Proposal Archive use h2
 
 // ---------- 16. No service-role key reaches the browser ----------
 await check('no service-role key is present anywhere in the loaded page (localStorage, DOM, or network bodies)', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1500);
   const key = authStorageKey(supabaseUrl);
   const storedSession = await page.evaluate((k) => localStorage.getItem(k), key);
@@ -1267,7 +1270,7 @@ await check('administrator: Signal Inbox trigger is also present on the Administ
 });
 
 await check('Artist A: sees the Signal Inbox trigger on their own dashboard', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   const trigger = await page.$('.sp-inbox__trigger');
   await context.close();
   return Boolean(trigger);
@@ -1281,7 +1284,7 @@ await check('signed-out visitor: the Signal Inbox trigger is never rendered at a
 });
 
 await check('Artist A: opening the inbox panel never shows another collaboration\'s title or any message not addressed to them', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.locator('.sp-inbox__trigger').click();
   await page.waitForTimeout(1000);
   const text = await page.textContent('.sp-inbox__panel');
@@ -1301,7 +1304,7 @@ await check('administrator: a fresh admin reply shows as unread for the recipien
   });
   if (replyError) return false;
 
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.locator('.sp-inbox__trigger').click();
   await page.waitForTimeout(1200);
   const beforeText = await page.textContent('.sp-inbox__panel');
@@ -1316,7 +1319,7 @@ await check('administrator: a fresh admin reply shows as unread for the recipien
 
 await check('Artist A: quick-reply from the inbox panel reaches the same Transmissions thread (existing portal-submit-feedback, no new write path)', async () => {
   const quickReplyText = `Quick reply via inbox ${Date.now()}`;
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.locator('.sp-inbox__trigger').click();
   await page.waitForTimeout(1000);
   const firstReplyInput = page.locator('.sp-inbox__quick-reply input').first();
@@ -1333,8 +1336,8 @@ await check('Artist A: quick-reply from the inbox panel reaches the same Transmi
 });
 
 // ---------- Stage K1.4/K1.4.1: Asset Library / Collaborations / Briefing Modal ----------
-await check('Artist A: Asset Library shows the compact row layout with a TRACK classification badge for Project A (bpm/key both set)', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): Asset Library shows the compact row layout with a TRACK classification badge for Project A (bpm/key both set)', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await expect(page.locator('.sp-asset-row').first()).toBeVisible();
   const rowCount = await page.locator('.sp-asset-row').count();
@@ -1343,8 +1346,8 @@ await check('Artist A: Asset Library shows the compact row layout with a TRACK c
   return rowCount >= 1 && text.includes('Track');
 });
 
-await check('Artist A: Asset Library row height is compact (music-library style, not an oversized card)', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): Asset Library row height is compact (music-library style, not an oversized card)', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   const height = await page.locator('.sp-asset-row').first().evaluate((el) => el.getBoundingClientRect().height);
   await context.close();
@@ -1352,8 +1355,8 @@ await check('Artist A: Asset Library row height is compact (music-library style,
   return height >= 60 && height <= 100;
 });
 
-await check('Artist A: clicking an Asset Library row opens the same briefing modal the Collaborations view uses', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): clicking an Asset Library row opens the same briefing modal the Collaborations view uses', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.locator('.sp-asset-row', { hasText: 'Ghost Signal' }).click();
   await page.waitForTimeout(500);
@@ -1374,8 +1377,8 @@ await check('administrator: Parallel Transmission (no bpm/key recorded) shows UN
   return text.includes('Unclassified');
 });
 
-await check('Artist A: switching to the Collaborations view shows the report-style list with a classification column', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): switching to the Collaborations view shows the report-style list with a classification column', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.getByRole('tab', { name: 'Collaborations' }).click();
   await page.waitForTimeout(600);
@@ -1384,18 +1387,16 @@ await check('Artist A: switching to the Collaborations view shows the report-sty
   return text.includes('Ghost Signal') && text.includes('Classification') && text.includes('Track');
 });
 
-await check('Artist B: the Collaborations report never shows Artist A\'s project (same isolation as the Asset Library)', async () => {
-  const { context, page } = await freshPage('artistB', '/dashboard');
-  await page.waitForTimeout(1200);
-  await page.getByRole('tab', { name: 'Collaborations' }).click();
-  await page.waitForTimeout(600);
-  const text = await page.textContent('.sp-collab-report');
+await check('Artist B: the Artist Portal shows their own project and never Artist A\'s projects', async () => {
+  const { context, page } = await freshPage('artistB', '/artist');
+  await page.getByRole('radio', { name: 'Static Bloom' }).waitFor({ state: 'visible', timeout: 12000 });
+  const text = await page.locator('body').textContent();
   await context.close();
   return text.includes('Static Bloom') && !text.includes('Ghost Signal') && !text.includes('Parallel Transmission');
 });
 
-await check('Artist A: clicking a Collaborations row opens the briefing modal with the correct project\'s real data', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): clicking a Collaborations row opens the briefing modal with the correct project\'s real data', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.getByRole('tab', { name: 'Collaborations' }).click();
   await page.waitForTimeout(600);
@@ -1407,8 +1408,8 @@ await check('Artist A: clicking a Collaborations row opens the briefing modal wi
   return text.includes('Ghost Signal') && text.includes('128') && text.includes('Deliverables') && text.includes('Collaboration Materials');
 });
 
-await check('Artist A: the briefing modal never fabricates the full WAV master as complete when it was never uploaded', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): the briefing modal never fabricates the full WAV master as complete when it was never uploaded', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.getByRole('tab', { name: 'Collaborations' }).click();
   await page.waitForTimeout(600);
@@ -1420,8 +1421,8 @@ await check('Artist A: the briefing modal never fabricates the full WAV master a
   return text.includes('Pending');
 });
 
-await check('Artist A: Escape closes the briefing modal and restores focus to the row that opened it', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): Escape closes the briefing modal and restores focus to the row that opened it', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.getByRole('tab', { name: 'Collaborations' }).click();
   await page.waitForTimeout(600);
@@ -1438,8 +1439,8 @@ await check('Artist A: Escape closes the briefing modal and restores focus to th
   return openedCount === 1 && closedCount === 0 && focusReturnedToRow;
 });
 
-await check('Artist A: Tab cycling inside the open briefing modal never escapes to the page behind it (focus trap)', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('Administrator Dashboard (artists no longer reach it): Tab cycling inside the open briefing modal never escapes to the page behind it (focus trap)', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.getByRole('tab', { name: 'Collaborations' }).click();
   await page.waitForTimeout(600);
@@ -1511,8 +1512,8 @@ await check('administrator: opening a collaboration briefing from the admin Coll
   return linkCount === 1 && !materialsText.includes('not yet available');
 });
 
-await check('accessibility (axe-core): artist Collaborations report + open briefing modal has zero serious/critical violations', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+await check('accessibility (axe-core): administrator Dashboard Collaborations report + open briefing modal has zero serious/critical violations', async () => {
+  const { context, page } = await freshPage('admin', '/dashboard');
   await page.waitForTimeout(1200);
   await page.getByRole('tab', { name: 'Collaborations' }).click();
   await page.waitForTimeout(600);
@@ -1616,18 +1617,14 @@ await check('(cleanup) restore Static Bloom classification to its original fixtu
   return true;
 });
 
-await check('Artist A: the classification badge is visible but no edit control exists anywhere in the artist-facing UI', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
-  await page.waitForTimeout(1200);
-  const badgeText = await page.locator('.sp-asset-row', { hasText: 'Ghost Signal' }).locator('.sp-class-badge').textContent();
-  // Stage K1.6A added ChamberNav's own <select> project-switcher
-  // (shown because Artist A has 2 authorized projects) -- that is a
-  // navigation control, not a classification editor, so it is
-  // deliberately excluded from this count rather than widening what
-  // this assertion is willing to allow.
+await check('Artist A: the artist-facing workspace has no classification edit control anywhere', async () => {
+  const { context, page } = await freshPage('artistA', '/artist');
+  await page.getByRole('radio', { name: 'Ghost Signal' }).waitFor({ state: 'visible', timeout: 12000 });
+  // ChamberNav's project switcher is a navigation control, not a classification editor.
   const selectCount = await page.$$eval('select', (els) => els.filter((el) => !el.closest('.sp-chamber-nav')).length);
+  const editLabels = await page.getByLabel(/Change classification/).count();
   await context.close();
-  return badgeText.includes('Track') && selectCount === 0;
+  return selectCount === 0 && editLabels === 0;
 });
 
 await check('administrator: "Dashboard" in the Command Center header navigates to the administrator Dashboard, same session', async () => {
@@ -1661,7 +1658,7 @@ await check('administrator: "Command Center" on the administrator Dashboard navi
 });
 
 await check('Artist A: "Command Center" never appears on the dashboard for an ordinary artist account', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
+  const { context, page } = await freshPage('artistA', '/artist');
   await page.waitForTimeout(1200);
   const count = await page.getByRole('link', { name: 'Command Center', exact: true }).count();
   await context.close();
@@ -1837,8 +1834,9 @@ await check('administrator: retrying the same classification save after the netw
   const select = row.getByLabel(/Change classification/);
   // No route interception this time — the network is "recovered".
   await select.selectOption('artwork');
-  await page.waitForTimeout(2000);
-  const sawSuccess = (await row.locator('text=Saved').count()) > 0;
+  // Wait for the real success indicator (not a fixed delay) so load on the
+  // shared dev backend can't make this flaky; still fails if it never appears.
+  const sawSuccess = await row.locator('text=Saved').first().waitFor({ state: 'visible', timeout: 10000 }).then(() => true).catch(() => false);
   await context.close();
   const { data } = await admin.from('collaborations').select('classification').eq('id', dataset.collaborations.projectA).single();
   // Restore the fixture's original classification so later/other runs aren't affected.
@@ -1954,28 +1952,49 @@ await check('administrator private-material access never creates a membership ro
 });
 
 // --- Artist isolation regression (re-confirmed explicitly for this review) ---
-await check('Artist A still cannot see Artist B\'s project anywhere in the Asset Library', async () => {
-  const { context, page } = await freshPage('artistA', '/dashboard');
-  await page.waitForTimeout(1200);
-  const text = await page.textContent('.sp-asset-row-list');
+await check('Artist A still cannot see Artist B\'s project anywhere in the Artist Portal', async () => {
+  const { context, page } = await freshPage('artistA', '/artist');
+  await page.getByRole('radio', { name: 'Ghost Signal' }).waitFor({ state: 'visible', timeout: 12000 });
+  const text = await page.locator('body').textContent();
   await context.close();
-  return !text.includes('Static Bloom');
+  return text.includes('Ghost Signal') && !text.includes('Static Bloom');
 });
 
-await check('Artist B still cannot see Artist A\'s project anywhere in the Asset Library', async () => {
-  const { context, page } = await freshPage('artistB', '/dashboard');
-  await page.waitForTimeout(1200);
-  const text = await page.textContent('.sp-asset-row-list');
+await check('Artist B still cannot see Artist A\'s project anywhere in the Artist Portal', async () => {
+  const { context, page } = await freshPage('artistB', '/artist');
+  await page.getByRole('radio', { name: 'Static Bloom' }).waitFor({ state: 'visible', timeout: 12000 });
+  const text = await page.locator('body').textContent();
   await context.close();
-  return !text.includes('Ghost Signal');
+  return text.includes('Static Bloom') && !text.includes('Ghost Signal');
 });
 
-await check('Artist A still cannot reach the Command Center', async () => {
+await check('Artist A cannot reach the Command Center: /admin redirects to /artist and renders no admin UI', async () => {
   const { context, page } = await freshPage('artistA', '/admin');
-  await page.waitForTimeout(1200);
-  const text = await page.textContent('body');
+  await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+  const onArtist = new URL(page.url()).pathname === '/artist';
+  const text = await page.locator('body').textContent();
+  const adminTabs = await page.getByRole('button', { name: 'Asset Library' }).count();
   await context.close();
-  return text.includes('Administrator access is required');
+  return onArtist && adminTabs === 0 && !text.includes('Command Center') && !text.includes('Administrator Command Center');
+});
+
+await check('Artist A cannot reach the administrator Dashboard: /dashboard redirects to /artist', async () => {
+  const { context, page } = await freshPage('artistA', '/dashboard');
+  await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+  const onArtist = new URL(page.url()).pathname === '/artist';
+  const hasAdminBadge = (await page.locator('.sp-dash__badge--admin').count()) > 0;
+  await context.close();
+  return onArtist && !hasAdminBadge;
+});
+
+await check('Artist A can sign out from the Artist Portal and the session is gone', async () => {
+  const { context, page } = await freshPage('artistA', '/artist');
+  await page.getByRole('button', { name: 'Sign Out' }).click();
+  await page.waitForTimeout(1500);
+  const stored = await page.evaluate((k) => localStorage.getItem(k), authStorageKey(supabaseUrl));
+  const text = await page.locator('body').innerText();
+  await context.close();
+  return !stored && /authorized Signal Portal access|Request access/i.test(text);
 });
 
 await check('Artist A still cannot change a classification — the Edge Function still rejects it with 403 and the value is unchanged', async () => {
@@ -2132,7 +2151,12 @@ async function adminAttachmentsTabPage(viewport) {
   await seedSessionAndReload(page, supabaseUrl, session, '/admin');
   await page.waitForTimeout(1200);
   await page.getByRole('button', { name: 'Attachments' }).click();
-  await page.waitForTimeout(1000);
+  // Wait for the review queue to actually finish loading (heading, then rows or
+  // the honest empty state) instead of a fixed delay — load on the shared dev
+  // backend must not make assertions read a half-rendered queue.
+  await page.getByText('Attachment Review').first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+  await page.locator('table tbody tr, .sp-admin__empty').first().waitFor({ state: 'attached', timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(300);
   return { context, page };
 }
 
@@ -2252,9 +2276,12 @@ await check('administrator: the Attachments tab is present in the Command Center
 
   await check('Artist A: the Transmission Chamber shows the rejected attachment\'s reason, surviving a full page refresh', async () => {
     const { context, page } = await freshPage('artistA', `/collaboration/${dataset.collaborations.projectA}/respond`);
-    await page.waitForTimeout(1800);
+    const reason = page.getByText('K1.6D browser test rejection reason.').first();
+    await reason.waitFor({ state: 'attached', timeout: 15000 }).catch(() => {});
     await page.reload();
-    await page.waitForTimeout(1800);
+    // Wait for the real content after the refresh (not a fixed delay); the
+    // assertion below is unchanged.
+    await page.getByText('K1.6D browser test rejection reason.').first().waitFor({ state: 'attached', timeout: 15000 }).catch(() => {});
     const text = await page.textContent('body');
     await context.close();
     return text.includes('This file was not approved for sharing.') && text.includes('K1.6D browser test rejection reason.');

@@ -30,7 +30,7 @@ const CHAMBERS: { segment: 'listen' | 'proposal' | 'visuals' | 'respond'; label:
  */
 export function ArtistPortalPage() {
   const data = useDashboardData();
-  const { isAdmin } = usePortalAuth();
+  const { isAdmin, signOut } = usePortalAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const collaborations = data.kind === 'ready' ? data.collaborations : [];
@@ -63,14 +63,20 @@ export function ArtistPortalPage() {
             administrator-only escape hatch to the central hub
             (/dashboard), positioned here above the chamber nav,
             alongside Admin Controls — never mixed into it. */}
-        {isAdmin && (
-          <nav className="sp-dash__nav" aria-label="Administrator navigation">
-            <Link to="/dashboard" className="sp-dash__admin-return">
-              Admin Dashboard
-            </Link>
-            <AdminControlsOverlay collaborationId={selected?.id} collaborationTitle={selected?.title} />
-          </nav>
-        )}
+        <nav className="sp-dash__nav" aria-label={isAdmin ? 'Administrator navigation' : 'Account'}>
+          {isAdmin && (
+            <>
+              <Link to="/dashboard" className="sp-dash__admin-return">
+                Admin Dashboard
+              </Link>
+              <AdminControlsOverlay collaborationId={selected?.id} collaborationTitle={selected?.title} />
+            </>
+          )}
+          {/* Every signed-in user — artists included — must be able to sign out. */}
+          <button type="button" className="sp-dash__signout" onClick={() => void signOut()}>
+            Sign Out
+          </button>
+        </nav>
       </header>
 
       <div className="sp-dash__nav-row">

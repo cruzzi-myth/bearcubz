@@ -101,7 +101,7 @@ export async function run(ctx) {
 
   // ---------- 1. Genuine clean scan (real Cloudmersive verdict) ----------
   let cleanAttachmentId;
-  await check('[K1.6E.1] genuine clean scan: an ordinary small text file receives a REAL clean verdict from the live Cloudmersive API, becomes eligible for review', async () => {
+  await check('[K1.6E.1] genuine clean scan: an ordinary small text file receives a clean provider verdict (live or mock, per scanner mode), becomes eligible for review', async () => {
     const result = await uploadFile('genuine-clean', new TextEncoder().encode('A genuine, ordinary attachment — real Cloudmersive scan, not a test fixture.'), 'text/plain', 'genuine-clean.txt');
     cleanAttachmentId = result.attachmentId;
     if (result.confirm?.body.status !== 'clean') return false;
@@ -148,7 +148,7 @@ export async function run(ctx) {
 
   // ---------- 5. ZIP: genuine clean archive, scanned via the real Advanced endpoint ----------
   let zipCleanId;
-  await check('[K1.6E.1] a genuine small ZIP archive receives a REAL clean verdict via the Advanced endpoint (provider: cloudmersive-advanced), proving its contents were actually evaluated', async () => {
+  await check('[K1.6E.1] a genuine small ZIP archive receives a clean verdict via the Advanced endpoint (provider: cloudmersive-advanced), proving its contents were evaluated', async () => {
     const zipBytes = readFileSync(new URL('../fixtures/sample.zip', import.meta.url));
     const result = await uploadFile('zip-clean', zipBytes, 'application/zip', 'zip-clean.zip');
     zipCleanId = result.attachmentId;

@@ -21,16 +21,55 @@ Email link → sign-in → `accept_artist_invitation()` (identity from `auth.uid
 invited collaboration → `/portal/artist` with that project selected. Returning artists sign in normally.
 If acceptance fails, an error with **Try again** is shown instead of an empty workspace.
 
-## Required before the first real send (owner actions, Supabase Dashboard → project `drsidtagxezznqviupsr`)
-1. **Authentication → Emails → SMTP Settings**: enable custom SMTP (verified sending domain, e.g. Resend /
-   Postmark / SES) and set a sender such as `no-reply@bearcubz.com`. Add the provider's SPF/DKIM/DMARC DNS records.
-2. **Authentication → Rate Limits**: raise "Emails sent per hour" (only editable with custom SMTP).
-3. **Authentication → URL Configuration**: Site URL `https://bearcubz.com/portal/`; add the same URL to Redirect URLs.
-4. **Authentication → Emails → Templates → Magic Link**: use the invitation copy below.
-5. Upload Setia's revised proposal in the Command Center, run its scan, approve its security release, and
-   deactivate the original once the replacement is verified.
+## Email delivery — current state (verified read-only on production)
+- Custom SMTP **enabled**: host `smtp.resend.com`, port 465, user `resend`, sender `portal@bearcubz.com`,
+  sender name `BEλR CUBZ // THE COLLECTIVE`. (Password is stored by Supabase and is never readable.)
+- Auth redirect allow-list contains exactly `https://bearcubz.com/portal/`; Site URL is `https://bearcubz.com/`
+  (left unchanged — shared with other bearcubz.com apps).
+- The invitation send uses **Supabase Auth** (`signInWithOtp` → the configured SMTP). No second provider or
+  extra Edge Function secret is needed. The link returns to `https://bearcubz.com/portal/`, which then sends
+  the artist to `/portal/artist` once the invitation is accepted.
+- Not readable from the CLI: the **emails-per-hour rate limit** (Authentication → Rate Limits). Confirm it is
+  comfortably above the handful of Phase 01 emails.
+- Note: the Magic Link template is shared by every sign-in email (including administrator sign-ins). Use copy
+  that reads correctly for both, or keep the default and let the invitation email stay generic.
 
-### Magic Link template
+## Delivery stages — what each word means
+1. *Request accepted* — Supabase accepted the request.
+2. *Provider accepted* — Supabase handed the message to Resend (shown as "Email sent (accepted by mail provider)").
+3. *Delivered* — it reached the inbox (only the recipient can confirm this).
+4. *Authentication successful* — the artist opened the link and signed in (the invitation then shows "accepted").
+
+## Switching Cloudmersive plans (no code change)
+The scanner reads `CLOUDMERSIVE_API_KEY` (and optional size limits `PORTAL_CLOUDMERSIVE_MAX_BYTES`,
+`PORTAL_ARTIST_UPLOAD_MAX_BYTES`) from Edge Function secrets only. To move between premium and free tier, set the
+key in each project: `supabase secrets set CLOUDMERSIVE_API_KEY=<key> --project-ref <ref>` (or Dashboard → Edge
+Functions → Secrets). The free tier's smaller file-size ceiling is already the default (2.9 MB); raise the limits
+only on a plan that allows it. No code or deploy is needed.
+
+## Test modes (protects Cloudmersive credits)
+- **Standard** (default for every suite): `supabase/scripts/set-dev-scanner-mode.sh mock`. The *development* scanner
+  uses a deterministic mock provider (`portal-test-scanner-mock`); malware-rejection assertions still run
+  (infected verdicts are recorded and can never be security-released; EICAR, size and archive checks remain local).
+- **Live-provider verification** (explicit only): `set-dev-scanner-mode.sh live`, then
+  `SIGNAL_PORTAL_LIVE_PROVIDER=1 SIGNAL_PORTAL_INTEGRATION_ONLY=liveProvider node tests/integration/run.mjs`
+  (one genuine scan). Switch back with `set-dev-scanner-mode.sh mock`.
+- The integration runner refuses to start if the scanner is in the wrong mode for the requested run.
+- **Production can never use test mode**: the scanner ignores/refuses it on the production project (it fails
+  closed with `SCANNER_TEST_MODE_FORBIDDEN_IN_PRODUCTION`), the mock function is not in the production deploy
+  manifest, and the mock endpoint is derived from the project's own URL, never configurable.
+
+## Artist routes
+`/portal/dashboard` and `/portal/admin` are administrator-only; an artist who opens either is redirected to
+`/portal/artist`. Administrators reach the Artist Portal with the ARTIST PORTAL button. Artists can sign out from
+the Artist Portal and from every chamber.
+
+## Remaining owner actions before the first real send
+1. Confirm you received the authentication test email from `portal@bearcubz.com` (see handoff).
+2. Confirm the emails-per-hour limit.
+3. Approve the production deployment plan, then explicitly authorize the two invitations.
+
+## Magic Link template (optional branding)
 Subject: `BEλR CUBZ // THE COLLECTIVE — Private Collaboration Access`
 
 > You've been invited to enter SIGNAL PORTAL, the private creative collaboration network for BEλR CUBZ // THE COLLECTIVE.
@@ -40,9 +79,10 @@ Subject: `BEλR CUBZ // THE COLLECTIVE — Private Collaboration Access`
 > After authentication, you'll be taken directly to your assigned collaboration workspace.
 > This invitation does not constitute acceptance of any collaboration terms, ownership arrangement, or release agreement.
 
-(No signed asset URLs are included.)
+(No signed asset URLs are included. Set in Authentication → Emails → Templates → Magic Link.)
 
-## Failure messages you may see
-- `EMAIL_RATE_LIMITED` — shared-SMTP/rate limit hit; do steps 1–2. The limit is never bypassed.
-- `SMTP_NOT_CONFIGURED` — Supabase's built-in mailer only mails project team members; do step 1.
-- `SMTP_REJECTED` — the provider refused the message; check credentials and sender domain.
+## Failure messages you may see in the Send Invitation panel
+- `EMAIL_RATE_LIMITED` — the email rate limit was reached; raise it in Authentication → Rate Limits. It is never bypassed.
+- `SMTP_NOT_CONFIGURED` — the built-in mailer only mails team members; custom SMTP must be enabled.
+- `SMTP_REJECTED` — the provider refused the message; check the Resend key and sender domain.
+- `REVISED_PROPOSAL_NOT_READY` — Setia's proposal gate (original still active, or the replacement is not clean + approved).
