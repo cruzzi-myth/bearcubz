@@ -220,6 +220,20 @@ export function markAssetInactive(assetId: string) {
   return invokeManage({ op: 'mark_asset_inactive', assetId });
 }
 
+/**
+ * A genuine, permanent delete — distinct from markAssetInactive,
+ * which only ever sets is_active = false and keeps both the row and
+ * the private Storage object. This is a separate Edge Function (not
+ * another `op` on portal-admin-manage-collaboration) because it does
+ * real Storage deletion, not just a metadata update.
+ */
+export async function deleteAsset(assetId: string): Promise<ApiResult<{ ok: true }>> {
+  const { data, error } = await supabase.functions.invoke('portal-admin-delete-asset', { body: { assetId } });
+  if (error) return { ok: false, error: mapError(error) };
+  if (data?.error) return { ok: false, error: data.detail ? `${data.error}: ${data.detail}` : data.error };
+  return { ok: true, data };
+}
+
 export function revokeInvitation(invitationId: string, reason?: string) {
   return invokeManage({ op: 'revoke_invitation', invitationId, reason });
 }

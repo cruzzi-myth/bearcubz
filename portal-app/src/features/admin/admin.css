@@ -363,6 +363,27 @@
   color: var(--red);
 }
 
+.sp-admin__delete-dialog {
+  max-width: 480px;
+}
+
+.sp-admin__delete-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.sp-admin__delete-dl dt {
+  color: var(--sp-ink-soft);
+}
+
+.sp-admin__delete-dl dd {
+  margin: 0;
+  font-weight: 600;
+}
+
 .sp-admin__row-actions {
   display: flex;
   gap: 6px;

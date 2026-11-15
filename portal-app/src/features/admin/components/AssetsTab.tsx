@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
 import { useAdminAssets } from '../hooks/useAdminAssets';
-import { updateAsset, markAssetInactive, confirmUpload, approveAssetSecurity } from '../services/adminApi';
+import { updateAsset, markAssetInactive, confirmUpload, approveAssetSecurity, deleteAsset } from '../services/adminApi';
 import { AssetUploadForm } from './AssetUploadForm';
 import { AssetLibraryList } from '../../../components/AssetLibraryList';
 import { AdminCollaborationBriefing } from './AdminCollaborationBriefing';
+import { DeleteAssetDialog } from './DeleteAssetDialog';
 import { useAdminAssetPreview } from '../hooks/useAdminAssetPreview';
 import { isCoverEligible } from '../lib/coverEligibility';
 import { formatBytes } from '../lib/formatBytes';
-import type { ApprovalStatus, AdminCollaboration } from '../types/adminTypes';
+import type { ApprovalStatus, AdminAsset, AdminCollaboration } from '../types/adminTypes';
 
 function statusPillClass(status: string): string {
   if (status === 'ready') return 'sp-admin__pill';
@@ -43,6 +44,9 @@ export function AssetsTab() {
   const [selectedCollaboration, setSelectedCollaboration] = useState<string>('');
   const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const { state: assetState, reload } = useAdminAssets(selectedCollaboration || undefined);
+  const [deleteTarget, setDeleteTarget] = useState<AdminAsset | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function handleApprovalChange(assetId: string, approvalStatus: ApprovalStatus) {
     await updateAsset(assetId, { approvalStatus });
@@ -68,6 +72,20 @@ export function AssetsTab() {
 
   async function handleRetryConfirm(assetId: string) {
     await confirmUpload(assetId);
+    reload();
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteAsset(deleteTarget.id);
+    setDeleting(false);
+    if (!result.ok) {
+      setDeleteError(result.error);
+      return;
+    }
+    setDeleteTarget(null);
     reload();
   }
 
@@ -182,6 +200,16 @@ export function AssetsTab() {
                             Mark Inactive
                           </button>
                         )}
+                        <button
+                          type="button"
+                          className="sp-admin__btn sp-admin__btn--danger"
+                          onClick={() => {
+                            setDeleteError(null);
+                            setDeleteTarget(asset);
+                          }}
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -193,6 +221,20 @@ export function AssetsTab() {
       </div>
 
       {briefingTarget && <AdminCollaborationBriefing collaboration={briefingTarget} onClose={() => setBriefingTarget(null)} />}
+
+      {deleteTarget && (
+        <DeleteAssetDialog
+          asset={deleteTarget}
+          collaborationTitle={collaborations.find((c) => c.id === deleteTarget.collaborationId)?.title ?? 'Unknown collaboration'}
+          deleting={deleting}
+          error={deleteError}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setDeleteTarget(null);
+            setDeleteError(null);
+          }}
+        />
+      )}
     </>
   );
 }
