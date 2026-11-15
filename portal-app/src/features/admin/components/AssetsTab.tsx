@@ -9,12 +9,13 @@ import { DeleteAssetDialog } from './DeleteAssetDialog';
 import { useAdminAssetPreview } from '../hooks/useAdminAssetPreview';
 import { isCoverEligible } from '../lib/coverEligibility';
 import { formatBytes } from '../lib/formatBytes';
+import { deriveAssetLifecycleStatus, LIFECYCLE_STATUS_META } from '../lib/assetLifecycleStatus';
 import type { ApprovalStatus, AdminAsset, AdminCollaboration } from '../types/adminTypes';
 
-function statusPillClass(status: string): string {
-  if (status === 'ready') return 'sp-admin__pill';
-  if (status === 'failed') return 'sp-admin__pill sp-admin__pill--bad';
-  return 'sp-admin__pill sp-admin__pill--warn';
+function LifecycleStatusPill({ asset }: { asset: AdminAsset }) {
+  const status = deriveAssetLifecycleStatus(asset);
+  const meta = LIFECYCLE_STATUS_META[status];
+  return <span className={`sp-admin__pill ${meta.pillClass}`}>{meta.label}</span>;
 }
 
 function PreviewButton({ assetId }: { assetId: string }) {
@@ -40,15 +41,22 @@ function PreviewButton({ assetId }: { assetId: string }) {
 
 type Props = { initialCollaborationId?: string };
 
+type SecurityFeedback = { kind: 'approving' | 'approved' | 'error'; message?: string };
+
 export function AssetsTab({ initialCollaborationId }: Props) {
   const { state: collabState } = useAdminCollaborations();
-  const [securityError, setSecurityError] = useState<string | null>(null);
   const [selectedCollaboration, setSelectedCollaboration] = useState<string>(initialCollaborationId ?? '');
   const [briefingTarget, setBriefingTarget] = useState<AdminCollaboration | null>(null);
   const { state: assetState, reload } = useAdminAssets(selectedCollaboration || undefined);
   const [deleteTarget, setDeleteTarget] = useState<AdminAsset | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Stage K1.6Q — per-asset, not a single shared banner: "which row
+  // just succeeded/failed" must stay unambiguous even with several
+  // rows acted on across reloads. Mirrors CollaborationsTab's own
+  // classificationFeedback pattern (saving/saved/error, auto-clearing
+  // on success only — an error persists until the next attempt).
+  const [securityFeedback, setSecurityFeedback] = useState<Record<string, SecurityFeedback>>({});
 
   async function handleApprovalChange(assetId: string, approvalStatus: ApprovalStatus) {
     await updateAsset(assetId, { approvalStatus });
@@ -66,9 +74,26 @@ export function AssetsTab({ initialCollaborationId }: Props) {
   }
 
   async function handleSecurity(assetId: string, approve = false) {
-    setSecurityError(null);
+    if (approve) setSecurityFeedback((prev) => ({ ...prev, [assetId]: { kind: 'approving' } }));
     const result = approve ? await approveAssetSecurity(assetId) : await confirmUpload(assetId, false, true);
-    if (!result.ok) setSecurityError(result.error);
+    if (approve) {
+      // A failed approval never changes the asset's own status — the
+      // Edge Function's update is itself conditional on security_status
+      // still being 'clean' (see portal-admin-review-asset), so this
+      // feedback reports exactly what happened without ever implying
+      // a state change that didn't occur.
+      setSecurityFeedback((prev) => ({ ...prev, [assetId]: result.ok ? { kind: 'approved' } : { kind: 'error', message: result.error } }));
+      if (result.ok) {
+        setTimeout(() => {
+          setSecurityFeedback((prev) => {
+            if (prev[assetId]?.kind !== 'approved') return prev;
+            const next = { ...prev };
+            delete next[assetId];
+            return next;
+          });
+        }, 2500);
+      }
+    }
     reload();
   }
 
@@ -96,7 +121,6 @@ export function AssetsTab({ initialCollaborationId }: Props) {
   return (
     <>
       <h2>Asset Library</h2>
-      {securityError && <p role="alert" className="sp-admin__status-msg sp-admin__status-msg--error">{securityError}</p>}
 
       {/* Stage K1.4.1 — the compact music-library-style browser (same
           shared row component the artist-facing Asset Library uses).
@@ -151,20 +175,37 @@ export function AssetsTab({ initialCollaborationId }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {assetState.assets.map((asset) => (
+                {assetState.assets.map((asset) => {
+                  const lifecycle = deriveAssetLifecycleStatus(asset);
+                  const feedback = securityFeedback[asset.id];
+                  return (
                   <tr key={asset.id}>
-                    <td>{asset.displayLabel}{!asset.isActive && <span className="sp-admin__pill">Inactive</span>}</td>
+                    <td>
+                      <span className="sp-admin__asset-label">{asset.displayLabel}</span>
+                      {!asset.isActive && <span className="sp-admin__pill sp-admin__pill--muted">Inactive</span>}
+                    </td>
                     <td>{asset.assetType}</td>
                     <td>{asset.version}</td>
                     <td>
-                      <span className={statusPillClass(asset.uploadStatus)}>{asset.uploadStatus}</span>
+                      <LifecycleStatusPill asset={asset} />
                     </td>
                     <td>
                       <span>{asset.securityRequired ? asset.securityStatus : 'Legacy — scan evidence incomplete'}</span>
                       {asset.scanEvidence?.provider && <div>{asset.scanEvidence.provider}</div>}
                       {asset.scanEvidence?.detail && <div>{asset.scanEvidence.detail}</div>}
-                      {asset.securityStatus === 'clean' && asset.securityReviewStatus !== 'approved' && <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleSecurity(asset.id, true)}>Approve security release</button>}
-                      {(['legacy_unverified','pending','error'].includes(asset.securityStatus) || (asset.securityStatus === 'scanning' && asset.scanLeaseExpiresAt && Date.parse(asset.scanLeaseExpiresAt) < Date.now())) && <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleSecurity(asset.id)}>{asset.securityStatus === 'scanning' ? 'Retry expired scan' : 'Scan / revalidate'}</button>}
+                      {lifecycle === 'awaiting-approval' && (
+                        <button
+                          type="button"
+                          className="sp-admin__btn sp-admin__btn--ghost sp-admin__table-action-btn"
+                          onClick={() => handleSecurity(asset.id, true)}
+                          disabled={feedback?.kind === 'approving'}
+                        >
+                          {feedback?.kind === 'approving' ? 'Approving…' : 'Approve Security Release'}
+                        </button>
+                      )}
+                      {(['legacy_unverified','pending','error'].includes(asset.securityStatus) || (asset.securityStatus === 'scanning' && asset.scanLeaseExpiresAt && Date.parse(asset.scanLeaseExpiresAt) < Date.now())) && <button type="button" className="sp-admin__btn sp-admin__btn--ghost sp-admin__table-action-btn" onClick={() => handleSecurity(asset.id)}>{asset.securityStatus === 'scanning' ? 'Retry expired scan' : 'Scan / revalidate'}</button>}
+                      {feedback?.kind === 'approved' && <p role="status" className="sp-admin__status-msg sp-admin__status-msg--success">Approved — asset is now READY.</p>}
+                      {feedback?.kind === 'error' && <p role="alert" className="sp-admin__status-msg sp-admin__status-msg--error">{feedback.message}</p>}
                     </td>
                     <td>
                       {asset.approvalStatus ? (
@@ -186,25 +227,25 @@ export function AssetsTab({ initialCollaborationId }: Props) {
                     <td>{new Date(asset.uploadedAt).toLocaleDateString()}</td>
                     <td>
                       <div className="sp-admin__row-actions">
-                        {(asset.uploadStatus === 'ready' || asset.securityStatus === 'clean') && <PreviewButton assetId={asset.id} />}
+                        {(lifecycle === 'ready' || lifecycle === 'awaiting-approval') && <PreviewButton assetId={asset.id} />}
                         {!asset.isPrimaryCover && isCoverEligible(asset) && (
-                          <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleSetPrimary(asset.id)}>
+                          <button type="button" className="sp-admin__btn sp-admin__btn--ghost sp-admin__table-action-btn" onClick={() => handleSetPrimary(asset.id)}>
                             Set Primary
                           </button>
                         )}
                         {(asset.uploadStatus === 'pending' || asset.uploadStatus === 'failed') && (
-                          <button type="button" className="sp-admin__btn sp-admin__btn--ghost" onClick={() => handleRetryConfirm(asset.id)}>
+                          <button type="button" className="sp-admin__btn sp-admin__btn--ghost sp-admin__table-action-btn" onClick={() => handleRetryConfirm(asset.id)}>
                             Retry Verify
                           </button>
                         )}
                         {asset.isActive && (
-                          <button type="button" className="sp-admin__btn sp-admin__btn--danger" onClick={() => handleMarkInactive(asset.id)}>
+                          <button type="button" className="sp-admin__btn sp-admin__btn--warn sp-admin__table-action-btn" onClick={() => handleMarkInactive(asset.id)}>
                             Mark Inactive
                           </button>
                         )}
                         <button
                           type="button"
-                          className="sp-admin__btn sp-admin__btn--danger"
+                          className="sp-admin__btn sp-admin__btn--danger sp-admin__table-action-btn sp-admin__delete-btn"
                           onClick={() => {
                             setDeleteError(null);
                             setDeleteTarget(asset);
@@ -215,7 +256,8 @@ export function AssetsTab({ initialCollaborationId }: Props) {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

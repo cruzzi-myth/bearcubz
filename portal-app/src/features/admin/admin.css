@@ -239,26 +239,56 @@
   background: rgba(8, 7, 15, 0.72);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  /* Stage K1.6Q: a visible scrollbar on a dark background otherwise
+     reads as "nothing more to see" — this is a real affordance for
+     the Asset Library's wide table on tablet/laptop widths, not
+     decoration. */
+  scrollbar-color: var(--sp-glass-border) transparent;
 }
 
 .sp-admin__table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  line-height: 1.5;
 }
 
 .sp-admin__table th,
 .sp-admin__table td {
   text-align: left;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Stage K1.6Q: the columns that genuinely need to wrap (long labels,
+   the Security column's provider/detail lines, and the action
+   buttons) get that room back explicitly — every other column stays
+   nowrap so numeric/short values never force extra row height. */
+.sp-admin__table th:first-child,
+.sp-admin__table td:first-child {
+  min-width: 220px;
+  max-width: 320px;
+  white-space: normal;
+}
+
+.sp-admin__table th:nth-child(5),
+.sp-admin__table td:nth-child(5) {
+  min-width: 200px;
+  white-space: normal;
+}
+
+.sp-admin__table th:last-child,
+.sp-admin__table td:last-child {
+  min-width: 260px;
+  white-space: normal;
 }
 
 .sp-admin__table th {
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sp-ink-faint);
   background: rgba(0, 0, 0, 0.25);
@@ -266,6 +296,10 @@
 
 .sp-admin__table tr:last-child td {
   border-bottom: none;
+}
+
+.sp-admin__asset-label {
+  letter-spacing: 0.04em;
 }
 
 .sp-admin__pill {
@@ -363,6 +397,46 @@
   color: var(--red);
 }
 
+/* Stage K1.6Q: Mark Inactive (reversible, keeps the Storage object)
+   and Delete (permanent, removes it) previously used the identical
+   red --danger styling, making them visually indistinguishable at a
+   glance despite very different severity. Mark Inactive now reads
+   amber/reversible; Delete keeps red but as a filled, heavier
+   treatment so it reads as the more final action of the two. */
+.sp-admin__btn--warn {
+  background: transparent;
+  border: 1px solid rgba(255, 183, 0, 0.5);
+  color: var(--amber);
+}
+
+.sp-admin__btn--warn:hover,
+.sp-admin__btn--warn:focus-visible {
+  background: rgba(255, 183, 0, 0.12);
+  border-color: var(--amber);
+}
+
+.sp-admin__delete-btn {
+  background: rgba(255, 45, 85, 0.16);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.sp-admin__delete-btn:hover,
+.sp-admin__delete-btn:focus-visible {
+  background: rgba(255, 45, 85, 0.32);
+}
+
+/* Stage K1.6Q: Asset Library action buttons specifically (not every
+   .sp-admin__btn site-wide, to avoid rippling into unrelated admin
+   tabs) get the slightly wider letter-spacing recommended for
+   readability at this smaller button size. */
+.sp-admin__table-action-btn {
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  padding: 8px 14px;
+  min-height: 34px;
+}
+
 .sp-admin__delete-dialog {
   max-width: 480px;
 }
@@ -444,6 +518,26 @@
 @media (max-width: 720px) {
   .sp-admin__table-wrap {
     font-size: 12px;
+    /* Stage K1.6Q: an explicit hint that the table scrolls — on
+       touch devices there's no visible scrollbar to notice
+       otherwise, and the Asset Library table is genuinely wider
+       than a phone viewport. */
+    box-shadow: inset -12px 0 12px -12px rgba(0, 229, 255, 0.25);
+  }
+
+  .sp-admin__table th,
+  .sp-admin__table td {
+    padding: 10px 12px;
+  }
+
+  .sp-admin__table th:first-child,
+  .sp-admin__table td:first-child {
+    min-width: 160px;
+  }
+
+  .sp-admin__table-action-btn {
+    font-size: 10px;
+    padding: 7px 10px;
   }
 }
 
