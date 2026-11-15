@@ -224,6 +224,67 @@ try {
     });
   }
 
+  // ---- Setia's invitation eligibility is computed from REAL asset records (not a static note) ----
+  const WLD_ID = 'c297d5be-14d9-4f2b-93e2-a184e1ed2b83';
+  const existingWld = await admin.from('collaborations').select('id').eq('id', WLD_ID).maybeSingle();
+  if (existingWld.data) {
+    console.log('SKIP proposal-gate panel checks (dev unexpectedly already has the production WONKY LIQUID DREAMS id)');
+  } else {
+    await admin.from('collaborations').insert({ id: WLD_ID, title: 'WONKY LIQUID DREAMS (dev gate fixture)', artist_display_name: 'K16W-GATE', created_by: adminSession.user.id, status: 'draft' });
+    const openPanel = async () => {
+      const o = await open(adminSession, '/admin?tab=invitations');
+      await o.page.getByRole('button', { name: /Invitations/ }).first().click().catch(() => {});
+      await o.page.waitForTimeout(800);
+      return o;
+    };
+    await check('proposal gate: Setia is shown as BLOCKED with the real reason while no revised proposal exists, and Send stays disabled', async () => {
+      const { context, page } = await openPanel();
+      await page.locator('#send-artist').selectOption({ index: 1 });
+      await page.getByTestId('proposal-gate').waitFor({ state: 'visible', timeout: 15000 });
+      const msg = await page.getByTestId('proposal-gate').innerText();
+      const checkbox = page.getByLabel(/I confirm this email address/);
+      const boxDisabled = await checkbox.isDisabled();
+      const sendDisabled = await page.getByRole('button', { name: 'Send Invitation', exact: true }).isDisabled();
+      await context.close();
+      return /Blocked/i.test(msg) && boxDisabled && sendDisabled;
+    });
+    await check('proposal gate: the BACKEND agrees and refuses Setia\'s send (rejected before any email is requested)', async () => {
+      const r = await callEdgeFunction(U, A, 'portal-admin-send-invitation', { authHeader: `Bearer ${adminSession.access_token}`, body: { email: 'setiahaven@gmail.com', collaborationId: WLD_ID } });
+      return r.status === 409 && r.body.error === 'REVISED_PROPOSAL_NOT_READY';
+    });
+    await check('proposal gate: BEλR CUBZ is never subject to the proposal gate', async () => {
+      const { context, page } = await openPanel();
+      const gateCount = await page.getByTestId('proposal-gate').count();
+      await context.close();
+      return gateCount === 0;
+    });
+    if (existsSync(REVISED_PDF)) {
+      const pdfBytes2 = readFileSync(REVISED_PDF);
+      const bearer2 = `Bearer ${adminSession.access_token}`;
+      const up2 = await callEdgeFunction(U, A, 'portal-admin-request-upload-url', {
+        authHeader: bearer2,
+        body: { collaborationId: WLD_ID, assetType: 'proposal_pdf', mimeType: 'application/pdf', fileSizeBytes: pdfBytes2.length, displayLabel: 'Revised vocal collaboration proposal' },
+      });
+      await fetch(up2.body.uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/pdf' }, body: pdfBytes2 });
+      await callEdgeFunction(U, A, 'portal-admin-confirm-upload', { authHeader: bearer2, body: { assetId: up2.body.assetId } });
+      await callEdgeFunction(U, A, 'portal-admin-review-asset', { authHeader: bearer2, body: { assetId: up2.body.assetId, decision: 'approve' } });
+      await check('proposal gate: once the exact production proposal is active, scanned clean and security-approved, Setia becomes ELIGIBLE (Send offered after confirmation; NOT clicked)', async () => {
+        const { context, page } = await openPanel();
+        await page.locator('#send-artist').selectOption({ index: 1 });
+        await page.getByTestId('proposal-gate').waitFor({ state: 'visible', timeout: 15000 });
+        const msg = await page.getByTestId('proposal-gate').innerText();
+        const checkbox = page.getByLabel(/I confirm this email address/);
+        const enabledBox = !(await checkbox.isDisabled());
+        await checkbox.check();
+        const sendEnabled = !(await page.getByRole('button', { name: 'Send Invitation', exact: true }).isDisabled());
+        const emailTxt = await page.getByTestId('send-email').innerText();
+        const collabTxt = await page.getByTestId('send-collab').innerText();
+        await context.close();
+        return /verified/i.test(msg) && !/Blocked/i.test(msg) && enabledBox && sendEnabled && emailTxt === 'setiahaven@gmail.com' && collabTxt === 'WONKY LIQUID DREAMS';
+      });
+    }
+  }
+
   // ---- expired / revoked do not grant access ----
   for (const kind of ['revoked', 'expired']) {
     await check(`${kind} invitation grants no access`, async () => {
@@ -246,9 +307,9 @@ try {
 } finally {
   await browser.close();
   await admin.from('artist_invitations').delete().ilike('email', '%k16w-%');
-  await admin.from('collaboration_assets').delete().in('collaboration_id', [collabId, otherCollabId]);
+  await admin.from('collaboration_assets').delete().in('collaboration_id', [collabId, otherCollabId, 'c297d5be-14d9-4f2b-93e2-a184e1ed2b83']);
   await admin.from('collaboration_members').delete().in('collaboration_id', [collabId, otherCollabId]);
-  await admin.from('collaborations').delete().in('id', [collabId, otherCollabId]);
+  await admin.from('collaborations').delete().in('id', [collabId, otherCollabId, 'c297d5be-14d9-4f2b-93e2-a184e1ed2b83']);
   if (uid) await admin.auth.admin.deleteUser(uid);
 }
 summary('Signal Portal browser suite (Invitation Phase 01 — Send Invitation panel + invited-artist journey)');

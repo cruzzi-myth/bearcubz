@@ -110,7 +110,7 @@ export async function listAssets(collaborationId?: string): Promise<ApiResult<Ad
   let query = supabase
     .from('collaboration_assets')
     .select(
-      'id, collaboration_id, asset_type, display_label, description, version, approval_status, is_primary_cover, is_active, upload_status, mime_type, byte_size, uploaded_by, uploaded_at, verified_at, scan_lease_expires_at, security_required, security_status, security_review_status, scan_evidence',
+      'id, collaboration_id, asset_type, display_label, description, version, approval_status, is_primary_cover, is_active, upload_status, mime_type, byte_size, uploaded_by, uploaded_at, verified_at, scan_lease_expires_at, security_required, security_status, security_review_status, file_sha256, scan_evidence',
     );
   if (collaborationId) query = query.eq('collaboration_id', collaborationId);
   const { data, error } = await query.order('uploaded_at', { ascending: false });
@@ -137,6 +137,7 @@ export async function listAssets(collaborationId?: string): Promise<ApiResult<Ad
       securityRequired: r.security_required,
       securityStatus: r.security_status,
       securityReviewStatus: r.security_review_status,
+      fileSha256: r.file_sha256,
       scanEvidence: r.scan_evidence,
     })),
   };

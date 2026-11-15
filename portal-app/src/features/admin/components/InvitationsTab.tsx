@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useAdminInvitations } from '../hooks/useAdminInvitations';
 import { useAdminCollaborations } from '../hooks/useAdminCollaborations';
-import { createInvitation, revokeInvitation, reissueInvitation, sendInvitation } from '../services/adminApi';
+import { createInvitation, revokeInvitation, reissueInvitation, sendInvitation, listAssets } from '../services/adminApi';
+import { proposalGate, PROPOSAL_GATE_MESSAGE } from '../lib/proposalGate';
 import { PHASE01_RECIPIENTS } from '../lib/phase01Recipients';
 import { invitationStage, STAGE_LABEL, describeSendError, type InvitationStage } from '../lib/invitationDelivery';
 
@@ -44,6 +45,41 @@ export function InvitationsTab() {
       : undefined;
   const existingStage = existingForRecipient ? invitationStage(existingForRecipient) : null;
   const sendBlocked = existingStage === 'accepted' || existingStage === 'requested' || existingStage === 'sent';
+
+  // Live eligibility for recipients whose invitation depends on a revised
+  // proposal. Read from the actual asset records (admin RLS), never hardcoded.
+  const [gate, setGate] = useState<{ kind: 'na' | 'loading' | 'ready' | 'blocked' | 'error'; reason?: string }>({ kind: 'na' });
+  useEffect(() => {
+    let cancelled = false;
+    if (!recipient.requiresRevisedProposal) {
+      setGate({ kind: 'na' });
+      return;
+    }
+    setGate({ kind: 'loading' });
+    listAssets(recipient.collaborationId).then((r) => {
+      if (cancelled) return;
+      if (!r.ok) {
+        setGate({ kind: 'error' });
+        return;
+      }
+      const result = proposalGate(
+        recipient.collaborationId,
+        r.data.map((a) => ({
+          assetType: a.assetType,
+          isActive: a.isActive,
+          uploadStatus: a.uploadStatus,
+          securityStatus: a.securityStatus,
+          securityReviewStatus: a.securityReviewStatus,
+          fileSha256: a.fileSha256,
+        })),
+      );
+      setGate(result.ready ? { kind: 'ready' } : { kind: 'blocked', reason: PROPOSAL_GATE_MESSAGE[result.reason] });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [recipient.collaborationId, recipient.requiresRevisedProposal]);
+  const gateBlocksSend = gate.kind === 'loading' || gate.kind === 'blocked' || gate.kind === 'error';
 
   async function handleSend() {
     setSendMsg(null);
@@ -126,18 +162,33 @@ export function InvitationsTab() {
         <p>
           <strong>Collaboration:</strong> <span data-testid="send-collab">{recipient.collaborationTitle}</span> (artist access to this project only)
         </p>
-        {recipient.note && <p className="sp-admin__empty">{recipient.note}</p>}
+        {gate.kind === 'loading' && <p className="sp-admin__empty">Checking the revised proposal…</p>}
+        {gate.kind === 'ready' && (
+          <p className="sp-admin__status-msg sp-admin__status-msg--success" data-testid="proposal-gate">
+            Revised proposal verified: active, scanned clean and security-approved.
+          </p>
+        )}
+        {gate.kind === 'blocked' && (
+          <p className="sp-admin__status-msg sp-admin__status-msg--error" data-testid="proposal-gate">
+            {gate.reason}
+          </p>
+        )}
+        {gate.kind === 'error' && (
+          <p className="sp-admin__status-msg sp-admin__status-msg--error" data-testid="proposal-gate">
+            Couldn’t verify the revised proposal right now. Reload and try again.
+          </p>
+        )}
         {existingStage && (
           <p>
             <strong>Status:</strong> <span className={pillClass(existingStage)}>{STAGE_LABEL[existingStage]}</span>
           </p>
         )}
         <label className="sp-admin__field" style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-          <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} disabled={sendBlocked} />
+          <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} disabled={sendBlocked || gateBlocksSend} />
           <span>I confirm this email address and collaboration are correct.</span>
         </label>
         {sendMsg && <p className={`sp-admin__status-msg sp-admin__status-msg--${sendMsg.kind}`}>{sendMsg.text}</p>}
-        <button type="button" className="sp-admin__btn" onClick={handleSend} disabled={!confirmed || sending || sendBlocked}>
+        <button type="button" className="sp-admin__btn" onClick={handleSend} disabled={!confirmed || sending || sendBlocked || gateBlocksSend}>
           {sending ? 'Sending…' : 'Send Invitation'}
         </button>
       </div>

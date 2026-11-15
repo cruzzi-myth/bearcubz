@@ -8,7 +8,8 @@ export interface Phase01Recipient {
   email: string;
   collaborationId: string;
   collaborationTitle: string;
-  note?: string;
+  /** When true, the send is gated on the revised proposal (see proposalGate.ts). */
+  requiresRevisedProposal?: boolean;
 }
 
 export const PHASE01_RECIPIENTS: readonly Phase01Recipient[] = [
@@ -25,6 +26,6 @@ export const PHASE01_RECIPIENTS: readonly Phase01Recipient[] = [
     email: 'setiahaven@gmail.com',
     collaborationId: 'c297d5be-14d9-4f2b-93e2-a184e1ed2b83',
     collaborationTitle: 'WONKY LIQUID DREAMS',
-    note: 'Blocked until the revised proposal replaces the original and is scanned and security-approved.',
+    requiresRevisedProposal: true,
   },
 ];

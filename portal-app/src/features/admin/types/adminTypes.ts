@@ -76,6 +76,7 @@ export type AdminAsset = {
   securityRequired: boolean;
   securityStatus: string;
   securityReviewStatus: string;
+  fileSha256: string | null;
   scanEvidence: { provider?: string; detail?: string; complete?: boolean } | null;
 };
 
