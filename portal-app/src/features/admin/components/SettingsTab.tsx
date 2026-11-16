@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { isBackendUnavailableError } from '../../../lib/supabaseErrors';
+import { PasskeyManagement } from './PasskeyManagement';
 
 type Status = 'CONFIGURED' | 'NOT CONFIGURED' | 'AVAILABLE' | 'UNAVAILABLE' | 'UNKNOWN';
 
@@ -88,6 +89,8 @@ export function SettingsTab() {
           ))}
         </div>
       </div>
+
+      <PasskeyManagement />
 
       <p className="sp-admin__empty" style={{ marginTop: 24, maxWidth: 560 }}>
         No service-role key, SQL editor, or infrastructure controls exist in this interface. "Database Connection" reflects

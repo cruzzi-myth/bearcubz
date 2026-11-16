@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { portalAsset } from '../lib/assetPath';
 import { supabase } from '../services/supabaseClient';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
+import { signInWithPasskey } from '../features/auth/passkeyClient';
+import { PASSKEY_MESSAGES } from '../features/auth/passkeyErrors';
 import { decideAccessAction, cooldownRemainingSeconds, ACCESS_MESSAGES, REQUEST_TIMEOUT_MS, SESSION_CHECK_TIMEOUT_MS } from '../features/auth/accessDecision';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { resolveQuickAction, resolveForCollaboration } from '../features/portal-host/portalHostActions';
@@ -23,6 +25,8 @@ type RequestState =
   | { kind: 'invalid'; message: string }
   | { kind: 'sending' }
   | { kind: 'checking-session' }
+  | { kind: 'passkey-prompt' }
+  | { kind: 'passkey-fallback'; message: string }
   | { kind: 'submitted' }
   | { kind: 'cooldown'; seconds: number }
   | { kind: 'denied'; message: string }
@@ -207,24 +211,25 @@ export function EntrancePage() {
     return () => window.clearTimeout(t);
   }, [waitingForSession]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (busyRef.current) return; // duplicate click while a request is in flight
-
-    // 1–4. Existing session? Verify authorization, then route by role.
+  /** Existing-session handling shared by BOTH buttons. Returns true when it handled the click. */
+  function handleExistingSession(): boolean {
     const decision = decideAccessAction({ authStatus, authorization, isAdmin });
     if (decision.kind === 'wait') {
       setState({ kind: 'checking-session' });
       setWaitingForSession(true);
-      return;
+      return true;
     }
     if (decision.kind !== 'request-link') {
       if (decision.kind === 'error' && authorization === 'error') retry();
       applyDecision(decision);
-      return;
+      return true;
     }
+    return false;
+  }
 
-    // 5. No session: request a secure sign-in link for this email.
+  /** No session: ask the backend to email a secure sign-in link (existing, unchanged mechanism). */
+  async function requestEmailLink() {
+    if (busyRef.current) return; // duplicate click while a request is in flight
     const trimmed = email.trim();
     if (!EMAIL_PATTERN.test(trimmed)) {
       setState({ kind: 'invalid', message: 'Enter a valid email address.' });
@@ -251,6 +256,45 @@ export function EntrancePage() {
       setState({ kind: 'network-error', message: ACCESS_MESSAGES.networkError });
     } finally {
       busyRef.current = false; // the UI can never be left pending
+    }
+  }
+
+  // ACCESS PORTAL: existing session -> its portal; otherwise the emailed link.
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busyRef.current) return;
+    if (handleExistingSession()) return;
+    await requestEmailLink();
+  }
+
+  // FINGERPRINT: existing session -> its portal; otherwise a real WebAuthn passkey
+  // ceremony (Touch ID / Face ID / security key). Falls back to the email link.
+  async function handlePasskey() {
+    if (busyRef.current) return;
+    if (handleExistingSession()) return;
+
+    busyRef.current = true;
+    setState({ kind: 'passkey-prompt' });
+    try {
+      const result = await signInWithPasskey();
+      if (result.kind === 'signed-in') {
+        // Supabase issued the session; wait for the server-side authorization
+        // check, then route (admin -> /dashboard). Never routed from the prompt alone.
+        setState({ kind: 'checking-session' });
+        setWaitingForSession(true);
+      } else {
+        const message =
+          result.kind === 'cancelled' ? PASSKEY_MESSAGES.cancelled
+          : result.kind === 'unsupported' ? PASSKEY_MESSAGES.unsupported
+          : result.kind === 'rate-limited' ? PASSKEY_MESSAGES.rateLimited
+          : result.kind === 'network' ? PASSKEY_MESSAGES.network
+          : PASSKEY_MESSAGES.failed;
+        setState({ kind: 'passkey-fallback', message });
+      }
+    } catch {
+      setState({ kind: 'passkey-fallback', message: PASSKEY_MESSAGES.failed });
+    } finally {
+      busyRef.current = false; // never left loading
     }
   }
 
@@ -386,7 +430,7 @@ export function EntrancePage() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              if (state.kind === 'invalid' || state.kind === 'network-error' || state.kind === 'denied') setState({ kind: 'idle' });
+              if (state.kind === 'invalid' || state.kind === 'network-error' || state.kind === 'denied' || state.kind === 'passkey-fallback') setState({ kind: 'idle' });
             }}
             aria-invalid={state.kind === 'invalid'}
             aria-describedby={state.kind === 'invalid' ? 'artist-email-error' : undefined}
@@ -399,18 +443,19 @@ export function EntrancePage() {
             type="submit"
             className="sp-entrance-v2__access-portal"
             style={variant.regions.accessPortal}
-            disabled={state.kind === 'sending'}
+            disabled={state.kind === 'sending' || state.kind === 'passkey-prompt'}
             aria-busy={state.kind === 'sending' || state.kind === 'checking-session'}
             aria-label={state.kind === 'sending' ? 'Sending access request' : 'Access Portal — request Signal Portal access'}
           />
 
           <button
-            type="submit"
+            type="button"
             className="sp-entrance-v2__fingerprint"
             style={variant.regions.fingerprint}
-            disabled={state.kind === 'sending'}
-            aria-busy={state.kind === 'sending' || state.kind === 'checking-session'}
-            aria-label="Authenticate with your artist email (illustrated as a fingerprint scanner — no biometric data is read or stored)"
+            onClick={() => void handlePasskey()}
+            disabled={state.kind === 'sending' || state.kind === 'passkey-prompt'}
+            aria-busy={state.kind === 'passkey-prompt' || state.kind === 'checking-session'}
+            aria-label="Sign in with a passkey — Touch ID, Face ID or a security key (your biometric data never leaves your device)"
           />
         </form>
 
@@ -428,6 +473,23 @@ export function EntrancePage() {
 
       <div className="sp-entrance-v2__status-dock" role="status" aria-live="polite">
         {state.kind === 'sending' && <p className="sp-entrance-v2__status-msg">Sending your secure sign-in request…</p>}
+        {state.kind === 'passkey-prompt' && (
+          <p className="sp-entrance-v2__status-msg" data-testid="passkey-prompt">
+            {PASSKEY_MESSAGES.prompt}
+          </p>
+        )}
+        {state.kind === 'passkey-fallback' && (
+          <div data-testid="passkey-fallback">
+            <p className="sp-entrance-v2__status-msg sp-entrance-v2__status-msg--error" role="alert">
+              {state.message}
+            </p>
+            <div className="sp-entrance-v2__choice-buttons">
+              <button type="button" onClick={() => void requestEmailLink()} data-testid="email-fallback">
+                Email me a sign-in link instead
+              </button>
+            </div>
+          </div>
+        )}
         {state.kind === 'checking-session' && <p className="sp-entrance-v2__status-msg">{ACCESS_MESSAGES.checkingSession}</p>}
         {state.kind === 'submitted' && <p className="sp-entrance-v2__status-msg" data-testid="access-submitted">{ACCESS_MESSAGES.submitted}</p>}
         {state.kind === 'cooldown' && (

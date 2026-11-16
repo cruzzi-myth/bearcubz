@@ -33,6 +33,8 @@ portal-admin-reply-feedback:clients.ts,cors.ts,requireAdmin.ts
 portal-admin-request-upload-url:clients.ts,cors.ts,requireAdmin.ts
 portal-admin-confirm-upload:clients.ts,cors.ts,requireAdmin.ts,uploadLifecycle.ts
 portal-admin-send-invitation:clients.ts,cors.ts,invitationPolicy.ts,invitationValidation.ts,requireAdmin.ts
+portal-passkey-auth:clients.ts,cors.ts,passkeyPolicy.ts
+portal-admin-passkeys:clients.ts,cors.ts,passkeyPolicy.ts,requireAdmin.ts
 "
 
 : > "$OUT"

@@ -117,21 +117,26 @@ try {
     return result;
   };
   const viaAccess = await submitFlow(ACCESS);
-  const viaFinger = await submitFlow(FINGER);
   await check('no session: ACCESS PORTAL requests ONE link, shows a clear "check your inbox" confirmation, and does NOT grant access from the email alone', async () =>
     /inbox/i.test(viaAccess.msg) && viaAccess.stayedOnLanding && viaAccess.posts === 1);
   await check('no session: the form is NOT left locked or "busy" afterwards (no endless loading state, no progress cursor)', async () =>
     viaAccess.buttonsEnabled && viaAccess.emailEnabled && viaAccess.busy !== 'true' && viaAccess.cursor !== 'progress');
-  await check('BOTH buttons behave identically (same request count, same confirmation, same final state)', async () =>
-    viaFinger.msg === viaAccess.msg && viaFinger.posts === viaAccess.posts && viaFinger.stayedOnLanding === viaAccess.stayedOnLanding &&
-    viaFinger.buttonsEnabled === viaAccess.buttonsEnabled && viaFinger.cursor === viaAccess.cursor);
+  await check('fingerprint with NO session starts a passkey ceremony — it never requests the emailed link (ACCESS PORTAL is the email path)', async () => {
+    const { context, page, calls } = await landing();
+    await page.locator('#artist-email').fill(d.identities.admin.email);
+    await page.locator(FINGER).click();
+    await page.waitForTimeout(2500);
+    const ok = calls.posts === 0 && path(page) === '/';
+    await context.close();
+    return ok;
+  });
 
   await check('repeated clicks never send duplicate requests (in flight + cooldown)', async () => {
     const { context, page, calls } = await landing();
     await page.locator('#artist-email').fill(d.identities.admin.email);
     await page.locator(ACCESS).dblclick();
     await page.getByTestId('access-submitted').waitFor({ timeout: 15000 });
-    await page.locator(FINGER).click(); // intentionally again, right after success
+    await page.locator(ACCESS).click(); // intentionally again, right after success
     await page.getByTestId('access-cooldown').waitFor({ timeout: 5000 });
     const ok = calls.posts === 1;
     await context.close();
@@ -163,10 +168,10 @@ try {
   await check('a request that NEVER answers times out: loading ends with a clear message (no endless spinner)', async () => {
     const { context, page } = await landing({ mode: 'hang' });
     await page.locator('#artist-email').fill(d.identities.admin.email);
-    await page.locator(FINGER).click();
-    const duringBusy = await page.locator(FINGER).getAttribute('aria-busy');
+    await page.locator(ACCESS).click();
+    const duringBusy = await page.locator(ACCESS).getAttribute('aria-busy');
     await page.getByTestId('access-error').waitFor({ timeout: 25000 });
-    const ok = duringBusy === 'true' && !(await page.locator(FINGER).isDisabled()) && (await page.locator(FINGER).getAttribute('aria-busy')) !== 'true';
+    const ok = duringBusy === 'true' && !(await page.locator(ACCESS).isDisabled()) && (await page.locator(ACCESS).getAttribute('aria-busy')) !== 'true';
     await context.close();
     return ok;
   });

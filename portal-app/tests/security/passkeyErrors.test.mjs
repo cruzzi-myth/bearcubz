@@ -1,0 +1,10 @@
+import { assert, importCompiled, report } from './runner.mjs';
+const { classifyWebAuthnError, PASSKEY_MESSAGES } = await importCompiled(new URL('../../src/features/auth/passkeyErrors.ts', import.meta.url).pathname);
+assert('a dismissed/failed prompt (NotAllowedError) is "cancelled"', classifyWebAuthnError({ name: 'NotAllowedError' }) === 'cancelled');
+assert('a SimpleWebAuthn ceremony abort is "cancelled"', classifyWebAuthnError({ name: 'WebAuthnError', code: 'ERROR_CEREMONY_ABORTED' }) === 'cancelled');
+assert('an already-registered authenticator is distinguished', classifyWebAuthnError({ name: 'InvalidStateError' }) === 'already-registered' && classifyWebAuthnError({ code: 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED' }) === 'already-registered');
+assert('an unsupported algorithm/device is "unsupported"', classifyWebAuthnError({ name: 'NotSupportedError' }) === 'unsupported');
+assert('anything unexpected is "failed" (never treated as success)', classifyWebAuthnError(new Error('boom')) === 'failed' && classifyWebAuthnError(null) === 'failed' && classifyWebAuthnError(undefined) === 'failed');
+assert('success banner is exactly the required text', PASSKEY_MESSAGES.registered === 'PASSKEY REGISTERED // SECURE ACCESS ENABLED');
+assert('no UI copy claims biometric data is stored or read by the portal', Object.values(PASSKEY_MESSAGES).every((t) => !/stores? (your )?(fingerprint|biometric)|reads? (your )?(fingerprint|biometric)/i.test(t)));
+report('passkeyErrors');
