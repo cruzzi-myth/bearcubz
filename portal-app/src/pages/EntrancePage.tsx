@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { portalAsset } from '../lib/assetPath';
 import { supabase } from '../services/supabaseClient';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
+import { decideAccessAction, cooldownRemainingSeconds, ACCESS_MESSAGES, REQUEST_TIMEOUT_MS, SESSION_CHECK_TIMEOUT_MS } from '../features/auth/accessDecision';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { resolveQuickAction, resolveForCollaboration } from '../features/portal-host/portalHostActions';
 import type { HostCollaboration, ProjectChoice, QuickActionId } from '../features/portal-host/portalHostTypes';
@@ -21,15 +22,18 @@ type RequestState =
   | { kind: 'idle' }
   | { kind: 'invalid'; message: string }
   | { kind: 'sending' }
+  | { kind: 'checking-session' }
   | { kind: 'submitted' }
-  | { kind: 'network-error' };
+  | { kind: 'cooldown'; seconds: number }
+  | { kind: 'denied'; message: string }
+  | { kind: 'network-error'; message: string };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Always the same copy regardless of what the backend actually did —
 // portal-request-access returns an identical { ok: true } whether the
-// email was eligible, ineligible, rate-limited, or never heard of.
-const NEUTRAL_MESSAGE = 'If this address has an active invitation, secure access instructions will be sent.';
+// email was eligible, ineligible, rate-limited, or never heard of. The copy
+// (ACCESS_MESSAGES.submitted) is therefore phrased conditionally on purpose.
 
 type QuickPanelId = 'listen' | 'proposal' | 'visuals' | 'respond';
 const QUICK_PANELS: { id: QuickPanelId; region: keyof typeof OVERLAY_REGIONS.panels; srLabel: string }[] = [
@@ -82,8 +86,14 @@ export function EntrancePage() {
   const [choicePrompt, setChoicePrompt] = useState<{ action: QuickActionId; choices: ProjectChoice[]; text: string } | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const { status: authStatus, authorization, isAdmin } = usePortalAuth();
+  const { status: authStatus, authorization, isAdmin, retry } = usePortalAuth();
   const dashboard = useDashboardData();
+  // Guards against duplicate submissions from repeated clicks, and records when
+  // the last link was requested so an intentional re-send is allowed after a
+  // short cooldown (never a permanent lock).
+  const busyRef = useRef(false);
+  const lastSentAtRef = useRef<number | null>(null);
+  const [waitingForSession, setWaitingForSession] = useState(false);
   const navigate = useNavigate();
   const variant = useEntranceVariant();
 
@@ -149,18 +159,99 @@ export function EntrancePage() {
     }
   }, []);
 
+  // ONE handler for both the ACCESS PORTAL button and the fingerprint button
+  // (both are submit buttons of the same form). The fingerprint is a visual
+  // alternative only — no biometric/WebAuthn flow exists or is claimed.
+  function applyDecision(decision: ReturnType<typeof decideAccessAction>): boolean {
+    if (decision.kind === 'route') {
+      setWaitingForSession(false);
+      setState({ kind: 'idle' });
+      navigate(decision.path, { replace: false });
+      return true;
+    }
+    if (decision.kind === 'denied') {
+      setWaitingForSession(false);
+      setState({ kind: 'denied', message: decision.message });
+      return true;
+    }
+    if (decision.kind === 'error') {
+      setWaitingForSession(false);
+      setState({ kind: 'network-error', message: decision.message });
+      return true;
+    }
+    return false;
+  }
+
+  // An existing session whose authorization is still being verified: finish
+  // the routing as soon as the backend answers (never from the session alone).
+  useEffect(() => {
+    if (!waitingForSession) return;
+    const decision = decideAccessAction({ authStatus, authorization, isAdmin });
+    if (decision.kind === 'wait') return;
+    if (decision.kind === 'request-link') {
+      setWaitingForSession(false);
+      setState({ kind: 'idle' });
+      return;
+    }
+    applyDecision(decision);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingForSession, authStatus, authorization, isAdmin]);
+
+  // ...and never wait forever.
+  useEffect(() => {
+    if (!waitingForSession) return;
+    const t = window.setTimeout(() => {
+      setWaitingForSession(false);
+      setState({ kind: 'network-error', message: ACCESS_MESSAGES.sessionTimeout });
+    }, SESSION_CHECK_TIMEOUT_MS);
+    return () => window.clearTimeout(t);
+  }, [waitingForSession]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busyRef.current) return; // duplicate click while a request is in flight
 
+    // 1–4. Existing session? Verify authorization, then route by role.
+    const decision = decideAccessAction({ authStatus, authorization, isAdmin });
+    if (decision.kind === 'wait') {
+      setState({ kind: 'checking-session' });
+      setWaitingForSession(true);
+      return;
+    }
+    if (decision.kind !== 'request-link') {
+      if (decision.kind === 'error' && authorization === 'error') retry();
+      applyDecision(decision);
+      return;
+    }
+
+    // 5. No session: request a secure sign-in link for this email.
     const trimmed = email.trim();
     if (!EMAIL_PATTERN.test(trimmed)) {
       setState({ kind: 'invalid', message: 'Enter a valid email address.' });
       return;
     }
+    const remaining = cooldownRemainingSeconds(lastSentAtRef.current, Date.now());
+    if (remaining > 0) {
+      setState({ kind: 'cooldown', seconds: remaining });
+      return;
+    }
 
+    busyRef.current = true;
     setState({ kind: 'sending' });
-    const { error } = await supabase.functions.invoke('portal-request-access', { body: { email: trimmed } });
-    setState(error ? { kind: 'network-error' } : { kind: 'submitted' });
+    try {
+      const { error } = await supabase.functions.invoke('portal-request-access', { body: { email: trimmed }, timeout: REQUEST_TIMEOUT_MS });
+      if (error) {
+        const timedOut = /abort|timeout|timed out/i.test(String((error as { name?: string; message?: string }).name ?? '') + String((error as { message?: string }).message ?? ''));
+        setState({ kind: 'network-error', message: timedOut ? ACCESS_MESSAGES.timeout : ACCESS_MESSAGES.networkError });
+      } else {
+        lastSentAtRef.current = Date.now();
+        setState({ kind: 'submitted' });
+      }
+    } catch {
+      setState({ kind: 'network-error', message: ACCESS_MESSAGES.networkError });
+    } finally {
+      busyRef.current = false; // the UI can never be left pending
+    }
   }
 
   function runQuickAction(actionId: QuickActionId) {
@@ -295,19 +386,21 @@ export function EntrancePage() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              if (state.kind === 'invalid' || state.kind === 'network-error') setState({ kind: 'idle' });
+              if (state.kind === 'invalid' || state.kind === 'network-error' || state.kind === 'denied') setState({ kind: 'idle' });
             }}
             aria-invalid={state.kind === 'invalid'}
             aria-describedby={state.kind === 'invalid' ? 'artist-email-error' : undefined}
-            disabled={state.kind === 'sending' || state.kind === 'submitted'}
-            required
+            disabled={state.kind === 'sending'}
+            // A signed-in user needs no email to enter — the session decides.
+            required={authStatus !== 'signed-in'}
           />
 
           <button
             type="submit"
             className="sp-entrance-v2__access-portal"
             style={variant.regions.accessPortal}
-            disabled={state.kind === 'sending' || state.kind === 'submitted'}
+            disabled={state.kind === 'sending'}
+            aria-busy={state.kind === 'sending' || state.kind === 'checking-session'}
             aria-label={state.kind === 'sending' ? 'Sending access request' : 'Access Portal — request Signal Portal access'}
           />
 
@@ -315,7 +408,8 @@ export function EntrancePage() {
             type="submit"
             className="sp-entrance-v2__fingerprint"
             style={variant.regions.fingerprint}
-            disabled={state.kind === 'sending' || state.kind === 'submitted'}
+            disabled={state.kind === 'sending'}
+            aria-busy={state.kind === 'sending' || state.kind === 'checking-session'}
             aria-label="Authenticate with your artist email (illustrated as a fingerprint scanner — no biometric data is read or stored)"
           />
         </form>
@@ -333,15 +427,27 @@ export function EntrancePage() {
       </div>
 
       <div className="sp-entrance-v2__status-dock" role="status" aria-live="polite">
-        {state.kind === 'submitted' && <p className="sp-entrance-v2__status-msg">{NEUTRAL_MESSAGE}</p>}
+        {state.kind === 'sending' && <p className="sp-entrance-v2__status-msg">Sending your secure sign-in request…</p>}
+        {state.kind === 'checking-session' && <p className="sp-entrance-v2__status-msg">{ACCESS_MESSAGES.checkingSession}</p>}
+        {state.kind === 'submitted' && <p className="sp-entrance-v2__status-msg" data-testid="access-submitted">{ACCESS_MESSAGES.submitted}</p>}
+        {state.kind === 'cooldown' && (
+          <p className="sp-entrance-v2__status-msg" data-testid="access-cooldown">
+            A sign-in link was sent moments ago. Check your inbox (and spam) — you can request another in {state.seconds}s.
+          </p>
+        )}
         {state.kind === 'invalid' && (
           <p className="sp-entrance-v2__status-msg sp-entrance-v2__status-msg--error" id="artist-email-error" role="alert">
             {state.message}
           </p>
         )}
+        {state.kind === 'denied' && (
+          <p className="sp-entrance-v2__status-msg sp-entrance-v2__status-msg--error" role="alert" data-testid="access-denied">
+            {state.message}
+          </p>
+        )}
         {state.kind === 'network-error' && (
-          <p className="sp-entrance-v2__status-msg sp-entrance-v2__status-msg--error" role="alert">
-            Couldn't reach the Signal Portal right now. Please try again in a moment.
+          <p className="sp-entrance-v2__status-msg sp-entrance-v2__status-msg--error" role="alert" data-testid="access-error">
+            {state.message}
           </p>
         )}
         {state.kind === 'idle' && !choicePrompt && actionMessage && <p className="sp-entrance-v2__status-msg">{actionMessage}</p>}

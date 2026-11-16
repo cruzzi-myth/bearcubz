@@ -1032,6 +1032,8 @@ await check('Proposal Chamber: page navigation (Next) moves to page 2 of the rea
 await check('Proposal Chamber: zoom in/out changes the rendered canvas size', async () => {
   if (!k16b) return true;
   const { context, page } = await k16bProposalPage('xylo');
+  // Wait for the real PDF canvas to render before measuring (not a fixed delay).
+  await page.locator('.sp-pdf__canvas-viewport canvas').first().waitFor({ state: 'visible', timeout: 20000 });
   const before = await page.locator('.sp-pdf__canvas-viewport canvas').boundingBox();
   await page.getByRole('button', { name: 'Zoom out' }).click();
   await page.getByRole('button', { name: 'Zoom out' }).click();

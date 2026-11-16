@@ -208,6 +208,13 @@
 }
 
 .sp-entrance-v2__access-portal:disabled {
+  cursor: not-allowed;
+}
+
+/* The busy cursor is reserved for a request that is genuinely in flight — it
+   must never remain after the request has finished. */
+.sp-entrance-v2__access-portal[aria-busy='true'],
+.sp-entrance-v2__fingerprint[aria-busy='true'] {
   cursor: progress;
 }
 
