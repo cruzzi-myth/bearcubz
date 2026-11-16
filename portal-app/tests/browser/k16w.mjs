@@ -170,7 +170,8 @@ try {
     await page.evaluate(([k]) => localStorage.removeItem(k), [authStorageKey(U)]);
     await page.reload();
     await page.waitForTimeout(1500);
-    const signedOut = /requires authorized|Request access/i.test(await page.locator('body').innerText());
+    await page.waitForURL((u) => u.pathname === '/', { timeout: 10000 }).catch(() => {});
+    const signedOut = new URL(page.url()).pathname === '/' && (await page.locator('#artist-email').count()) === 1;
     const back = await signInForBrowser(anon, email, PASSWORD);
     await page.evaluate(([k, v]) => localStorage.setItem(k, v), [authStorageKey(U), JSON.stringify(back)]);
     await page.goto('http://localhost:5173/artist');

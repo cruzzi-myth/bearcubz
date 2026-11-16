@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import { usePortalAuth } from './PortalAuthContext';
 import { PortalEmptyState } from '../../components/PortalEmptyState';
 
@@ -20,13 +21,9 @@ export function RequirePortalAuth({ children }: { children: ReactNode }) {
     );
   }
 
-  if (status === 'signed-out') {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <PortalEmptyState message="This area requires authorized Signal Portal access. Request access from the entrance page." />
-      </div>
-    );
-  }
+  // Signed out: back to the public entrance (never a dead-end message). Signed-in
+  // users who are merely not authorized keep the explanatory messages below.
+  if (status === 'signed-out') return <Navigate to="/" replace />;
 
   if (authorization === 'backend-unavailable') {
     return (

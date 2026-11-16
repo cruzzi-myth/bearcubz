@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { useSignOut } from '../../auth/useSignOut';
 import { usePortalAuth } from '../../auth/PortalAuthContext';
 import { portalAsset } from '../../../lib/assetPath';
 import '../admin.css';
@@ -30,7 +31,8 @@ type Props = {
 };
 
 export function AdminLayout({ activeTab, onTabChange, children }: Props) {
-  const { session, signOut } = usePortalAuth();
+  const { session } = usePortalAuth();
+  const signOut = useSignOut();
 
   return (
     <div className="sp-admin">

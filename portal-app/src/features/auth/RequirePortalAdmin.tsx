@@ -19,6 +19,10 @@ export function RequirePortalAdmin({ children }: { children: ReactNode }) {
     );
   }
 
+  // Signed out: back to the public entrance. (A signed-in NON-admin is handled
+  // separately below — it is denied/redirected, never treated as a logout.)
+  if (status === 'signed-out') return <Navigate to="/" replace />;
+
   if (authorization === 'backend-unavailable') {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -42,7 +46,7 @@ export function RequirePortalAdmin({ children }: { children: ReactNode }) {
     return <Navigate to="/artist" replace />;
   }
 
-  if (status === 'signed-out' || !isAdmin) {
+  if (!isAdmin) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <PortalEmptyState message="Administrator access is required for this area." showReturnLink={false} />

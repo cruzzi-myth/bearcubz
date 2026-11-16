@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useAdminPreviewMembership } from '../hooks/useAdminPreviewMembership';
+import { useSignOut } from '../features/auth/useSignOut';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { ChamberNav } from '../components/ChamberNav';
 import { AdminControlsOverlay } from '../components/AdminControlsOverlay';
@@ -30,7 +31,8 @@ const CHAMBERS: { segment: 'listen' | 'proposal' | 'visuals' | 'respond'; label:
  */
 export function ArtistPortalPage() {
   const data = useDashboardData();
-  const { isAdmin, signOut } = usePortalAuth();
+  const { isAdmin } = usePortalAuth();
+  const signOut = useSignOut();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const collaborations = data.kind === 'ready' ? data.collaborations : [];

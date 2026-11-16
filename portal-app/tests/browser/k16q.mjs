@@ -129,10 +129,11 @@ try {
     const context = await browser.newContext();
     const page = await context.newPage();
     await seedSessionAndReload(page, process.env.SUPABASE_URL, artistSession, '/admin');
-    await page.waitForTimeout(1200);
-    const text = await page.locator('body').textContent();
+    await page.waitForURL((u) => u.pathname === '/artist', { timeout: 12000 }).catch(() => {});
+    const onArtist = new URL(page.url()).pathname === '/artist';
+    const adminUi = await page.getByRole('button', { name: 'Asset Library', exact: true }).count();
     await context.close();
-    return text.includes('Administrator access is required');
+    return onArtist && adminUi === 0;
   });
 
   await check('mobile viewport (390x844): the Asset Library table scrolls horizontally and action buttons remain tappable', async () => {

@@ -144,7 +144,16 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
       isAdmin,
       session,
       async signOut() {
-        await supabase.auth.signOut();
+        // End the session everywhere; if the server call fails (offline, expired
+        // token) still end it locally, then CONFIRM no session remains.
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (error) await supabase.auth.signOut({ scope: 'local' });
+        } catch {
+          await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+        }
+        const { data } = await supabase.auth.getSession();
+        if (data.session) await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
       },
       retry() {
         setAuthorization('checking');

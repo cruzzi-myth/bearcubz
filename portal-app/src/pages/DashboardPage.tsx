@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDashboardData, type DashboardCollaboration } from '../hooks/useDashboardData';
+import { useSignOut } from '../features/auth/useSignOut';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { AssetLibraryList } from '../components/AssetLibraryList';
 import { CollaborationsReport } from '../components/CollaborationsReport';
@@ -23,7 +24,8 @@ function formatActivityDate(iso: string): string {
 
 export function DashboardPage() {
   const data = useDashboardData();
-  const { signOut, isAdmin } = usePortalAuth();
+  const { isAdmin } = usePortalAuth();
+  const signOut = useSignOut();
   const [view, setView] = useState<LibraryView>('asset-library');
   const [briefingTarget, setBriefingTarget] = useState<DashboardCollaboration | null>(null);
 

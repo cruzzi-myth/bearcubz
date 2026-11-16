@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useSignOut } from '../features/auth/useSignOut';
 import { usePortalAuth } from '../features/auth/PortalAuthContext';
 import { ChamberNav } from '../components/ChamberNav';
 import { AdminControlsOverlay } from '../components/AdminControlsOverlay';
@@ -35,7 +36,8 @@ export function PortalChamberLayout({ background, backgroundUrl, backgroundAlt, 
   // account, since isAdmin only ever reflects a real, server-verified
   // is_portal_admin() result (see PortalAuthContext), same guarantee
   // every other admin-only control in this app already relies on.
-  const { isAdmin, signOut } = usePortalAuth();
+  const { isAdmin } = usePortalAuth();
+  const signOut = useSignOut();
   // Stage K1.6A: this layout is shared by all four chambers, each
   // matched by the exact same `collaboration/:id/<segment>` route
   // shape -- reading :id here (once) is what lets ChamberNav preserve

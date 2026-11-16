@@ -72,18 +72,24 @@ await check('signed-out visitor: entrance renders, login form present, no privat
   return Boolean(emailInput) && !text.includes('Ghost Signal') && !text.includes('Static Bloom');
 });
 
-await check('signed-out visitor: /dashboard shows the access-required empty state, not dashboard data', async () => {
+await check('signed-out visitor: /dashboard redirects to the public entrance (sign-in UI), never dashboard data', async () => {
   const { context, page } = await freshPage(null, '/dashboard');
+  await page.waitForURL((u) => u.pathname === '/', { timeout: 10000 }).catch(() => {});
+  const onEntrance = new URL(page.url()).pathname === '/';
+  const hasLogin = (await page.locator('#artist-email').count()) === 1;
   const text = await page.textContent('body');
   await context.close();
-  return text.includes('requires authorized Signal Portal access');
+  return onEntrance && hasLogin && !text.includes('Ghost Signal') && !text.includes('Static Bloom');
 });
 
-await check('signed-out visitor: /admin shows an access-required state, not the Administrator Command Center', async () => {
+await check('signed-out visitor: /admin redirects to the public entrance, never the Administrator Command Center', async () => {
   const { context, page } = await freshPage(null, '/admin');
+  await page.waitForURL((u) => u.pathname === '/', { timeout: 10000 }).catch(() => {});
+  const onEntrance = new URL(page.url()).pathname === '/';
+  const hasLogin = (await page.locator('#artist-email').count()) === 1;
   const text = await page.textContent('body');
   await context.close();
-  return !text.includes('Asset Library') && !text.includes('Audit Log');
+  return onEntrance && hasLogin && !text.includes('Asset Library') && !text.includes('Audit Log');
 });
 
 // ---------- Stage K1: stale/superseded magic-link error surfacing ----------
@@ -226,7 +232,8 @@ await check('Artist B: dashboard shows ONLY Static Bloom, never Ghost Signal or 
 
 await check("Artist B: navigating directly to Project A's URL by id is denied", async () => {
   const { context, page } = await freshPage('artistB', `/collaboration/${dataset.collaborations.projectA}/listen`);
-  await page.waitForTimeout(1500);
+  // Wait for the real denial message (not a fixed delay); the assertion is unchanged.
+  await page.getByText("isn't available to your account").first().waitFor({ state: 'attached', timeout: 15000 }).catch(() => {});
   const text = await page.textContent('body');
   await context.close();
   return !text.includes('Ghost Signal') && text.includes("isn't available to your account");
@@ -711,7 +718,10 @@ await check('NYX ARDENT reactive: a genuine backend failure (not fabricated) tri
   const page = await context.newPage();
   const session = await sessionFor('artistA');
   const key = authStorageKey(supabaseUrl);
-  await page.goto(`${BASE}/dashboard`);
+  // Seed the session on the public entrance (a signed-out visit to a protected
+  // route now redirects there), then open the artist workspace, which hosts the
+  // same companion and the same dashboard-data hook.
+  await page.goto(`${BASE}/`);
   await page.evaluate(([k, v]) => localStorage.setItem(k, v), [key, JSON.stringify(session)]);
   // The SAME real dashboard-connectivity check useDashboardData already
   // performs -- a genuine HTTP 500 on its membership query is what
@@ -735,7 +745,8 @@ await check('NYX ARDENT reactive: a genuine backend failure (not fabricated) tri
     (url) => url.href.includes('/rest/v1/collaboration_members') && url.href.includes('select=collaboration_id'),
     (route) => route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ message: 'internal error', code: 'XX000' }) }),
   );
-  await page.reload();
+  await page.goto(`${BASE}/artist`);
+  await page.locator('.sp-host__companion').waitFor({ state: 'visible', timeout: 15000 });
   await page.waitForTimeout(1500);
   await page.locator('.sp-host__companion').click();
   await page.waitForTimeout(200);
@@ -1727,12 +1738,14 @@ await check('session persistence: the Supabase session is byte-identical before 
   return Boolean(before) && before === after;
 });
 
-await check('direct URL access to a chamber route while signed out still requires authorization, unaffected by the new nav controls', async () => {
+await check('direct URL access to a chamber route while signed out redirects to the public entrance and shows no chamber content', async () => {
   const { context, page } = await freshPage(null, `/collaboration/${dataset.collaborations.projectA}/listen`);
-  await page.waitForTimeout(800);
-  const text = await page.textContent('body');
+  await page.waitForURL((u) => u.pathname === '/', { timeout: 10000 }).catch(() => {});
+  const onEntrance = new URL(page.url()).pathname === '/';
+  const hasLogin = (await page.locator('#artist-email').count()) === 1;
+  const audio = await page.locator('audio').count();
   await context.close();
-  return text.includes('authorized Signal Portal access') || text.includes('requires authorized');
+  return onEntrance && hasLogin && audio === 0;
 });
 
 await check('responsive @ 390px: Command Center header nav (incl. Dashboard) has no horizontal overflow', async () => {
@@ -1993,10 +2006,12 @@ await check('Artist A can sign out from the Artist Portal and the session is gon
   const { context, page } = await freshPage('artistA', '/artist');
   await page.getByRole('button', { name: 'Sign Out' }).click();
   await page.waitForTimeout(1500);
+  await page.waitForURL((u) => u.pathname === '/', { timeout: 10000 }).catch(() => {});
   const stored = await page.evaluate((k) => localStorage.getItem(k), authStorageKey(supabaseUrl));
-  const text = await page.locator('body').innerText();
+  const onEntrance = new URL(page.url()).pathname === '/';
+  const hasLogin = (await page.locator('#artist-email').count()) === 1;
   await context.close();
-  return !stored && /authorized Signal Portal access|Request access/i.test(text);
+  return !stored && onEntrance && hasLogin;
 });
 
 await check('Artist A still cannot change a classification — the Edge Function still rejects it with 403 and the value is unchanged', async () => {
