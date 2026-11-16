@@ -83,7 +83,7 @@ fi
 # other than exactly what's been reviewed.
 [ -f "$MANIFEST" ] || refuse "approved-migrations.manifest is missing -- cannot verify migration integrity without it."
 manifest_count="$(wc -l < "$MANIFEST" | tr -d ' ')"
-[ "$manifest_count" -eq 7 ] || refuse "manifest does not list exactly 7 migrations (found $manifest_count) -- failing closed."
+[ "$manifest_count" -eq 8 ] || refuse "manifest does not list exactly 8 migrations (found $manifest_count) -- failing closed."
 if ! ( cd "$REPO_ROOT" && shasum -a 256 -c "$MANIFEST" --status ); then
   refuse "one or more approved migration files does not match its reviewed SHA-256 hash in $MANIFEST -- a changed migration file is never auto-approved, regardless of how small the change."
 fi
@@ -110,7 +110,7 @@ fi
 history_json="$(npx supabase migration list --remote="$PRODUCTION_REF" --output-format json 2>/dev/null)" \
   || refuse "could not read production migration history -- failing closed rather than assuming it is safe to proceed."
 pending="$(printf '%s' "$history_json" | jq -r '.migrations[]? | select(.local != "" and .remote == "") | .local' | sort)"
-approved_versions="20261106140000 20261106140100 20261106150000 20261106160000 20261106170000 20261107220000 20261108080000"
+approved_versions="20261106140000 20261106140100 20261106150000 20261106160000 20261106170000 20261107220000 20261108080000 20261116120000"
 if [ -z "$pending" ]; then
   refuse "no migration is pending at all -- nothing for this guarded db push to apply. Failing closed rather than running a no-op push."
 fi
