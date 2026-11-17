@@ -12,3 +12,28 @@ events-app/vite.config.d.ts
 # project ref, never a secret, but standard practice is to keep it
 # out of version control since it's machine/session-local.
 supabase/.temp/
+
+
+# Unreal Engine — generated files
+MoonRacerUE/Binaries/
+MoonRacerUE/DerivedDataCache/
+MoonRacerUE/Intermediate/
+MoonRacerUE/Saved/
+MoonRacerUE/.vs/
+MoonRacerUE/.idea/
+MoonRacerUE/*.sln
+MoonRacerUE/*.xcworkspace
+MoonRacerUE/*.xcuserstate
+
+# Unreal per-developer content
+MoonRacerUE/Content/Developers/
+
+# macOS metadata
+.DS_Store
+
+# Unreal generated build/cook bookkeeping (keep the rest of Build/Mac, e.g. Resources/)
+MoonRacerUE/Build/Mac/FileOpenOrder/
+MoonRacerUE/Build/Mac/MoonRacerUE.PackageVersionCounter
+
+# Disposable renderer-diagnostic maps (kept locally, never committed)
+MoonRacerUE/Content/MoonRacer/Diagnostics/DISPOSABLE_DIAG_*.umap
