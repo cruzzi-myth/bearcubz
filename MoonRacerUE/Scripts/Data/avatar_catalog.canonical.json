@@ -1,0 +1,130 @@
+{
+  "_generated": "by Scripts/Tools/export_avatar_catalog.mjs from network-app/src (canonical). DO NOT EDIT BY HAND.",
+  "schema": 1,
+  "species": [
+    {
+      "id": "human",
+      "displayName": "Human"
+    },
+    {
+      "id": "alien",
+      "displayName": "Alien"
+    },
+    {
+      "id": "hybrid",
+      "displayName": "Hybrid"
+    },
+    {
+      "id": "ai",
+      "displayName": "AI"
+    },
+    {
+      "id": "mythraxian",
+      "displayName": "Mythraxian"
+    },
+    {
+      "id": "glitch",
+      "displayName": "Glitch"
+    }
+  ],
+  "hair": [
+    {
+      "id": "signal-crop",
+      "label": "Signal Crop"
+    },
+    {
+      "id": "drift-waves",
+      "label": "Drift Waves"
+    },
+    {
+      "id": "void-braid",
+      "label": "Void Braid"
+    },
+    {
+      "id": "static-shave",
+      "label": "Static Shave"
+    }
+  ],
+  "eyes": [
+    {
+      "id": "cyan-visor",
+      "label": "Cyan Visor"
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow"
+    },
+    {
+      "id": "violet-scan",
+      "label": "Violet Scan"
+    },
+    {
+      "id": "mono-dark",
+      "label": "Mono Dark"
+    }
+  ],
+  "outfits": [
+    {
+      "id": "racer-jacket",
+      "label": "Racer Jacket"
+    },
+    {
+      "id": "signal-cloak",
+      "label": "Signal Cloak"
+    },
+    {
+      "id": "core-uniform",
+      "label": "Core Uniform"
+    },
+    {
+      "id": "outer-rim-gear",
+      "label": "Outer Rim Gear"
+    }
+  ],
+  "signalAccents": [
+    {
+      "id": "cyan",
+      "label": "Cyan"
+    },
+    {
+      "id": "magenta",
+      "label": "Magenta"
+    },
+    {
+      "id": "amber",
+      "label": "Amber"
+    },
+    {
+      "id": "none",
+      "label": "None"
+    }
+  ],
+  "humanAccessories": [
+    {
+      "id": "pendant",
+      "label": "Pendant"
+    },
+    {
+      "id": "gloves",
+      "label": "Signal Gloves"
+    },
+    {
+      "id": "blade",
+      "label": "Sidearm Blade"
+    }
+  ],
+  "humanHeadwear": [
+    {
+      "id": "visor_helmet",
+      "label": "Visor Helmet"
+    },
+    {
+      "id": "hood",
+      "label": "Hood"
+    },
+    {
+      "id": "goggles",
+      "label": "Goggles"
+    }
+  ]
+}
