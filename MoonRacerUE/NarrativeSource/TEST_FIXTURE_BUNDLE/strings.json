@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "strings",
+  "tableId": "TEST_FIXTURE_NONCANON_STRINGS",
+  "locale": "en",
+  "entries": {
+    "npc_alpha_name": "TEST FIXTURE - NONCANON Alpha",
+    "npc_beta_name": "TEST FIXTURE - NONCANON Beta",
+    "alpha_1": "TEST FIXTURE - NONCANON: alpha line one (placeholder, not Moon Racer dialogue).",
+    "alpha_back": "TEST FIXTURE - NONCANON: alpha returning line (placeholder).",
+    "alpha_ask": "TEST FIXTURE - NONCANON: alpha question (placeholder).",
+    "alpha_no": "TEST FIXTURE - NONCANON: alpha reply to decline (placeholder).",
+    "resp_yes": "TEST FIXTURE - NONCANON: response yes",
+    "resp_secret": "TEST FIXTURE - NONCANON: conditional response",
+    "resp_no": "TEST FIXTURE - NONCANON: response no",
+    "player_yes": "TEST FIXTURE - NONCANON: player line (placeholder).",
+    "beta_1": "TEST FIXTURE - NONCANON: beta line (placeholder).",
+    "mission_title": "TEST FIXTURE - NONCANON mission",
+    "mission_summary": "TEST FIXTURE - NONCANON: placeholder mission summary",
+    "obj_1": "TEST FIXTURE - NONCANON objective one",
+    "obj_2": "TEST FIXTURE - NONCANON objective two"
+  }
+}

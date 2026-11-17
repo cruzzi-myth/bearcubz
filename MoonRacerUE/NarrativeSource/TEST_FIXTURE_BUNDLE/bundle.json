@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "bundleId": "TEST_FIXTURE_BUNDLE",
+  "classification": "TEST_FIXTURE",
+  "dialogueVersion": "TEST_FIXTURE_V1",
+  "questVersion": "TEST_FIXTURE_V1",
+  "files": [
+    {
+      "path": "strings.json",
+      "sha1": "ece0720006fccc781e8870fc4d784df34d86c857"
+    },
+    {
+      "path": "npcs.json",
+      "sha1": "68497d997096916ccd344bac566fe52d81455f85"
+    },
+    {
+      "path": "dialogues.json",
+      "sha1": "793be4567a50c3ce501a64d4946d3905e0b39801"
+    },
+    {
+      "path": "missions.json",
+      "sha1": "091c8e4edbf0af8b707a258e719c017a668276df"
+    }
+  ]
+}

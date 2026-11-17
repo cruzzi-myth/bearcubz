@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "kind": "dialogues",
+  "records": [
+    {
+      "id": "TEST_FIXTURE_DIALOGUE_ALPHA",
+      "npcId": "TEST_FIXTURE_NPC_ALPHA",
+      "stringTable": "TEST_FIXTURE_NONCANON_STRINGS",
+      "start": "n_start",
+      "testFixture": true,
+      "provenance": {
+        "sourceDocumentId": "TEST_FIXTURE_NONCANON",
+        "note": "TEST FIXTURE - NONCANON; not Moon Racer canon"
+      },
+      "nodes": [
+        {
+          "id": "n_start",
+          "type": "line",
+          "speaker": "TEST_FIXTURE_NPC_ALPHA",
+          "textKey": "alpha_1",
+          "next": "n_gate",
+          "onEnter": [
+            {
+              "type": "set_fact",
+              "subject": "TEST_FIXTURE_FACT_MET_ALPHA",
+              "oneTime": true,
+              "effectId": "TEST_FIXTURE_FX_MET"
+            }
+          ]
+        },
+        {
+          "id": "n_gate",
+          "type": "branch",
+          "choices": [
+            {
+              "id": "b_return",
+              "next": "n_back",
+              "conditions": [
+                {
+                  "type": "dialogue_completed",
+                  "subject": "TEST_FIXTURE_DIALOGUE_ALPHA"
+                }
+              ]
+            },
+            {
+              "id": "b_first",
+              "next": "n_ask"
+            }
+          ]
+        },
+        {
+          "id": "n_back",
+          "type": "line",
+          "speaker": "TEST_FIXTURE_NPC_ALPHA",
+          "textKey": "alpha_back",
+          "next": "n_end_back"
+        },
+        {
+          "id": "n_end_back",
+          "type": "end",
+          "completionEvent": "TEST_FIXTURE_EVT_ALPHA_BACK"
+        },
+        {
+          "id": "n_ask",
+          "type": "choice",
+          "speaker": "TEST_FIXTURE_NPC_ALPHA",
+          "textKey": "alpha_ask",
+          "choices": [
+            {
+              "id": "c_yes",
+              "textKey": "resp_yes",
+              "next": "n_yes",
+              "effects": [
+                {
+                  "type": "offer_mission",
+                  "subject": "TEST_FIXTURE_MISSION",
+                  "oneTime": true,
+                  "effectId": "TEST_FIXTURE_FX_OFFER"
+                }
+              ]
+            },
+            {
+              "id": "c_secret",
+              "textKey": "resp_secret",
+              "next": "n_yes",
+              "conditions": [
+                {
+                  "type": "fact_set",
+                  "subject": "TEST_FIXTURE_FACT_SECRET"
+                }
+              ]
+            },
+            {
+              "id": "c_no",
+              "textKey": "resp_no",
+              "next": "n_no"
+            }
+          ]
+        },
+        {
+          "id": "n_yes",
+          "type": "line",
+          "textKey": "player_yes",
+          "next": "n_end_yes"
+        },
+        {
+          "id": "n_end_yes",
+          "type": "end",
+          "completionEvent": "TEST_FIXTURE_EVT_ALPHA_ACCEPT",
+          "onEnter": [
+            {
+              "type": "accept_mission",
+              "subject": "TEST_FIXTURE_MISSION",
+              "oneTime": true,
+              "effectId": "TEST_FIXTURE_FX_ACCEPT"
+            }
+          ]
+        },
+        {
+          "id": "n_no",
+          "type": "line",
+          "speaker": "TEST_FIXTURE_NPC_ALPHA",
+          "textKey": "alpha_no",
+          "next": "n_end_no"
+        },
+        {
+          "id": "n_end_no",
+          "type": "end",
+          "completionEvent": "TEST_FIXTURE_EVT_ALPHA_DECLINE"
+        }
+      ]
+    },
+    {
+      "id": "TEST_FIXTURE_DIALOGUE_BETA",
+      "npcId": "TEST_FIXTURE_NPC_BETA",
+      "stringTable": "TEST_FIXTURE_NONCANON_STRINGS",
+      "start": "n_b1",
+      "testFixture": true,
+      "provenance": {
+        "sourceDocumentId": "TEST_FIXTURE_NONCANON",
+        "note": "TEST FIXTURE - NONCANON; not Moon Racer canon"
+      },
+      "nodes": [
+        {
+          "id": "n_b1",
+          "type": "line",
+          "speaker": "TEST_FIXTURE_NPC_BETA",
+          "textKey": "beta_1",
+          "next": "n_b_end"
+        },
+        {
+          "id": "n_b_end",
+          "type": "end",
+          "completionEvent": "TEST_FIXTURE_EVT_BETA_DONE"
+        }
+      ]
+    }
+  ]
+}

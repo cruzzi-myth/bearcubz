@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "npcs",
+  "records": [
+    {
+      "id": "TEST_FIXTURE_NPC_ALPHA",
+      "stringTable": "TEST_FIXTURE_NONCANON_STRINGS",
+      "displayNameKey": "npc_alpha_name",
+      "defaultDialogueId": "TEST_FIXTURE_DIALOGUE_ALPHA",
+      "testFixture": true,
+      "provenance": {
+        "sourceDocumentId": "TEST_FIXTURE_NONCANON",
+        "note": "TEST FIXTURE - NONCANON; not Moon Racer canon"
+      }
+    },
+    {
+      "id": "TEST_FIXTURE_NPC_BETA",
+      "stringTable": "TEST_FIXTURE_NONCANON_STRINGS",
+      "displayNameKey": "npc_beta_name",
+      "defaultDialogueId": "TEST_FIXTURE_DIALOGUE_BETA",
+      "testFixture": true,
+      "provenance": {
+        "sourceDocumentId": "TEST_FIXTURE_NONCANON",
+        "note": "TEST FIXTURE - NONCANON; not Moon Racer canon"
+      }
+    }
+  ]
+}

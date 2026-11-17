@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "kind": "missions",
+  "records": [
+    {
+      "id": "TEST_FIXTURE_MISSION",
+      "stringTable": "TEST_FIXTURE_NONCANON_STRINGS",
+      "titleKey": "mission_title",
+      "summaryKey": "mission_summary",
+      "offeringNpcId": "TEST_FIXTURE_NPC_ALPHA",
+      "testFixture": true,
+      "provenance": {
+        "sourceDocumentId": "TEST_FIXTURE_NONCANON",
+        "note": "TEST FIXTURE - NONCANON; not Moon Racer canon"
+      },
+      "objectives": [
+        {
+          "id": "TEST_FIXTURE_OBJ_1",
+          "textKey": "obj_1",
+          "completionEvent": "TEST_FIXTURE_EVT_OBJ_1"
+        },
+        {
+          "id": "TEST_FIXTURE_OBJ_2",
+          "textKey": "obj_2",
+          "completionEvent": "TEST_FIXTURE_EVT_OBJ_2"
+        }
+      ]
+    }
+  ]
+}
