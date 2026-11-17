@@ -14,6 +14,10 @@
 #include "Misc/Paths.h"
 #include "UObject/StrongObjectPtr.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MRAvatarSaveIntegrityTestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -322,5 +326,7 @@ bool FMRSaveIsolationTest::RunTest(const FString&)
 	if (bDefaultExisted) { TArray<uint8> After; FFileHelper::LoadFileToArray(After, *Default); TestTrue(TEXT("default slot bytes unchanged"), Before == After); }
 	CleanSlot(); return true;
 }
+
+} // namespace MRAvatarSaveIntegrityTestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS

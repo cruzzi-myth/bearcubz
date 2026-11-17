@@ -14,6 +14,10 @@
 #include "Onboarding/MROnboardingSubsystem.h"
 #include "UObject/StrongObjectPtr.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MROnboardingAutomationTestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -638,5 +642,7 @@ bool FMROnbFixtureMarkingTest::RunTest(const FString&)
 	CleanSlots();
 	return true;
 }
+
+} // namespace MROnboardingAutomationTestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS

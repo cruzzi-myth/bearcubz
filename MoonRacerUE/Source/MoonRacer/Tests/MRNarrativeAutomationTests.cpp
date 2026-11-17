@@ -15,6 +15,10 @@
 #include "Onboarding/MROnboardingSubsystem.h"
 #include "UObject/StrongObjectPtr.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MRNarrativeAutomationTestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -605,5 +609,7 @@ bool FMRNarr_Interfaces::RunTest(const FString&)
 	TestTrue(TEXT("Cancelled is a distinct result"), EMRServiceResult::Cancelled != EMRServiceResult::Failed && EMRServiceResult::Cancelled != EMRServiceResult::Unavailable);
 	return true;
 }
+
+} // namespace MRNarrativeAutomationTestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS

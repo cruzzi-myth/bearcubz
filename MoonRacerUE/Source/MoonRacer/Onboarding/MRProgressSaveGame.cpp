@@ -11,21 +11,21 @@
 namespace
 {
 	FString GBaseOverride;
-	constexpr int32 UserIndex = 0;
+	constexpr int32 ProgressSaveUserIndex = 0;
 
 
 
 	// ---- integrity envelope: "MRPG" | u32 format(1) | u32 payloadLen | u32 crc32(payload) | payload (SaveGameToMemory bytes) ----
-	constexpr uint32 EnvelopeMagic = 0x4750524D; // 'M','R','P','G' little-endian
-	constexpr uint32 EnvelopeFormat = 1;
-	constexpr uint32 MaxPayload = 1 << 20;
+	constexpr uint32 ProgressEnvelopeMagic = 0x4750524D; // 'M','R','P','G' little-endian
+	constexpr uint32 ProgressEnvelopeFormat = 1;
+	constexpr uint32 ProgressEnvelopeMaxPayload = 1 << 20;
 
 	bool WriteEnvelope(const FString& Path, UMRProgressSaveGame* Save)
 	{
 		TArray<uint8> Payload;
-		if (!UGameplayStatics::SaveGameToMemory(Save, Payload) || Payload.Num() == 0 || (uint32)Payload.Num() > MaxPayload) return false;
+		if (!UGameplayStatics::SaveGameToMemory(Save, Payload) || Payload.Num() == 0 || (uint32)Payload.Num() > ProgressEnvelopeMaxPayload) return false;
 		TArray<uint8> File; File.SetNumUninitialized(16 + Payload.Num());
-		const uint32 Header[4] = { EnvelopeMagic, EnvelopeFormat, (uint32)Payload.Num(), FCrc::MemCrc32(Payload.GetData(), Payload.Num()) };
+		const uint32 Header[4] = { ProgressEnvelopeMagic, ProgressEnvelopeFormat, (uint32)Payload.Num(), FCrc::MemCrc32(Payload.GetData(), Payload.Num()) };
 		FMemory::Memcpy(File.GetData(), Header, 16);
 		FMemory::Memcpy(File.GetData() + 16, Payload.GetData(), Payload.Num());
 		const FString Tmp = Path + TEXT(".tmp");
@@ -41,9 +41,9 @@ namespace
 		if (!FFileHelper::LoadFileToArray(File, *Path)) { Why = TEXT("unreadable"); return nullptr; }
 		if (File.Num() < 16) { Why = TEXT("truncated"); return nullptr; }
 		uint32 Header[4]; FMemory::Memcpy(Header, File.GetData(), 16);
-		if (Header[0] != EnvelopeMagic) { Why = TEXT("not a progress file"); return nullptr; }
-		if (Header[1] != EnvelopeFormat) { Why = TEXT("unknown envelope format"); return nullptr; }
-		if (Header[2] == 0 || Header[2] > MaxPayload || (int64)Header[2] != (int64)File.Num() - 16) { Why = TEXT("bad length"); return nullptr; }
+		if (Header[0] != ProgressEnvelopeMagic) { Why = TEXT("not a progress file"); return nullptr; }
+		if (Header[1] != ProgressEnvelopeFormat) { Why = TEXT("unknown envelope format"); return nullptr; }
+		if (Header[2] == 0 || Header[2] > ProgressEnvelopeMaxPayload || (int64)Header[2] != (int64)File.Num() - 16) { Why = TEXT("bad length"); return nullptr; }
 		if (FCrc::MemCrc32(File.GetData() + 16, Header[2]) != Header[3]) { Why = TEXT("payload CRC mismatch"); return nullptr; }
 		TArray<uint8> Payload; Payload.Append(File.GetData() + 16, (int32)Header[2]); // CRC-verified bytes only reach the engine deserialiser
 		return Cast<UMRProgressSaveGame>(UGameplayStatics::LoadGameFromMemory(Payload));

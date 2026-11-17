@@ -11,7 +11,7 @@
 namespace
 {
 	FString GSlotOverride;
-	constexpr int32 UserIndex = 0;
+	constexpr int32 AvatarSaveUserIndex = 0;
 }
 
 FString UMRAvatarSaveSubsystem::GetSlotName()

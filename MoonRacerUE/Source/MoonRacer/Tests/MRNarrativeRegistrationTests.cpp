@@ -19,6 +19,10 @@
 #include "Serialization/JsonWriter.h"
 #include "UObject/StrongObjectPtr.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MRNarrativeRegistrationTestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -400,5 +404,7 @@ bool FMRReg_DupKeys::RunTest(const FString&)
 	TestTrue(TEXT("unknown fields are still rejected"), Import(D, C, false).Validation.HasCode(TEXT("SCHEMA_UNKNOWN_FIELD")));
 	Clean(C); return true;
 }
+
+} // namespace MRNarrativeRegistrationTestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS

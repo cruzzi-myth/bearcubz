@@ -16,6 +16,10 @@
 #include "Onboarding/MRCheckpointV2Store.h"
 #include "UObject/StrongObjectPtr.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MRCheckpointV2TestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -497,5 +501,7 @@ bool FMRV2_Guards::RunTest(const FString&)
 	TestTrue(TEXT("v1 records and the v1 store round-trip exactly as before"), [&] { CleanProgress(); const FMRProgressRecord V = V1At(EState::FirstObjective); const FMRProgressSaveResult S = FMRProgressStore::Save(V); FMRProgressLoadReport LR; const FMRProgressRecord B = FMRProgressStore::Load(LR); const bool bOk = S.bOk && B == V && !LR.bMigrated; CleanProgress(); return bOk; }());
 	return true;
 }
+
+} // namespace MRCheckpointV2TestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS

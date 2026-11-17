@@ -22,6 +22,10 @@
 #include "Serialization/JsonWriter.h"
 #include "UObject/StrongObjectPtr.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MRNarrativeImportTestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -381,5 +385,7 @@ bool FMRImp_Disk::RunTest(const FString&)
 	FMRNarrativeStore::Delete();
 	return true;
 }
+
+} // namespace MRNarrativeImportTestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS

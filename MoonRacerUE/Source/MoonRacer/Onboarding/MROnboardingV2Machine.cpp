@@ -13,8 +13,8 @@ using EState = EMROnboardingStateV2;
 // ---------------------------------------------------------------------------------------------------------------
 namespace
 {
-	int32 GFlagOverride = -1;
-	bool GSimulateShipping = false;
+	int32 GOnboardingV2FlagOverride = -1;
+	bool GOnboardingV2SimulateShipping = false;
 	const TCHAR* EventNames[] = { TEXT("SessionStarted"), TEXT("ReturningPlayer"), TEXT("AccessResolved"), TEXT("IdentityResolved"), TEXT("AvatarConfirmed"), TEXT("StationEntered"),
 		TEXT("TavernReached"), TEXT("EncounterDone"), TEXT("DepartureReached"), TEXT("PassportScanned"), TEXT("TransitFinished"), TEXT("CoreArrived") };
 	static_assert(UE_ARRAY_COUNT(EventNames) == (int32)EMRV2Event::Count, "v2 event name table out of sync");
@@ -27,7 +27,7 @@ namespace MROnboardingV2Dev
 #if UE_BUILD_SHIPPING
 		return true;
 #else
-		return GSimulateShipping;
+		return GOnboardingV2SimulateShipping;
 #endif
 	}
 	bool IsFlagPresent()
@@ -35,7 +35,7 @@ namespace MROnboardingV2Dev
 #if UE_BUILD_SHIPPING
 		return false;
 #else
-		if (GFlagOverride >= 0) return GFlagOverride == 1;
+		if (GOnboardingV2FlagOverride >= 0) return GOnboardingV2FlagOverride == 1;
 		return FParse::Param(FCommandLine::Get(), FlagName);
 #endif
 	}
@@ -46,8 +46,8 @@ namespace MROnboardingV2Dev
 		return true;
 	}
 	FName ActiveFlow() { return IsAllowed() ? FName("V2_DEV") : FName("V1"); }
-	void SetFlagOverrideForTest(int32 Mode) { GFlagOverride = Mode; }
-	void SetSimulateShippingForTest(bool bShipping) { GSimulateShipping = bShipping; }
+	void SetFlagOverrideForTest(int32 Mode) { GOnboardingV2FlagOverride = Mode; }
+	void SetSimulateShippingForTest(bool bShipping) { GOnboardingV2SimulateShipping = bShipping; }
 }
 
 namespace MROnboardingV2Machine

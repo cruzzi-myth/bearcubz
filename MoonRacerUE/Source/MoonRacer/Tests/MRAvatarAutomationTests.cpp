@@ -10,6 +10,10 @@
 #include "Engine/GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
+// File-local test code lives in a uniquely named namespace so that unity builds (which merge .cpp files)
+// cannot see helpers such as TestFlags/TestSlot/Good from other test files.
+namespace MRAvatarAutomationTestUnit
+{
 namespace
 {
 	constexpr EAutomationTestFlags TestFlags = EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter;
@@ -262,5 +266,7 @@ bool FMRAvatarLocalOnlyTest::RunTest(const FString&)
 		TestFalse(*FString::Printf(TEXT("appearance JSON has no '%s'"), Forbidden), Json.Contains(Forbidden));
 	return true;
 }
+
+} // namespace MRAvatarAutomationTestUnit
 
 #endif // WITH_DEV_AUTOMATION_TESTS
